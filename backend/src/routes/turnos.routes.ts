@@ -1,5 +1,5 @@
 import fastify, { FastifyInstance } from "fastify";
-import { reservarTurnoHandler, limpiarTurnosHandler } from "../controllers/turnos.controller";}
+import { reservarTurnoHandler, limpiarTurnosHandler } from "../controllers/turnos.controller";
 
 export const turnosRouter = async (fastify: FastifyInstance) => {
   
