@@ -16,8 +16,7 @@ const start = async () => {
     await fastify.register(cors, { origin: true });
 
     // Registro de Módulos de Rutas de la API
-    await fastify.register(turnosRouter, { prefix: '/api/turnos' });
-
+    await fastify.register(turnosRouter, { prefix: '/api/turnos' }); // Ruta de los turnos
     // Health Check global
     fastify.get('/api/ping', async () => {
       return { status: 'online', architecture: 'Modular/Clean' };
