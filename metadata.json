@@ -1,0 +1,6 @@
+{
+  "name": "Optiturno",
+  "description": "Ecosistema SaaS de agendamiento inteligente con panel de administración y PWA de cliente.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
