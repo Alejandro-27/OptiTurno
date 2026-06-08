@@ -49,34 +49,34 @@ export default function AdminDashboard({ onNavigate }: { onNavigate: (tab: strin
       {/* KPI Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         
-        {/* KPI 1: Revenue (Emerald) */}
+        {/* KPI 1: Ingresos mensuales */}
         <div className="bg-[#0b1120] border border-slate-800 p-6 rounded-xl hover:border-slate-700 transition-all shadow-xl relative overflow-hidden group">
           <div className="flex justify-between items-start">
-            <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Total Monthly Revenue</span>
+            <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Ingresos mensuales</span>
             <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400">
               <DollarSign size={18} />
             </div>
           </div>
           <div className="mt-4">
             <span className="text-3xl font-bold text-emerald-400 font-sans">$14.2M</span>
-            <span className="block text-emerald-400 text-xs font-medium mt-1">+12.5% vs last month</span>
+            <span className="block text-emerald-400 text-xs font-medium mt-1">+12,5% respecto al mes pasado</span>
           </div>
           <div className="w-full h-1 bg-slate-800 rounded-full mt-4 overflow-hidden">
             <div className="h-full bg-emerald-500 rounded-full w-3/4 transition-all duration-1000"></div>
           </div>
         </div>
 
-        {/* KPI 2: Active Bookings (Indigo) */}
+        {/* KPI 2: Reservas activas */}
         <div className="bg-[#0b1120] border border-slate-800 p-6 rounded-xl hover:border-slate-700 transition-all shadow-xl relative overflow-hidden group">
           <div className="flex justify-between items-start">
-            <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Active Bookings</span>
+            <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Reservas activas</span>
             <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-400">
               <Calendar size={18} />
             </div>
           </div>
           <div className="mt-4">
             <span className="text-3xl font-bold text-indigo-300 font-sans">842</span>
-            <span className="block text-slate-450 text-xs mt-1">48 appointments today</span>
+            <span className="block text-slate-450 text-xs mt-1">48 citas hoy</span>
           </div>
           <div className="flex -space-x-2 mt-4 items-center">
             <span className="w-6 h-6 rounded-full border border-slate-800 bg-slate-700 flex items-center justify-center text-[9px] font-bold">AK</span>
@@ -86,10 +86,10 @@ export default function AdminDashboard({ onNavigate }: { onNavigate: (tab: strin
           </div>
         </div>
 
-        {/* KPI 3: No-Show Rate (Amber Warn) */}
+        {/* KPI 3: Tasa de inasistencia */}
         <div className="bg-[#0b1120] border border-slate-800 p-6 rounded-xl hover:border-slate-700 transition-all shadow-xl relative overflow-hidden group">
           <div className="flex justify-between items-start">
-            <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">No-Show Rate</span>
+            <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Tasa de inasistencia</span>
             <div className="p-2 bg-amber-500/10 rounded-lg text-amber-500">
               <AlertCircle size={18} />
             </div>
@@ -98,16 +98,16 @@ export default function AdminDashboard({ onNavigate }: { onNavigate: (tab: strin
             <span className="text-3xl font-bold text-amber-500 font-sans">18.4%</span>
             <div className="flex items-center gap-1.5 mt-1">
               <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-              <span className="text-amber-500 text-xs font-semibold">Alert: Above Target</span>
+              <span className="text-amber-500 text-xs font-semibold">Alerta: por encima del objetivo</span>
             </div>
           </div>
-          <p className="text-[10px] text-slate-400 mt-3 italic leading-tight">Recommended: Send SMS reminders 2h before.</p>
+          <p className="text-[10px] text-slate-400 mt-3 italic leading-tight">Recomendación: Enviar recordatorios por SMS 2 horas antes.</p>
         </div>
 
-        {/* KPI 4: New Customers */}
+        {/* KPI 4: Nuevos clientes */}
         <div className="bg-[#0b1120] border border-slate-800 p-6 rounded-xl hover:border-slate-700 transition-all shadow-xl relative overflow-hidden group">
           <div className="flex justify-between items-start">
-            <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">New Customers</span>
+            <span className="text-slate-400 text-xs font-bold uppercase tracking-wider">Nuevos clientes</span>
             <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-400">
               <UserPlus size={18} />
             </div>
@@ -131,11 +131,11 @@ export default function AdminDashboard({ onNavigate }: { onNavigate: (tab: strin
       {/* Main Charts & Stream */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         
-        {/* Weekly Spikes: High Fidelity Demands graph */}
+        {/* Picos semanales: Gráfico de demandas de alta fidelidad */}
         <div className="lg:col-span-2 bg-[#0b1120] border border-slate-800 rounded-xl p-6 flex flex-col justify-between shadow-xl">
           <div className="flex justify-between items-center">
             <div>
-              <h3 className="text-lg font-bold text-slate-100">Weekly Spikes</h3>
+              <h3 className="text-lg font-bold text-slate-100">Picos semanales</h3>
               <p className="text-xs text-slate-400 mt-0.5">Intensidad de demanda por franja horaria</p>
             </div>
             <div className="flex gap-1 bg-slate-950 p-1 rounded-lg">
@@ -175,19 +175,19 @@ export default function AdminDashboard({ onNavigate }: { onNavigate: (tab: strin
           {/* Graph metadata metrics row */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-slate-800 text-center md:text-left">
             <div>
-              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Peak Day</p>
-              <p className="text-base font-bold text-slate-100 mt-1">Thursday</p>
+              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Día pico</p>
+              <p className="text-base font-bold text-slate-100 mt-1">Jueves</p>
             </div>
             <div>
-              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Avg Daily Load</p>
+              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Carga diaria promedio</p>
               <p className="text-base font-bold text-emerald-400 mt-1">82%</p>
             </div>
             <div>
-              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Wait Time</p>
+              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Tiempo de espera</p>
               <p className="text-base font-bold text-slate-100 mt-1">12 min</p>
             </div>
             <div>
-              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Efficiency</p>
+              <p className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Eficiencia</p>
               <p className="text-base font-bold text-indigo-400 mt-1">94.8%</p>
             </div>
           </div>
@@ -290,7 +290,7 @@ export default function AdminDashboard({ onNavigate }: { onNavigate: (tab: strin
           <div className="absolute -top-12 -right-12 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-all duration-500"></div>
           
           <div className="relative z-20">
-            <span className="bg-indigo-600 text-white px-2.5 py-0.5 text-[9px] font-bold rounded-full mb-2.5 inline-block uppercase tracking-wider shadow">Pro Feature</span>
+            <span className="bg-indigo-600 text-white px-2.5 py-0.5 text-[9px] font-bold rounded-full mb-2.5 inline-block uppercase tracking-wider shadow">Característica profesional</span>
             <h5 className="text-base font-bold text-indigo-300 flex items-center gap-1.5 leading-snug">
               Inteligencia Predictiva
               <Sparkles size={14} className="text-indigo-400 animate-pulse" />
