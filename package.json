@@ -1,0 +1,7 @@
+{
+  "name": "optiturno-root",
+  "private": true,
+  "scripts": {
+    "build:frontend": "pnpm --filter optiturno-frontend build"
+  }
+}
