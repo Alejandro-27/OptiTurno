@@ -2,6 +2,6 @@
   "name": "optiturno-root",
   "private": true,
   "scripts": {
-    "build:frontend": "pnpm --filter ./frontend build"
+    "build:frontend": "pnpm --filter optiturno-frontend build"
   }
 }

@@ -1,9 +1,25 @@
-node_modules/
 .vite/
-dist/
 build/
 coverage/
 *.log
 .env*
 !.env.example
 EOF
+
+# Dependencias de Node (Monorepo y subcarpetas)
+node_modules/
+.pnpm-store/
+
+# Carpetas de compilación (Frontend)
+frontend/dist/
+dist/
+
+# Archivos de entorno local (Credenciales, tokens, etc.)
+.env
+.env.local
+.env.*.local
+
+# Cachés de editores y herramientas
+.turbo/
+.shared/
+.ninja/

@@ -1,3 +1,10 @@
+# allowBuilds:
+#   '@google/genai': false
+#   esbuild: true
+#   protobufjs: false
+packages:
+  - 'frontend'
+  - 'backend'
 allowBuilds:
   '@google/genai': false
   esbuild: false
