@@ -168,7 +168,7 @@ export default function AdminDashboard({ onNavigate }: { onNavigate: (tab: strin
               <path d="M0,150 C100,120 150,180 200,80 C250,-20 300,150 400,120 C500,90 600,40 700,100 C750,130 800,50 800,50" fill="none" stroke="url(#gradient-line-accent)" strokeWidth="3"></path>
             </svg>
             <div className="absolute inset-x-0 bottom-0 flex justify-between text-[10px] text-slate-400 px-2 font-medium">
-              <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+              <span>Lun</span><span>Mar</span><span>Mie</span><span>Jue</span><span>Vie</span><span>Sab</span><span>Dom</span>
             </div>
           </div>
 
