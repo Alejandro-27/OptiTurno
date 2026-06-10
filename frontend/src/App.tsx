@@ -160,7 +160,7 @@ export default function App() {
                     }`}
                   >
                     <Clock size={16} />
-                    Disponibilidad (Horarios)
+                    Disponibilidad
                   </button>
 
                   <button 

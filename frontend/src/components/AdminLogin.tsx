@@ -43,12 +43,12 @@ export default function AdminLogin({ onLoginSuccess }: { onLoginSuccess: () => v
         </div>
 
         <div className="relative z-10 my-8 space-y-4">
-          <span className="inline-block px-3 py-1 bg-indigo-500/10 text-indigo-400 text-[10px] font-bold rounded-full uppercase tracking-wider">B2B2C SaaS Engine</span>
+          <span className="inline-block px-3 py-1 bg-indigo-500/10 text-indigo-400 text-[10px] font-bold rounded-full uppercase tracking-wider">SaaS Engine</span>
           <h2 className="text-2xl md:text-3xl font-extrabold text-slate-50 leading-tight">
             Agendamiento Predictivo de Alto Impacto
           </h2>
           <p className="text-xs text-slate-400 leading-relaxed">
-            Elimine el no-show, organice turnos en segundos con nuestro algoritmo inteligente y despliegue su propia PWA para clientes.
+            Elimine la inasistencia de clientes, organice y gestiones turnos en segundos con nuestro algoritmo inteligente.
           </p>
 
           <div className="space-y-2 pt-2 text-left">
@@ -68,7 +68,7 @@ export default function AdminLogin({ onLoginSuccess }: { onLoginSuccess: () => v
         </div>
 
         <div className="relative z-10 text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-          © 2026 OptiTurno Pro • All rights reserved.
+          © 2026 OptiTurno • Reservados todos los derechos.
         </div>
       </div>
 
@@ -162,7 +162,7 @@ export default function AdminLogin({ onLoginSuccess }: { onLoginSuccess: () => v
         </form>
 
         <div className="pt-6 mt-6 border-t border-slate-950 flex items-center justify-between gap-2 text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-          <span>Demo Account Credentials:</span>
+          <span>Credenciales para el DEMO:</span>
           <span>admin@optiturno.com / password123</span>
         </div>
 

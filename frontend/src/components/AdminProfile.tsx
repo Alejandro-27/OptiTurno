@@ -10,7 +10,7 @@ export default function AdminProfile() {
   const [subdomain, setSubdomain] = useState('optiturnoprostudio');
   const [address, setAddress] = useState('Calle G #45-12, Bogotá');
   const [phone, setPhone] = useState('+57 321 456 7890');
-  const [description, setDescription] = useState('SaaS B2B2C vanguardista de estilismo premium, ofreciendo cortes exclusivos y tratamientos de cuidado facial de alta gama.');
+  const [description, setDescription] = useState('SaaS vanguardista de estilismo premium, ofreciendo cortes exclusivos y tratamientos de cuidado facial de alta gama.');
 
   const [activeStep, setActiveStep] = useState(1);
   const [showToast, setShowToast] = useState(false);
@@ -150,7 +150,7 @@ export default function AdminProfile() {
             </div>
 
             <div className="space-y-1.5">
-              <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Subdominio PWA Exclusivo</label>
+              <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">Subdominio Exclusivo</label>
               <div className="relative">
                 <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-500 pointer-events-none">
                   <Globe size={14} className="text-indigo-400" />
@@ -203,7 +203,7 @@ export default function AdminProfile() {
             
             {/* Color accent picks */}
             <div className="space-y-2">
-              <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Color de Enfoque PWA</label>
+              <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Color de Enfoque</label>
               <div className="grid grid-cols-4 gap-3 max-w-md">
                 <div className="border-2 border-indigo-500 bg-indigo-600/10 p-3 rounded-xl flex items-center gap-2 cursor-pointer">
                   <div className="w-4 h-4 rounded-full bg-indigo-500"></div>
@@ -226,7 +226,7 @@ export default function AdminProfile() {
 
             {/* Logo placeholder selections */}
             <div className="space-y-2">
-              <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Logotipo oficial (B2B2C Banner)</label>
+              <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block">Logotipo oficial (Banner)</label>
               <div className="flex gap-4">
                 <div className="w-20 h-20 bg-slate-950 border border-slate-800 rounded-xl flex items-center justify-center text-4xl">
                   💈
@@ -279,7 +279,7 @@ export default function AdminProfile() {
           <div>
             <h3 className="text-xl font-bold text-slate-50">¡Onboarding Completado Exitosamente!</h3>
             <p className="text-xs text-slate-400 mt-2 max-w-md mx-auto leading-relaxed">
-              Tu software OptiTurno Pro ya se encuentra activo en producción. El subdominio privado ahora está abierto para recibir citas de clientes.
+              Tu software OptiTurno ya se encuentra activo en producción. El subdominio privado ahora está abierto para recibir citas de clientes.
             </p>
           </div>
 

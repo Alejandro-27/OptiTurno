@@ -183,7 +183,7 @@ export default function AdminCatalog() {
                       </div>
                       <div>
                         <p className="text-xs font-bold text-slate-100">{svc.name}</p>
-                        <p className="text-[10px] text-slate-400 font-medium">B2B2C Standard Tier</p>
+                        <p className="text-[10px] text-slate-400 font-medium">Standard Tier</p>
                       </div>
                     </div>
                   </td>

@@ -63,7 +63,7 @@ export default function AdminAvailability() {
           <div>
             <h3 className="text-base font-bold text-slate-100">Define Tu Disponibilidad Laboral</h3>
             <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-              Configura tus jornadas laborales y franjas de almuerzo o descanso. Estos límites se exportan automáticamente a tus canales PWA de agendamiento y plataformas de reservas instantáneas.
+              Configura tus jornadas laborales y franjas de almuerzo o descanso. Estos límites se exportan automáticamente a tus canales de agendamiento y plataformas de reservas instantáneas.
             </p>
           </div>
         </div>
