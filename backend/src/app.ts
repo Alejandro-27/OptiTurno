@@ -33,7 +33,7 @@ const start = async () => {
         .limit(1);
 
       if (error) {
-        fastify.log.error("Error en Supabase:", error);
+        fastify.log.error(error, "Error en Supabase: ");
         return reply
           .status(500)
           .send({
