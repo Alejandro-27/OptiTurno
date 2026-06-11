@@ -200,7 +200,7 @@ export default function AdminDashboard({ onNavigate }: { onNavigate: (tab: strin
               <span className={`w-2.5 h-2.5 rounded-full bg-emerald-450 ${animateHeartbeat ? 'scale-125' : ''} transition-all duration-300 animate-pulse`}></span>
               Actividad en Tiempo Real
             </h3>
-            <span className="text-[9px] font-mono font-bold text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded border border-emerald-500/20">WS: CONNECTED</span>
+            <span className="text-[9px] font-mono font-bold text-emerald-400 bg-emerald-400/10 px-1.5 py-0.5 rounded border border-emerald-500/20">WS: CONECTADO</span>
           </div>
 
           <div className="p-4 flex-grow overflow-y-auto max-h-[300px] space-y-4 custom-scrollbar">
