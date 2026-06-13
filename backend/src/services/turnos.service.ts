@@ -90,3 +90,57 @@ export const limpiarTurnosExpiradosService = async (
     turnosLiberados: count || data?.length || 0,
   };
 };
+
+interface ConsultarDisponibilidadInput {
+  profesional_id: string;
+  fecha: string;
+}
+
+export const consultarDisponibilidadService = async (
+  datos: ConsultarDisponibilidadInput,
+) => {
+  const { profesional_id, fecha } = datos;
+
+  // Averiguar qué día de la semana es la fecha consultada (0 = Domingo, 6 = Sábado)
+  // Usar un reemplazo de guiones para evitar desfases de zona horaria en Node
+  const numeroDiaSemana = new Date(fecha.replace(/-/g, "\/")).getDay();
+
+  // Consultar la disponibilidad del profesional
+  const { data: horarioLaboral, error: errorHorario } = await supabase
+    .from("horarios_laborales")
+    .select("hora_inicio, hora_fin")
+    .eq("profesional_id", profesional_id)
+    .eq("dia_semana", numeroDiaSemana)
+    .single();
+
+  if (errorHorario || !horarioLaboral) {
+    return {
+      message:
+        "El profesional no atiende en la fecha y el horario seleccionado.",
+      horariosDisponibles: [],
+    };
+  }
+
+  // Traer los turnos que YA están ocupados (confirmados o pendientes de pago) para ese día
+
+  const { data: turnosOcupados, error: errorTurnos } = await supabase
+    .from("turnos")
+    .select("hora_inicio, hora_fin")
+    .eq("profesional_id", profesional_id)
+    .eq("fecha", fecha)
+    .in("estado", ["confirmado", "pendiente_pago"]);
+
+  if (errorTurnos) throw errorTurnos;
+
+  // Retornamos el rango de atención y los bloques que están bloqueados
+  // Para que el frontend o el backend puedan mapear visualmente los huecos
+
+  return {
+    fecha,
+    jornadaLaboral: {
+      inicio: horarioLaboral.hora_inicio,
+      fin: horarioLaboral.hora_fin,
+    },
+    bloquesOcupados: turnosOcupados || [],
+  };
+};

@@ -1,8 +1,10 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import {
+  consultarDisponibilidadService,
   crearTurnoService,
   limpiarTurnosExpiradosService,
 } from "../services/turnos.service.js";
+import { request } from "node:https";
 
 interface ReservarTurnoBody {
   cliente_id: string;
@@ -51,6 +53,37 @@ export const limpiarTurnosHandler = async (
     request.log.error(error, "Error en limpiarTurnosHandler");
     return reply
       .status(500)
-      .send({ error: "Error interno al limpiar los turnos expirados." });
+      .send({ error: "Error al limpiar los turnos expirados." });
+  }
+};
+
+interface ConsultarDisponibilidadQuery {
+  profesional_id: string;
+  fecha: string;
+}
+
+export const consultarDisponibilidadHandler = async (
+  request: FastifyRequest<{ Querystring: ConsultarDisponibilidadQuery }>,
+  reply: FastifyReply,
+) => {
+  try {
+    const { profesional_id, fecha } = request.query;
+
+    if (!profesional_id || !fecha) {
+      return reply
+        .status(400)
+        .send({ error: "Faltan los parametros requeridos." });
+    }
+
+    const disponibilidad = await consultarDisponibilidadService({
+      profesional_id,
+      fecha,
+    });
+    return reply.status(200).send(disponibilidad);
+  } catch (error: any) {
+    request.log.error(error, "Error en consultarDisponibilidadHandler");
+    return reply
+      .status(500)
+      .send({ error: "Error al consultar la disponibilidad de la agenda." });
   }
 };
