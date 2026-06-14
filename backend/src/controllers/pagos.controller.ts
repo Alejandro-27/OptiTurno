@@ -26,11 +26,9 @@ export const webhookPasarelaHandler = async (
     }
 
     // Si llega otro tipo de evento (ej: pago fallido), respondemos OK pero no confirmamos el turno
-    return reply
-      .status(200)
-      .send({
-        message: "Evento recibido pero no requiere acción en la agenda.",
-      });
+    return reply.status(200).send({
+      message: "Evento recibido pero no requiere acción en la agenda.",
+    });
   } catch (error: any) {
     if (error.status) {
       return reply.status(error.status).send({ error: error.message });

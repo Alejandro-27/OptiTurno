@@ -47,11 +47,9 @@ export const ejecutarSeederHandler = async (
     return reply.status(201).send(resultado);
   } catch (error: any) {
     request.log.error(error, "Error en ejecutarSeederHandler");
-    return reply
-      .status(500)
-      .send({
-        error: "Error interno al ejecutar la siembra de datos.",
-        detalles: error.message,
-      });
+    return reply.status(500).send({
+      error: "Error interno al ejecutar la siembra de datos.",
+      detalles: error.message,
+    });
   }
 };

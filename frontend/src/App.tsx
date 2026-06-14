@@ -97,7 +97,7 @@ export default function App() {
         {/* Sync Indicator */}
         <div className="hidden lg:flex items-center gap-2 text-[9px] font-mono text-emerald-400 bg-emerald-500/5 px-2.5 py-1 rounded-full border border-emerald-500/10">
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-          ENTORNO COMPILE-READY
+          Logo de la empresa
         </div>
 
       </header>

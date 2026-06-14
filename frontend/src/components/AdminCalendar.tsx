@@ -57,9 +57,9 @@ export default function AdminCalendar() {
       <div className="flex justify-between items-center bg-slate-900/40 p-4 border border-slate-800 rounded-xl flex-wrap gap-4">
         <div className="flex items-center gap-4">
           <div className="flex bg-slate-950 p-1 rounded-full border border-slate-800">
-            <button className="px-4 py-1 text-xs font-bold bg-indigo-600 text-white rounded-full shadow">Daily</button>
-            <button className="px-4 py-1 text-xs font-semibold text-slate-400 rounded-full hover:text-slate-200">Weekly</button>
-            <button className="px-4 py-1 text-xs font-semibold text-slate-400 rounded-full hover:text-slate-200">Monthly</button>
+            <button className="px-4 py-1 text-xs font-bold bg-indigo-600 text-white rounded-full shadow">Diario</button>
+            <button className="px-4 py-1 text-xs font-semibold text-slate-400 rounded-full hover:text-slate-200">Semanal</button>
+            <button className="px-4 py-1 text-xs font-semibold text-slate-400 rounded-full hover:text-slate-200">Mensual</button>
           </div>
         </div>
 
@@ -162,7 +162,7 @@ export default function AdminCalendar() {
             <Check size={18} />
           </div>
           <div>
-            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Turns Today</p>
+            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Turnos diarios</p>
             <p className="text-lg font-bold text-slate-100 font-sans">32 / 45</p>
           </div>
         </div>
@@ -172,7 +172,7 @@ export default function AdminCalendar() {
             <DollarSign size={18} />
           </div>
           <div>
-            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Projected Rev.</p>
+            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Ingresos proyectados</p>
             <p className="text-lg font-bold text-slate-100 font-sans">$1,450.00</p>
           </div>
         </div>
@@ -182,7 +182,7 @@ export default function AdminCalendar() {
             <Clock size={18} className="text-amber-500" />
           </div>
           <div>
-            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Unconfirmed</p>
+            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Sin confirmar</p>
             <p className="text-lg font-bold text-slate-100 font-sans">04</p>
           </div>
         </div>
@@ -192,7 +192,7 @@ export default function AdminCalendar() {
             <CalendarX size={18} />
           </div>
           <div>
-            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Cancellations</p>
+            <p className="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Cancelaciones</p>
             <p className="text-lg font-bold text-slate-100 font-sans">02</p>
           </div>
         </div>

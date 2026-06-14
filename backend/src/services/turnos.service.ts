@@ -76,8 +76,8 @@ export const crearTurnoService = async (datos: CrearTurnoInput) => {
     pagoRequerido: {
       monto: montoACobrar,
       clientSecret: intencionPago.clientSecret,
-      transaccionId: intencionPago.transaccionId
-    }
+      transaccionId: intencionPago.transaccionId,
+    },
   };
 };
 
