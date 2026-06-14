@@ -2,7 +2,7 @@ import Fastify from 'fastify';
 import cors from '@fastify/cors';
 import dotenv from 'dotenv';
 import { turnosRouter } from './routes/turnos.routes.js';
-
+import { pagosRoutes } from './routes/pagos.routes.js';
 
 dotenv.config();
 
@@ -17,6 +17,9 @@ const start = async () => {
 
     // Registro de Módulos de Rutas de la API
     await fastify.register(turnosRouter, { prefix: '/api/turnos' }); // Ruta de los turnos
+    await fastify.register(pagosRoutes, { prefix: '/api/pagos' }); // Ruta de pagos
+
+    
     // Health Check global
     fastify.get('/api/ping', async () => {
       return { status: 'online', architecture: 'Modular/Clean' };

@@ -1,4 +1,5 @@
 import { supabase } from "../config/database.js";
+import { crearIntencionPagoService } from "./pagos.service.js";
 
 interface CrearTurnoInput {
   cliente_id: string;
@@ -8,13 +9,18 @@ interface CrearTurnoInput {
   hora_inicio: string;
 }
 
+interface ConsultarDisponibilidadInput {
+  profesional_id: string;
+  fecha: string;
+}
+
 export const crearTurnoService = async (datos: CrearTurnoInput) => {
   const { cliente_id, profesional_id, servicio_id, fecha, hora_inicio } = datos;
 
   // Obtener la duración del servicio para calcular la hora_fin
   const { data: servicio, error: errorServicio } = await supabase
     .from("servicios")
-    .select("duracion_minutos")
+    .select("duracion_minutos, precio")
     .eq("id", servicio_id)
     .single();
 
@@ -59,7 +65,20 @@ export const crearTurnoService = async (datos: CrearTurnoInput) => {
     throw errorTurno;
   }
 
-  return nuevoTurno;
+  const montoACobrar = servicio.precio;
+  const intencionPago = await crearIntencionPagoService({
+    turno_id: nuevoTurno.id,
+    monto: montoACobrar,
+  });
+
+  return {
+    ...nuevoTurno,
+    pagoRequerido: {
+      monto: montoACobrar,
+      clientSecret: intencionPago.clientSecret,
+      transaccionId: intencionPago.transaccionId
+    }
+  };
 };
 
 export const limpiarTurnosExpiradosService = async (
@@ -90,11 +109,6 @@ export const limpiarTurnosExpiradosService = async (
     turnosLiberados: count || data?.length || 0,
   };
 };
-
-interface ConsultarDisponibilidadInput {
-  profesional_id: string;
-  fecha: string;
-}
 
 export const consultarDisponibilidadService = async (
   datos: ConsultarDisponibilidadInput,
