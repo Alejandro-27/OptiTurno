@@ -1,0 +1,21 @@
+meta {
+  name: POST Pre-reservar Turno
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}/turnos/reservar
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "cliente_id": "8a7c2934-8d11-4cb3-8833-2804c865f123",
+    "profesional_id": "{{profesional_id}}",
+    "servicio_id": "{{servicio_id}}",
+    "fecha": "2026-06-15",
+    "hora_inicio": "10:00:00"
+  }
+}

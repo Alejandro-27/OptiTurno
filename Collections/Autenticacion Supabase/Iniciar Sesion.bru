@@ -1,0 +1,27 @@
+meta {
+  name: Iniciar Sesion
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{supabase_url}}/auth/v1/token?grant_type=password
+  body: json
+  auth: none
+}
+
+params:query {
+  grant_type: password
+}
+
+headers {
+  apikey: {{supabase_anon_key}}
+  Content-Type: application/json
+}
+
+body:json {
+  {
+    "email": "alejandro.dev@optiturno.com",
+    "password": "PasswordSeguro123"
+  }
+}

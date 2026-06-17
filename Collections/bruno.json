@@ -1,0 +1,9 @@
+{
+  "version": "1",
+  "name": "OptiTurno_Collections",
+  "type": "collection",
+  "ignore": [
+    "node_modules",
+    ".git"
+  ]
+}

@@ -1,8 +1,12 @@
-import { FastifyInstance } from "fastify";
+import fastify, { FastifyInstance } from "fastify";
 import {
   listarServiciosHandler,
   listarProfesionalesHandler,
   ejecutarSeederHandler,
+  crearUsuarioHandler,
+  crearNegocioHandler,
+  crearServicioHandler,
+  crearSucursalHandler,
 } from "../controllers/negocios.controller.js";
 import {
   verificarAutenticacion,
@@ -24,4 +28,9 @@ export const negociosRoutes = async (fastify: FastifyInstance) => {
     { preHandler: [verificarAutenticacion, permitirRoles(["superadmin"])] },
     ejecutarSeederHandler,
   );
+
+  fastify.post("/usuarios", crearUsuarioHandler);
+  fastify.post("/negocios", crearNegocioHandler);
+  fastify.post("/sucursales", crearSucursalHandler);
+  fastify.post("/servicios", crearServicioHandler);
 };

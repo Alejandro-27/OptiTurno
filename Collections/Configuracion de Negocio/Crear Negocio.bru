@@ -1,0 +1,18 @@
+meta {
+  name: Crear Negocio
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/negocios
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "nombre": "Barberia El Elegante",
+    "slug": "barberia-el-elegante"
+  }
+}

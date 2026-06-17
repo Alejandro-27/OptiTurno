@@ -23,3 +23,7 @@ dist/
 .turbo/
 .shared/
 .ninja/
+
+# --- BRUNO API CLIENT ---
+# Ignorar los valores de entornos locales y privados de Bruno
+**/Collections/environments/*.local.bru

@@ -1,0 +1,24 @@
+meta {
+  name: Crear Usuario Espejo
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/usuarios
+  body: json
+  auth: none
+}
+
+headers {
+  Authorization: Bearer {{token_auth}}
+}
+
+body:json {
+  {
+    "id": "{{usuario_real_id}}",
+    "nombre": "Alejandro Dev",
+    "email": "alejandro.dev@optiturno.com",
+    "telefono": "3101234567"
+  }
+}

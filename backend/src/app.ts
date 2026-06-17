@@ -19,7 +19,7 @@ const start = async () => {
     // Registro de Módulos de Rutas de la API
     await fastify.register(turnosRouter, { prefix: "/api/turnos" }); // Ruta de los turnos
     await fastify.register(pagosRoutes, { prefix: "/api/pagos" }); // Ruta de pagos
-    await fastify.register(negociosRoutes, { prefix: "/api" });
+    await fastify.register(negociosRoutes, { prefix: "/api" }); // Insertar un negocio, una sucursal física y 3 servicios estructurados con precios a supabase /api/seed
 
     // Health Check global
     fastify.get("/api/ping", async () => {
