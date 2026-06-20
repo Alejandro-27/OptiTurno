@@ -14,8 +14,16 @@ body:json {
   {
     "sucursal_id": "{{sucursal_id}}",
     "usuario_id": "{{usuario_real_id}}",
-    "nombre": "Alejandro Barber",
+    "nombre": "Carlos Barber",
     "especialidad": "Cortes clásicos y degradados (Fade)",
     "telefono": "3159876543"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    const data = res.getBody();
+    // Si el backend devuelve el objeto directo (ej: data.id)
+    bru.setEnvVar("usuario_real_id", data.id); 
   }
 }
