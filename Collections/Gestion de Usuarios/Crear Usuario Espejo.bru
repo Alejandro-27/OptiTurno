@@ -5,7 +5,7 @@ meta {
 }
 
 post {
-  url: {{base_url}}/usuarios
+  url: {{base_url}}/usuarios/registrar
   body: json
   auth: none
 }
@@ -16,9 +16,10 @@ headers {
 
 body:json {
   {
-    "id": "{{usuario_real_id}}",
-    "nombre": "Alejandro Dev",
-    "email": "alejandro.dev@optiturno.com",
-    "telefono": "3101234567"
+    "email": "carlos.barber2@optiturno.com",
+    "password": "PasswordSeguro123",
+    "nombre": "Carlos Barber",
+    "telefono": "3159876543",
+    "rol": "profesional"
   }
 }
