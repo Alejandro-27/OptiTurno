@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import { turnosRouter } from "./routes/turnos.routes.js";
 import { pagosRoutes } from "./routes/pagos.routes.js";
 import { negociosRoutes } from "./routes/negocios.routes.js";
+import profesionalesRoutes from './routes/profesionales.routes';
 
 dotenv.config();
 
@@ -20,6 +21,7 @@ const start = async () => {
     await fastify.register(turnosRouter, { prefix: "/api/turnos" }); // Ruta de los turnos
     await fastify.register(pagosRoutes, { prefix: "/api/pagos" }); // Ruta de pagos
     await fastify.register(negociosRoutes, { prefix: "/api" }); // Insertar un negocio, una sucursal física y 3 servicios estructurados con precios a supabase /api/seed
+    await fastify.register(profesionalesRoutes, { prefix: '/api/profesionales' });
 
     // Health Check global
     fastify.get("/api/ping", async () => {

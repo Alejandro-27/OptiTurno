@@ -1,0 +1,21 @@
+meta {
+  name: Crear Servicio
+  type: http
+  seq: 1
+}
+
+post {
+  url: {{base_url}}/servicios
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "sucursal_id": "{{sucursal_id}}",
+    "nombre": "Corte de Cabello Premium",
+    "descripcion": "Incluye lavado, perfilado de cejas y asesoría de imagen",
+    "precio": 25000,
+    "duracion_minutos": 30
+  }
+}

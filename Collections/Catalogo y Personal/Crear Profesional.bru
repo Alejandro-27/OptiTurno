@@ -1,0 +1,21 @@
+meta {
+  name: Crear Profesional
+  type: http
+  seq: 2
+}
+
+post {
+  url: {{base_url}}/profesionales
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "sucursal_id": "{{sucursal_id}}",
+    "usuario_id": "{{usuario_real_id}}",
+    "nombre": "Alejandro Barber",
+    "especialidad": "Cortes clásicos y degradados (Fade)",
+    "telefono": "3159876543"
+  }
+}
