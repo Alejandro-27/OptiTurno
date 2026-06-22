@@ -15,7 +15,7 @@ export const usuariosService = {
 
     const userUUID = authData.user.id;
 
-    // 2. Insertar los datos en tu tabla espejo pública 'usuarios'
+    // 2. Insertar los datos en tu tabla espejo pública 'usuarios' 
     const { data: perfilData, error: perfilError } = await supabase
       .from('usuarios')
       .insert([
