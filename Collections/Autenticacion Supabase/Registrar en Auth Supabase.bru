@@ -21,3 +21,13 @@ body:json {
     "password": "PasswordSeguro123"
   }    
 }
+
+script:post-response {
+  if (res.getStatus() === 200 || res.getStatus() === 201) {
+    const data = res.getBody();
+    // Supabase devuelve el ID dentro del objeto 'user'
+    if (data.user && data.user.id) {
+      bru.setEnvVar("usuario_real_id", data.user.id);
+    }
+  }
+}

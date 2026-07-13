@@ -11,15 +11,25 @@ post {
 }
 
 headers {
-  Authorization: Bearer {{token_auth}}
+  ~Authorization: Bearer {{token_auth}}
 }
 
 body:json {
   {
-    "email": "carlos.barber2@optiturno.com",
-    "password": "PasswordSeguro123",
-    "nombre": "Carlos Barber",
+    "email": "alejandro.dev@optiturno.com",
+    "nombre": "Alejandro Dev",
     "telefono": "3159876543",
-    "rol": "profesional"
+    "rol": "superadmin"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 200 || res.getStatus() === 201) {
+    const data = res.getBody();
+    
+    // Si tu backend devuelve el objeto con el campo id
+    if (data && data.id) {
+      bru.setEnvVar("usuario_real_id", data.id);
+    }
   }
 }
