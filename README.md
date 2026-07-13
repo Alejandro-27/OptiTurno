@@ -31,7 +31,7 @@ El repositorio está estructurado en un monorepo simple / carpetas independiente
 
 ```text
 OptiTurno/
-├── backend/     # API REST en Node.js + TypeScript
+├── backend/     # API REST en Node.js + Fastify.js + TypeScript
 └── frontend/    # Aplicación de cliente (Interfaz de usuario)
 ```
 
