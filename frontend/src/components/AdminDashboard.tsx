@@ -470,21 +470,22 @@ export default function AdminDashboard({
         </div>
 
         {/* Predictive AI Banner */}
-        <div className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-slate-900 text-white shadow-sm dark:shadow-xl min-h-[160px] flex flex-col justify-end p-6 group cursor-pointer hover:border-indigo-500 transition-colors">
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-900/60 to-transparent z-10 transition-opacity group-hover:opacity-90"></div>
-
+        <div className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-indigo-50/80 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-950 shadow-sm dark:shadow-xl min-h-[160px] flex flex-col justify-end p-6 group cursor-pointer hover:border-indigo-500 transition-all duration-200">
           {/* Atmospheric background neon colors */}
-          <div className="absolute -top-12 -right-12 w-32 h-32 bg-indigo-500/20 rounded-full blur-2xl group-hover:bg-indigo-500/30 transition-all duration-500"></div>
+          <div className="absolute -top-12 -right-12 w-32 h-32 bg-indigo-500/10 dark:bg-indigo-500/20 rounded-full blur-2xl group-hover:bg-indigo-500/20 dark:group-hover:bg-indigo-500/30 transition-all duration-500"></div>
 
           <div className="relative z-20">
-            <span className="bg-indigo-600 text-white px-2.5 py-0.5 text-[9px] font-bold rounded-full mb-2.5 inline-block uppercase tracking-wider shadow">
+            <span className="bg-indigo-600 text-white px-2.5 py-0.5 text-[9px] font-bold rounded-full mb-2.5 inline-block uppercase tracking-wider shadow-sm">
               Característica profesional
             </span>
-            <h5 className="text-base font-bold text-indigo-200 flex items-center gap-1.5 leading-snug">
+            <h5 className="text-base font-bold text-indigo-950 dark:text-indigo-200 flex items-center gap-1.5 leading-snug">
               Inteligencia Predictiva
-              <Sparkles size={14} className="text-indigo-400 animate-pulse" />
+              <Sparkles
+                size={14}
+                className="text-indigo-600 dark:text-indigo-400 animate-pulse"
+              />
             </h5>
-            <p className="text-[11px] text-slate-300 mt-1 leading-relaxed">
+            <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
               Habilita sugerencias de turnos basadas en análisis climático,
               eventos locales y tendencias de no-show.
             </p>
