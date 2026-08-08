@@ -172,7 +172,7 @@ export default function AdminCalendar() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in text-slate-800 dark:text-slate-100 h-full flex flex-col relative transition-colors duration-200">
+    <div className="space-y-6 animate-fade-in text-slate-800 dark:text-slate-100 h-full flex flex-col relative transition-colors duration-200 overflow-y-auto pr-1">
       {/* Toast Notification */}
       {showToast && (
         <div className="fixed top-4 right-4 bg-white dark:bg-slate-900 border-2 border-emerald-500 rounded-xl p-4 shadow-2xl z-[100] animate-bounce flex items-center gap-3">
@@ -423,8 +423,9 @@ export default function AdminCalendar() {
 
       {/* VISTA MENSUAL */}
       {viewMode === "mensual" && (
-        <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-950/90 shadow-sm p-4 flex-grow">
-          <div className="grid grid-cols-7 gap-2 text-center font-bold text-xs text-slate-400 uppercase tracking-wider mb-2">
+        <div className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/90 shadow-sm p-4 flex-1 min-h-[420px] overflow-y-auto custom-scrollbar">
+          {/* Cabecera de días */}
+          <div className="grid grid-cols-7 gap-2 text-center font-bold text-xs text-slate-400 uppercase tracking-wider mb-2 sticky top-0 bg-white dark:bg-slate-950 py-1 z-10">
             <div>Lun</div>
             <div>Mar</div>
             <div>Mié</div>
@@ -433,13 +434,15 @@ export default function AdminCalendar() {
             <div>Sáb</div>
             <div>Dom</div>
           </div>
+
+          {/* Rejilla de días del mes */}
           <div className="grid grid-cols-7 gap-2">
             {getMonthDays().map((dayDate, idx) => {
               if (!dayDate) {
                 return (
                   <div
                     key={idx}
-                    className="h-24 bg-slate-100/30 dark:bg-slate-900/10 rounded-lg border border-transparent"
+                    className="h-16 bg-slate-50/50 dark:bg-slate-900/10 rounded-lg border border-slate-100/50 dark:border-slate-800/30"
                   />
                 );
               }
@@ -450,10 +453,10 @@ export default function AdminCalendar() {
                 <div
                   key={idx}
                   onClick={() => setCurrentDate(dayDate)}
-                  className={`h-24 border rounded-lg p-2 cursor-pointer transition-all flex flex-col justify-between ${
+                  className={`h-16 p-1.5 border rounded-lg cursor-pointer transition-all flex flex-col justify-between ${
                     isSelectedDay
-                      ? "border-indigo-500 bg-indigo-50/40 dark:bg-indigo-950/30 shadow-md"
-                      : "border-slate-200 dark:border-slate-800/60 bg-slate-50/50 dark:bg-slate-900/30 hover:border-slate-300 dark:hover:border-slate-700"
+                      ? "border-indigo-500 bg-indigo-50/40 dark:bg-indigo-950/30 shadow-sm"
+                      : "border-slate-200/80 dark:border-slate-800/60 bg-white dark:bg-slate-900/30 hover:border-slate-300 dark:hover:border-slate-700"
                   }`}
                 >
                   <span
@@ -466,8 +469,8 @@ export default function AdminCalendar() {
                     {dayDate.getDate()}
                   </span>
 
-                  <div className="space-y-1">
-                    <span className="block text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 rounded px-1 text-center">
+                  <div className="mt-0.5">
+                    <span className="block text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 rounded py-0.5 px-1 text-center truncate">
                       4 Citas
                     </span>
                   </div>
@@ -573,23 +576,65 @@ export default function AdminCalendar() {
                 </select>
               </div>
 
-              {/* Selección de Mes */}
-              <div>
-                <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1">
-                  Mes
-                </label>
-                <select
-                  value={tempMonth}
-                  onChange={(e) => setTempMonth(Number(e.target.value))}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2 text-xs font-semibold focus:outline-none focus:border-indigo-500"
-                >
-                  {monthsList.map((month, idx) => (
-                    <option key={idx} value={idx}>
-                      {month}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {/* VISTA MENSUAL */}
+              {viewMode === "mensual" && (
+                <div className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/90 shadow-sm p-3 w-full">
+                  {/* Días de la semana */}
+                  <div className="grid grid-cols-7 gap-1.5 text-center font-bold text-xs text-slate-400 uppercase tracking-wider mb-2">
+                    <div>Lun</div>
+                    <div>Mar</div>
+                    <div>Mié</div>
+                    <div>Jue</div>
+                    <div>Vie</div>
+                    <div>Sáb</div>
+                    <div>Dom</div>
+                  </div>
+
+                  {/* Grilla de días */}
+                  <div className="grid grid-cols-7 gap-1.5 auto-rows-fr">
+                    {getMonthDays().map((dayDate, idx) => {
+                      if (!dayDate) {
+                        return (
+                          <div
+                            key={idx}
+                            className="min-h-[50px] bg-slate-50/50 dark:bg-slate-900/10 rounded-md border border-slate-100/50 dark:border-slate-800/30"
+                          />
+                        );
+                      }
+                      const isSelectedDay =
+                        dayDate.toDateString() === currentDate.toDateString();
+
+                      return (
+                        <div
+                          key={idx}
+                          onClick={() => setCurrentDate(dayDate)}
+                          className={`min-h-[52px] p-1.5 border rounded-lg cursor-pointer transition-all flex flex-col justify-between ${
+                            isSelectedDay
+                              ? "border-indigo-500 bg-indigo-50/40 dark:bg-indigo-950/30 shadow-sm"
+                              : "border-slate-200/80 dark:border-slate-800/60 bg-white dark:bg-slate-900/30 hover:border-slate-300 dark:hover:border-slate-700"
+                          }`}
+                        >
+                          <span
+                            className={`text-xs font-bold ${
+                              isSelectedDay
+                                ? "text-indigo-600 dark:text-indigo-400"
+                                : "text-slate-700 dark:text-slate-300"
+                            }`}
+                          >
+                            {dayDate.getDate()}
+                          </span>
+
+                          <div className="mt-1">
+                            <span className="block text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 rounded py-0.5 px-1 text-center truncate">
+                              4 Citas
+                            </span>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
 
               {/* Selección de Año */}
               <div>
