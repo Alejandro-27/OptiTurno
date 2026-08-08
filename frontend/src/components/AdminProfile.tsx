@@ -28,6 +28,38 @@ export default function AdminProfile() {
   const [activeStep, setActiveStep] = useState(1);
   const [showToast, setShowToast] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedColor, setSelectedColor] = useState("indigo");
+
+  const colorOptions = [
+    {
+      id: "indigo",
+      name: "Indigo Neo",
+      bg: "bg-indigo-500",
+      border: "border-indigo-500",
+      activeBg: "bg-indigo-50 dark:bg-indigo-600/10",
+    },
+    {
+      id: "emerald",
+      name: "Emerald",
+      bg: "bg-emerald-500",
+      border: "border-emerald-500",
+      activeBg: "bg-emerald-50 dark:bg-emerald-600/10",
+    },
+    {
+      id: "amber",
+      name: "Amber",
+      bg: "bg-amber-500",
+      border: "border-amber-500",
+      activeBg: "bg-amber-50 dark:bg-amber-600/10",
+    },
+    {
+      id: "sunset",
+      name: "Sunset",
+      bg: "bg-rose-500",
+      border: "border-rose-500",
+      activeBg: "bg-rose-50 dark:bg-rose-600/10",
+    },
+  ];
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -79,7 +111,9 @@ export default function AdminProfile() {
 
           <div className="flex-1 h-[2px] bg-slate-200 dark:bg-slate-800 mx-2 -mt-4">
             <div
-              className={`h-full bg-indigo-500 transition-all duration-500 ${activeStep >= 2 ? "w-full" : "w-0"}`}
+              className={`h-full bg-indigo-500 transition-all duration-500 ${
+                activeStep >= 2 ? "w-full" : "w-0"
+              }`}
             ></div>
           </div>
 
@@ -100,7 +134,9 @@ export default function AdminProfile() {
 
           <div className="flex-1 h-[2px] bg-slate-200 dark:bg-slate-800 mx-2 -mt-4">
             <div
-              className={`h-full bg-indigo-500 transition-all duration-500 ${activeStep >= 3 ? "w-full" : "w-0"}`}
+              className={`h-full bg-indigo-500 transition-all duration-500 ${
+                activeStep >= 3 ? "w-full" : "w-0"
+              }`}
             ></div>
           </div>
 
@@ -284,31 +320,35 @@ export default function AdminProfile() {
               <label className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider block">
                 Color de Enfoque
               </label>
-              <div className="grid grid-cols-4 gap-3 max-w-md">
-                <div className="border-2 border-indigo-500 bg-indigo-50 dark:bg-indigo-600/10 p-3 rounded-xl flex items-center gap-2 cursor-pointer">
-                  <div className="w-4 h-4 rounded-full bg-indigo-500"></div>
-                  <span className="text-[10px] font-bold text-slate-800 dark:text-slate-200">
-                    Indigo Neo
-                  </span>
-                </div>
-                <div className="border border-slate-200 dark:border-slate-800 bg-transparent opacity-60 p-3 rounded-xl flex items-center gap-2 cursor-default">
-                  <div className="w-4 h-4 rounded-full bg-emerald-500"></div>
-                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                    Emerald
-                  </span>
-                </div>
-                <div className="border border-slate-200 dark:border-slate-800 bg-transparent opacity-60 p-3 rounded-xl flex items-center gap-2 cursor-default">
-                  <div className="w-4 h-4 rounded-full bg-amber-500"></div>
-                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                    Amber
-                  </span>
-                </div>
-                <div className="border border-slate-200 dark:border-slate-800 bg-transparent opacity-60 p-3 rounded-xl flex items-center gap-2 cursor-default">
-                  <div className="w-4 h-4 rounded-full bg-rose-500"></div>
-                  <span className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
-                    Sunset
-                  </span>
-                </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 max-w-md">
+                {colorOptions.map((color) => {
+                  const isSelected = selectedColor === color.id;
+                  return (
+                    <button
+                      key={color.id}
+                      type="button"
+                      onClick={() => setSelectedColor(color.id)}
+                      className={`p-3 rounded-xl flex items-center gap-2 border-2 transition-all cursor-pointer ${
+                        isSelected
+                          ? `${color.border} ${color.activeBg} shadow-sm`
+                          : "border-slate-200 dark:border-slate-800 bg-transparent hover:border-slate-300 dark:hover:border-slate-700"
+                      }`}
+                    >
+                      <div
+                        className={`w-4 h-4 rounded-full ${color.bg} flex-shrink-0`}
+                      />
+                      <span
+                        className={`text-[10px] font-bold truncate ${
+                          isSelected
+                            ? "text-slate-900 dark:text-slate-100"
+                            : "text-slate-500 dark:text-slate-400"
+                        }`}
+                      >
+                        {color.name}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
 
