@@ -1,17 +1,15 @@
 import React, { useState } from "react";
+import AdminProfile from "./AdminProfile";
 import {
-  Building2,
   Mail,
   Lock,
-  ShieldAlert,
-  Check,
-  Sparkles,
   AlertCircle,
   Eye,
   EyeOff,
   Globe,
-  ArrowRight,
   CornerDownRight,
+  UserPlus,
+  ArrowLeft,
 } from "lucide-react";
 
 export default function AdminLogin({
@@ -19,6 +17,8 @@ export default function AdminLogin({
 }: {
   onLoginSuccess: () => void;
 }) {
+  const [showRegister, setShowRegister] = useState(false);
+
   const [email, setEmail] = useState("admin@optiturno.com");
   const [password, setPassword] = useState("password123");
   const [showPassword, setShowPassword] = useState(false);
@@ -41,6 +41,22 @@ export default function AdminLogin({
       }
     }, 1200);
   };
+
+  // Si se presiona el botón de registro, mostramos AdminProfile
+  if (showRegister) {
+    return (
+      <div className="space-y-4">
+        <button
+          onClick={() => setShowRegister(false)}
+          className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
+        >
+          <ArrowLeft size={16} />
+          Volver al Inicio de Sesión
+        </button>
+        <AdminProfile />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[550px] bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-900 rounded-2xl overflow-hidden shadow-2xl flex flex-col md:flex-row animate-scale-up text-slate-800 dark:text-slate-100 transition-colors duration-200">
@@ -119,7 +135,6 @@ export default function AdminLogin({
           </div>
         )}
 
-        {/* LoginForm */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
             <label className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
@@ -192,7 +207,7 @@ export default function AdminLogin({
           <button
             type="submit"
             disabled={isLoading}
-            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50"
+            className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50 cursor-pointer"
           >
             {isLoading ? (
               <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
@@ -202,6 +217,21 @@ export default function AdminLogin({
             {isLoading ? "Autenticando..." : "Iniciar Sesión"}
           </button>
         </form>
+
+        {/* Link para redireccionar al componente de Registro AdminProfile */}
+        <div className="mt-5 text-center">
+          <p className="text-xs text-slate-600 dark:text-slate-400">
+            ¿No tienes una cuenta aún?{" "}
+            <button
+              type="button"
+              onClick={() => setShowRegister(true)}
+              className="font-bold text-indigo-600 dark:text-indigo-400 hover:underline inline-flex items-center gap-1 cursor-pointer"
+            >
+              <UserPlus size={13} />
+              Registrar mi comercio
+            </button>
+          </p>
+        </div>
 
         <div className="pt-6 mt-6 border-t border-slate-200 dark:border-slate-900 flex items-center justify-between gap-2 text-[10px] text-slate-500 font-bold uppercase tracking-wider">
           <span>Credenciales para el DEMO:</span>
