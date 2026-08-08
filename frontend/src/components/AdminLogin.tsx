@@ -11,6 +11,7 @@ import {
   UserPlus,
   ArrowLeft,
 } from "lucide-react";
+import { login } from "../store";
 
 export default function AdminLogin({
   onLoginSuccess,
@@ -27,19 +28,21 @@ export default function AdminLogin({
   const [isLoading, setIsLoading] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorText(null);
     setIsLoading(true);
 
-    setTimeout(() => {
+    try {
+      await login(email.trim(), password);
+      onLoginSuccess();
+    } catch (err) {
+      setErrorText(
+        err instanceof Error ? err.message : "Error al iniciar sesión.",
+      );
+    } finally {
       setIsLoading(false);
-      if (email.trim() === "" || password.trim() === "") {
-        setErrorText("Por favor ingresa credenciales válidas.");
-      } else {
-        onLoginSuccess();
-      }
-    }, 1200);
+    }
   };
 
   // Si se presiona el botón de registro, mostramos AdminProfile

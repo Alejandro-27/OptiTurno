@@ -21,13 +21,35 @@ import {
 } from "lucide-react";
 import { initialServices } from "../data";
 import { Service } from "../types";
+import { reservarTurno, useStore } from "../store";
+
+const SACAR_HORA_24H = (hora12: string): string => {
+  const [hora, minutos] = hora12.replace(/\s*(AM|PM)/i, "").split(":").map(Number);
+  const esPM = /PM/i.test(hora12);
+  const hora24 = esPM ? (hora % 12) + 12 : hora % 12;
+  return `${String(hora24).padStart(2, "0")}:${String(minutos).padStart(2, "0")}`;
+};
+
+const MESES: Record<string, number> = {
+  ene: 0, feb: 1, mar: 2, abr: 3, may: 4, jun: 5,
+  jul: 6, ago: 7, sep: 8, oct: 9, nov: 10, dic: 11,
+};
+
+const fechaAISO = (etiqueta: string): string => {
+  const partes = etiqueta.split(", ")[1]?.split(" ") || [];
+  if (partes.length < 2) return new Date().toISOString().slice(0, 10);
+  const mes = MESES[partes[0].slice(0, 3).toLowerCase()];
+  const dia = Number(partes[1]);
+  return new Date(2026, mes, dia).toISOString().slice(0, 10);
+};
 
 export default function ClientPwa() {
+  const servicios = useStore((s) => s.servicios);
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1); // 1: catalog, 2: select slot, 3: contact details, 4: success
 
   // States of chosen parameters
   const [selectedService, setSelectedService] = useState<Service>(
-    initialServices[0],
+    servicios[0] || initialServices[0],
   );
   const [selectedDate, setSelectedDate] = useState<string>("Jueves, Oct 24");
   const [selectedHour, setSelectedHour] = useState<string>("");
@@ -55,17 +77,31 @@ export default function ClientPwa() {
     { day: "Sáb", num: "26", fullday: "Sábado, Oct 26" },
   ];
 
-  const handleBookingConfirm = (e: React.FormEvent) => {
+  const handleBookingConfirm = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedHour) {
       alert("Por favor selecciona una hora disponible.");
       return;
     }
     setIsSubmitting(true);
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      await reservarTurno({
+        cliente_id: "cli-demo",
+        profesional_id: "elena",
+        servicio_id: selectedService.id,
+        fecha: fechaAISO(selectedDate),
+        hora_inicio: SACAR_HORA_24H(selectedHour),
+        cliente_nombre: clientName.trim(),
+        servicio_nombre: selectedService.name,
+      });
       setStep(4);
-    }, 1500);
+    } catch (err) {
+      alert(
+        err instanceof Error ? err.message : "No se pudo confirmar la cita.",
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const resetFlow = () => {
@@ -148,39 +184,41 @@ export default function ClientPwa() {
                 </span>
 
                 <div className="space-y-3">
-                  {initialServices.map((svc) => (
-                    <div
-                      key={svc.id}
-                      className="bg-white dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 transition-all flex justify-between items-center shadow-sm"
-                    >
-                      <div className="space-y-1 text-left flex-1 pr-3">
-                        <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 rounded border border-indigo-100 dark:border-indigo-500/10 inline-block">
-                          {svc.category}
-                        </span>
-                        <h4 className="text-xs font-bold text-slate-900 dark:text-slate-50 leading-snug">
-                          {svc.name}
-                        </h4>
-                        <div className="flex items-center gap-3 text-[10px] text-slate-500 dark:text-slate-400">
-                          <span className="flex items-center gap-0.5">
-                            <Clock size={10} /> {svc.duration} min
-                          </span>
-                          <span className="font-bold font-mono text-slate-800 dark:text-slate-200">
-                            ${svc.price.toLocaleString("es-CO")} COP
-                          </span>
-                        </div>
-                      </div>
-
-                      <button
-                        onClick={() => {
-                          setSelectedService(svc);
-                          setStep(2);
-                        }}
-                        className="py-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-md shadow-indigo-600/20 active:scale-95"
+                  {(servicios.length > 0 ? servicios : initialServices).map(
+                    (svc) => (
+                      <div
+                        key={svc.id}
+                        className="bg-white dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 transition-all flex justify-between items-center shadow-sm"
                       >
-                        Agendar
-                      </button>
-                    </div>
-                  ))}
+                        <div className="space-y-1 text-left flex-1 pr-3">
+                          <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 rounded border border-indigo-100 dark:border-indigo-500/10 inline-block">
+                            {svc.category}
+                          </span>
+                          <h4 className="text-xs font-bold text-slate-900 dark:text-slate-50 leading-snug">
+                            {svc.name}
+                          </h4>
+                          <div className="flex items-center gap-3 text-[10px] text-slate-500 dark:text-slate-400">
+                            <span className="flex items-center gap-0.5">
+                              <Clock size={10} /> {svc.duration} min
+                            </span>
+                            <span className="font-bold font-mono text-slate-800 dark:text-slate-200">
+                              ${svc.price.toLocaleString("es-CO")} COP
+                            </span>
+                          </div>
+                        </div>
+
+                        <button
+                          onClick={() => {
+                            setSelectedService(svc);
+                            setStep(2);
+                          }}
+                          className="py-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-md shadow-indigo-600/20 active:scale-95"
+                        >
+                          Agendar
+                        </button>
+                      </div>
+                    ),
+                  )}
                 </div>
               </div>
             </div>

@@ -1,19 +1,12 @@
-import { apiClient } from "./api.client.js";
-
-// Interfaz para tipar la respuesta de la disponibilidad
-export interface DisponibilidadResponse {
-  fecha: string;
-  jornadaLaboral: { inicio: string; fin: string };
-  bloquesOcupados: Array<{ hora_inicio: string; hora_fin: string }>;
-}
+import { apiClient } from "./api.client";
+import type { DisponibilidadDTO, ReservarTurnoInputDTO } from "./dto";
 
 // Consulta los horarios bloqueados y la jornada laboral de un profesional
-
 export const obtenerDisponibilidad = async (
   profesionalId: string,
   fecha: string,
-): Promise<DisponibilidadResponse> => {
-  const { data } = await apiClient.get<DisponibilidadResponse>(
+): Promise<DisponibilidadDTO> => {
+  const { data } = await apiClient.get<DisponibilidadDTO>(
     "/turnos/disponibilidad",
     {
       params: { profesional_id: profesionalId, fecha },
@@ -23,14 +16,9 @@ export const obtenerDisponibilidad = async (
 };
 
 // Envía la solicitud para pre-reservar un espacio y obtener las llaves de pago
-
-export const reservarTurno = async (datosReserva: {
-  cliente_id: string;
-  profesional_id: string;
-  servicio_id: string;
-  fecha: string;
-  hora_inicio: string;
-}) => {
+export const reservarTurno = async (
+  datosReserva: ReservarTurnoInputDTO,
+) => {
   const { data } = await apiClient.post("/turnos/reservar", datosReserva);
   return data;
 };

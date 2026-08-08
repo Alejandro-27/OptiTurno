@@ -13,15 +13,15 @@ import {
   ArrowRight,
   UserCheck,
 } from "lucide-react";
-import { initialActivityLogs } from "../data";
 import { ActivityLog } from "../types";
+import { agregarLog, useStore } from "../store";
 
 export default function AdminDashboard({
   onNavigate,
 }: {
   onNavigate: (tab: string) => void;
 }) {
-  const [logs, setLogs] = useState<ActivityLog[]>(initialActivityLogs);
+  const logs = useStore((s) => s.logs);
   const [animateHeartbeat, setAnimateHeartbeat] = useState<boolean>(false);
 
   // Auto log emitter ticker simulation (every 12 seconds adding a new randomized activity stream)
@@ -71,7 +71,7 @@ export default function AdminDashboard({
         detail: `${randomName} - ${randomService}`,
       };
 
-      setLogs((prev) => [newLog, ...prev.slice(0, 4)]);
+      agregarLog(newLog);
       // Brief heartbeat trigger for live light
       setAnimateHeartbeat(true);
       setTimeout(() => setAnimateHeartbeat(false), 2000);

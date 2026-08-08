@@ -15,13 +15,13 @@ import {
   DollarSign,
   X,
 } from "lucide-react";
-import { initialBookings } from "../data";
 import { BookingEvent } from "../types";
+import { cancelarTurno, useStore } from "../store";
 
 type ViewMode = "diario" | "semanal" | "mensual";
 
 export default function AdminCalendar() {
-  const [bookings, setBookings] = useState<BookingEvent[]>(initialBookings);
+  const bookings = useStore((s) => s.turnos);
   const [selectedBooking, setSelectedBooking] = useState<BookingEvent | null>(
     null,
   );
@@ -118,10 +118,17 @@ export default function AdminCalendar() {
       );
       setTimeout(() => setShowToast(null), 4000);
     } else if (type === "cancel") {
-      setBookings((prev) => prev.filter((b) => b.id !== selectedBooking.id));
-      setShowToast(
-        `Cita de ${selectedBooking.clientName} cancelada exitosamente.`,
-      );
+      cancelarTurno(selectedBooking.id)
+        .then(() => {
+          setShowToast(
+            `Cita de ${selectedBooking.clientName} cancelada exitosamente.`,
+          );
+        })
+        .catch(() => {
+          setShowToast(
+            `No se pudo cancelar la cita de ${selectedBooking.clientName}.`,
+          );
+        });
       setTimeout(() => setShowToast(null), 3000);
     } else if (type === "modify") {
       setShowToast(

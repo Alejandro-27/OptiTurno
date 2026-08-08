@@ -1,25 +1,30 @@
-import axios from "axios";
-
-const API_URL = "http://localhost:5000/api";
+import axios, { AxiosError } from "axios";
+import { env } from "../config/env";
+import { getSessionToken, setSessionToken } from "../data/session";
 
 export const apiClient = axios.create({
-  baseURL: API_URL,
+  baseURL: env.API_URL,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
-// Middleware de Axios (Interceptor) para adjuntar el token de Supabase en cada petición
+// Interceptor de petición: adjunta el token de sesión (Supabase o simulado) en cada petición
 apiClient.interceptors.request.use(async (config) => {
-  // Aquí recuperaramos la sesión de Supabase en el frontend
-  // const { data: { session } } = await supabase.auth.getSession();
-  // const token = session?.access_token;
-
-  // Por ahora, simulamos un token para pruebas de desarrollo
-  const token = "TOKEN_SIMULADO_SUPERADMIN";
-
+  const token = getSessionToken();
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
   }
   return config;
 });
+
+// Interceptor de respuesta: ante 401 se descarta la sesión local
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error: AxiosError) => {
+    if (error.response?.status === 401) {
+      setSessionToken(null);
+    }
+    return Promise.reject(error);
+  },
+);

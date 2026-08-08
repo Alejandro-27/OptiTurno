@@ -29,6 +29,8 @@ import AdminProfile from "./components/AdminProfile";
 import AdminLogin from "./components/AdminLogin";
 import ClientPwa from "./components/ClientPwa";
 import ThemeToggle from "./components/ThemeToggle"; // <-- IMPORTANTE: Componente importado
+import { iniciarApp, logout, useStore } from "./store";
+import { MODO_DEMO } from "./config/env";
 
 export default function App() {
   // Navigation tabs of application
@@ -37,11 +39,14 @@ export default function App() {
   // Tab within the Admin view
   const [adminTab, setAdminTab] = useState<string>("dashboard");
 
-  // Login simulator state
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState<boolean>(true);
+  // Login state proveniente del store global (sesión real o simulada)
+  const sesion = useStore((s) => s.sesion);
+  const errorDatos = useStore((s) => s.error);
+  const isAdminLoggedIn = !!sesion;
 
-  // Hook-up communication helper so Profile can navigate to simulator!
+  // Carga inicial: repositorios (mock o API) + comunicación hacia el PWA
   useEffect(() => {
+    iniciarApp();
     (window as any).triggerClientTab = () => {
       setActiveTab("pwa");
     };
@@ -101,17 +106,34 @@ export default function App() {
           </button>
         </div>
 
-        {/* Header Right Actions: Sync Indicator + Dark/Light Theme Toggle */}
+        {/* Header Right Actions: data-source indicator + Dark/Light Theme Toggle */}
         <div className="flex items-center gap-3">
-          <div className="hidden lg:flex items-center gap-2 text-[9px] font-mono text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/5 px-2.5 py-1 rounded-full border border-emerald-500/20 dark:border-emerald-500/10">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
-            ONLINE
+          <div
+            className={`hidden lg:flex items-center gap-2 text-[9px] font-mono px-2.5 py-1 rounded-full border ${
+              MODO_DEMO
+                ? "text-amber-600 dark:text-amber-400 bg-amber-500/10 dark:bg-amber-500/5 border-amber-500/20 dark:border-amber-500/10"
+                : "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/5 border-emerald-500/20 dark:border-emerald-500/10"
+            }`}
+            title={MODO_DEMO ? "Usando datos de demostración locales" : "Conectado al backend real"}
+          >
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${MODO_DEMO ? "bg-amber-500" : "bg-emerald-500"} animate-ping`}
+            ></span>
+            {MODO_DEMO ? "MODO DEMO" : "API ONLINE"}
           </div>
 
           {/* Selector de Modo Claro/Oscuro */}
           <ThemeToggle />
         </div>
       </header>
+
+      {/* Aviso de caída al modo demo cuando la API no responde en modo real */}
+      {errorDatos && !MODO_DEMO && (
+        <div className="bg-amber-500/10 dark:bg-amber-500/5 border-b border-amber-500/20 px-6 py-2 text-[11px] font-semibold text-amber-700 dark:text-amber-400 flex items-center gap-2">
+          <Info size={13} />
+          {errorDatos}
+        </div>
+      )}
 
       {/* Main Body */}
       <div className="flex-grow flex flex-col md:flex-row">
@@ -211,8 +233,8 @@ export default function App() {
                   </div>
 
                   <button
-                    onClick={() => {
-                      setIsAdminLoggedIn(false);
+                    onClick={async () => {
+                      await logout();
                       setAdminTab("login");
                     }}
                     className="flex items-center gap-3 w-full px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 rounded-lg hover:bg-red-500/10 transition-all text-left"
@@ -230,7 +252,6 @@ export default function App() {
                 <div className="max-w-4xl mx-auto py-12">
                   <AdminLogin
                     onLoginSuccess={() => {
-                      setIsAdminLoggedIn(true);
                       setAdminTab("dashboard");
                     }}
                   />

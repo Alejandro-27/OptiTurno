@@ -14,24 +14,25 @@ import {
   Sparkles,
   CheckCircle2,
 } from "lucide-react";
-import { defaultAvailability } from "../data";
 import { DayAvailability } from "../types";
+import { guardarDisponibilidad, useStore } from "../store";
 
 export default function AdminAvailability() {
-  const [schedule, setSchedule] =
-    useState<DayAvailability[]>(defaultAvailability);
+  const schedule = useStore((s) => s.equipo);
   const [isLoading, setIsLoading] = useState(false);
   const [showToast, setShowToast] = useState(false);
+  const [errorText, setErrorText] = useState<string | null>(null);
 
   const handleToggleDay = (day: string) => {
-    setSchedule((prev) =>
-      prev.map((item) => {
-        if (item.day === day) {
-          return { ...item, enabled: !item.enabled };
-        }
-        return item;
-      }),
-    );
+    guardarDisponibilidad(
+      schedule.map((item) =>
+        item.day === day ? { ...item, enabled: !item.enabled } : item,
+      ),
+    ).catch((err) => {
+      setErrorText(
+        err instanceof Error ? err.message : "No se pudo actualizar.",
+      );
+    });
   };
 
   const handleValueChange = (
@@ -39,23 +40,31 @@ export default function AdminAvailability() {
     field: keyof DayAvailability,
     value: string,
   ) => {
-    setSchedule((prev) =>
-      prev.map((item) => {
-        if (item.day === day) {
-          return { ...item, [field]: value };
-        }
-        return item;
-      }),
-    );
+    guardarDisponibilidad(
+      schedule.map((item) =>
+        item.day === day ? { ...item, [field]: value } : item,
+      ),
+    ).catch((err) => {
+      setErrorText(
+        err instanceof Error ? err.message : "No se pudo actualizar.",
+      );
+    });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsLoading(true);
-    setTimeout(() => {
-      setIsLoading(false);
+    setErrorText(null);
+    try {
+      await guardarDisponibilidad(schedule);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 4000);
-    }, 1200);
+    } catch (err) {
+      setErrorText(
+        err instanceof Error ? err.message : "No se pudo guardar.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -72,6 +81,23 @@ export default function AdminAvailability() {
             </p>
             <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
               La disponibilidad fue guardada en el backend de forma segura.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Error Banner */}
+      {errorText && (
+        <div className="fixed top-4 right-4 bg-white dark:bg-slate-900 border-2 border-rose-500 rounded-xl p-4 shadow-2xl z-[100] animate-bounce flex items-center gap-3">
+          <div className="p-1 bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-lg">
+            <AlertTriangle size={20} />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
+              Error al guardar
+            </p>
+            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
+              {errorText}
             </p>
           </div>
         </div>

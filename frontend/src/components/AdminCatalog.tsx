@@ -15,15 +15,16 @@ import {
   ToggleRight,
   ListFilter,
 } from "lucide-react";
-import { initialServices } from "../data";
 import { Service } from "../types";
+import { guardarServicio, eliminarServicio, useStore } from "../store";
 
 export default function AdminCatalog() {
-  const [services, setServices] = useState<Service[]>(initialServices);
+  const servicios = useStore((s) => s.servicios);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<
     "all" | "activo" | "pausado"
   >("all");
+  const [operationError, setOperationError] = useState<string | null>(null);
 
   // Right Drawer State
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -37,8 +38,15 @@ export default function AdminCatalog() {
   const [formStatus, setFormStatus] = useState<"Activo" | "Pausado">("Activo");
 
   // Handle delete
-  const handleDelete = (id: string) => {
-    setServices((prev) => prev.filter((s) => s.id !== id));
+  const handleDelete = async (id: string) => {
+    setOperationError(null);
+    try {
+      await eliminarServicio(id);
+    } catch (err) {
+      setOperationError(
+        err instanceof Error ? err.message : "No se pudo eliminar el servicio.",
+      );
+    }
   };
 
   // Open drawer for adding service
@@ -64,13 +72,14 @@ export default function AdminCatalog() {
   };
 
   const handleToggleStatus = (svc: Service) => {
-    setServices((prev) =>
-      prev.map((s) => {
-        if (s.id === svc.id) {
-          return { ...s, status: s.status === "Activo" ? "Pausado" : "Activo" };
-        }
-        return s;
-      }),
+    const actualizado: Service = {
+      ...svc,
+      status: svc.status === "Activo" ? "Pausado" : "Activo",
+    };
+    guardarServicio(actualizado).catch((err) =>
+      setOperationError(
+        err instanceof Error ? err.message : "No se pudo actualizar.",
+      ),
     );
   };
 
@@ -78,41 +87,26 @@ export default function AdminCatalog() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!formName.trim()) return;
+    setOperationError(null);
 
-    if (editingService) {
-      // Modify
-      setServices((prev) =>
-        prev.map((s) => {
-          if (s.id === editingService.id) {
-            return {
-              ...s,
-              name: formName,
-              category: formCategory,
-              price: Number(formPrice),
-              duration: Number(formDuration),
-              status: formStatus,
-            };
-          }
-          return s;
-        }),
+    guardarServicio({
+      id: editingService?.id,
+      name: formName,
+      category: formCategory,
+      price: Number(formPrice),
+      duration: Number(formDuration),
+      status: formStatus,
+      icon: editingService?.icon || "scissors",
+    }).then(() => {
+      setIsDrawerOpen(false);
+    }).catch((err) => {
+      setOperationError(
+        err instanceof Error ? err.message : "No se pudo guardar el servicio.",
       );
-    } else {
-      // Create new
-      const newItem: Service = {
-        id: Math.random().toString(),
-        name: formName,
-        category: formCategory,
-        price: Number(formPrice),
-        duration: Number(formDuration),
-        status: formStatus,
-        icon: "scissors",
-      };
-      setServices((prev) => [...prev, newItem]);
-    }
-    setIsDrawerOpen(false);
+    });
   };
 
-  const filteredServices = services.filter((s) => {
+  const filteredServices = servicios.filter((s) => {
     const matchesSearch =
       s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       s.category.toLowerCase().includes(searchQuery.toLowerCase());
@@ -414,24 +408,32 @@ export default function AdminCatalog() {
               </form>
             </div>
 
-            <div className="bg-slate-50 dark:bg-slate-950/60 p-4 -mx-6 -mb-6 border-t border-slate-200 dark:border-slate-800 flex gap-4">
-              <button
-                type="button"
-                onClick={() => setIsDrawerOpen(false)}
-                className="flex-1 py-2.5 border border-slate-300 dark:border-slate-700 bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  const btn = document.getElementById("drawer-submit-btn");
-                  if (btn) btn.click();
-                }}
-                className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-indigo-600/15"
-              >
-                Guardar
-              </button>
+            <div className="bg-slate-50 dark:bg-slate-950/60 p-4 -mx-6 -mb-6 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-3">
+              {operationError && (
+                <div className="flex items-center gap-2 text-[11px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2">
+                  <ShieldAlert size={14} />
+                  {operationError}
+                </div>
+              )}
+              <div className="flex gap-4">
+                <button
+                  type="button"
+                  onClick={() => setIsDrawerOpen(false)}
+                  className="flex-1 py-2.5 border border-slate-300 dark:border-slate-700 bg-transparent hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-xl text-xs font-bold uppercase tracking-wider transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const btn = document.getElementById("drawer-submit-btn");
+                    if (btn) btn.click();
+                  }}
+                  className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-indigo-600/15"
+                >
+                  Guardar
+                </button>
+              </div>
             </div>
           </div>
         </div>
