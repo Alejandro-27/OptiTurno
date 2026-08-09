@@ -18,10 +18,14 @@ import {
   Clock,
   Star,
   Landmark,
+  LogOut,
+  UserCircle2,
 } from "lucide-react";
 import { initialServices } from "../data";
 import { Service } from "../types";
-import { reservarTurno, useStore } from "../store";
+import { reservarTurno, logout, useStore } from "../store";
+import AccessAuth from "./AccessAuth";
+import type { SesionDTO } from "../api/dto";
 
 const SACAR_HORA_24H = (hora12: string): string => {
   const [hora, minutos] = hora12.replace(/\s*(AM|PM)/i, "").split(":").map(Number);
@@ -43,8 +47,13 @@ const fechaAISO = (etiqueta: string): string => {
   return new Date(2026, mes, dia).toISOString().slice(0, 10);
 };
 
-export default function ClientPwa() {
+export default function ClientPwa({
+  onAutenticado,
+}: {
+  onAutenticado?: (sesion: SesionDTO) => void;
+}) {
   const servicios = useStore((s) => s.servicios);
+  const sesion = useStore((s) => s.sesion);
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1); // 1: catalog, 2: select slot, 3: contact details, 4: success
 
   // States of chosen parameters
@@ -85,8 +94,9 @@ export default function ClientPwa() {
     }
     setIsSubmitting(true);
     try {
+      const clienteId = sesion?.usuario.id;
       await reservarTurno({
-        cliente_id: "cli-demo",
+        cliente_id: clienteId || "cli-demo",
         profesional_id: "elena",
         servicio_id: selectedService.id,
         fecha: fechaAISO(selectedDate),
@@ -105,6 +115,12 @@ export default function ClientPwa() {
   };
 
   const resetFlow = () => {
+    setStep(1);
+    setSelectedHour("");
+  };
+
+  const cerrarSesion = async () => {
+    await logout();
     setStep(1);
     setSelectedHour("");
   };
@@ -133,7 +149,7 @@ export default function ClientPwa() {
         <div className="flex-grow flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 overflow-y-auto custom-scrollbar relative select-none transition-colors">
           {/* Header Bar */}
           <div className="p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800/80 flex justify-between items-center sticky top-0 z-40 transition-colors">
-            {step > 1 ? (
+            {sesion && step > 1 ? (
               <button
                 onClick={() => setStep((prev) => (prev - 1) as 1 | 2 | 3 | 4)}
                 className="p-1 px-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
@@ -147,13 +163,49 @@ export default function ClientPwa() {
                 </span>
               </div>
             )}
-            <span className="text-[9px] uppercase font-bold tracking-widest text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/15 px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-500/20">
-              PWA Cliente
-            </span>
+            <div className="flex items-center gap-1.5">
+              {sesion && (
+                <span className="text-[9px] font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700 flex items-center gap-1 max-w-[90px] truncate">
+                  <UserCircle2 size={10} className="text-indigo-500 flex-shrink-0" />
+                  {sesion.usuario.nombre}
+                </span>
+              )}
+              <span className="text-[9px] uppercase font-bold tracking-widest text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/15 px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-500/20">
+                PWA Cliente
+              </span>
+              {sesion && (
+                <button
+                  onClick={cerrarSesion}
+                  title="Cerrar sesión"
+                  className="p-1 text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
+                >
+                  <LogOut size={13} />
+                </button>
+              )}
+            </div>
           </div>
 
+          {/* STEP 0: ACCESO (LOGIN/REGISTRO) DEL CLIENTE */}
+          {!sesion && (
+            <div className="p-4 flex-grow flex flex-col justify-center">
+              <div className="space-y-1.5 mb-4 text-center">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-50">
+                  Accede para reservar tu cita
+                </h3>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                  Inicia sesión o crea tu cuenta como cliente para agendar en
+                  segundos.
+                </p>
+              </div>
+              <AccessAuth
+                tipoInicial="cliente"
+                onAutenticado={(s) => onAutenticado?.(s)}
+              />
+            </div>
+          )}
+
           {/* STEP 1: SERVICES CATALOG */}
-          {step === 1 && (
+          {sesion && step === 1 && (
             <div className="p-4 space-y-6 flex-grow flex flex-col select-none">
               {/* Cover Banner (Light & Dark total) */}
               <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-indigo-500 to-purple-600 dark:from-slate-900 dark:to-slate-950 h-28 flex flex-col justify-end p-4 border border-indigo-400/20 dark:border-slate-800 shadow-sm transition-colors">
@@ -225,7 +277,7 @@ export default function ClientPwa() {
           )}
 
           {/* STEP 2: SELECT DATE AND HOUR SLOT */}
-          {step === 2 && (
+          {sesion && step === 2 && (
             <div className="p-4 space-y-6 flex-grow flex flex-col select-none text-left">
               <div className="space-y-1">
                 <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
@@ -324,7 +376,7 @@ export default function ClientPwa() {
           )}
 
           {/* STEP 3: CONTACT FORM */}
-          {step === 3 && (
+          {sesion && step === 3 && (
             <form
               onSubmit={handleBookingConfirm}
               className="p-4 space-y-6 flex-grow flex flex-col text-left select-none"
@@ -431,7 +483,7 @@ export default function ClientPwa() {
           )}
 
           {/* STEP 4: SUCCESS CONFIRMATION MODAL */}
-          {step === 4 && (
+          {sesion && step === 4 && (
             <div className="p-6 space-y-6 flex-grow flex flex-col justify-center text-center animate-scale-up select-none">
               <div className="w-16 h-16 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto shadow-[0_0_15px_rgba(16,185,129,0.2)]">
                 <Check size={32} />

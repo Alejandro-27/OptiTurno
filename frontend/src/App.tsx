@@ -29,7 +29,7 @@ import AdminProfile from "./components/AdminProfile";
 import AdminLogin from "./components/AdminLogin";
 import ClientPwa from "./components/ClientPwa";
 import ThemeToggle from "./components/ThemeToggle"; // <-- IMPORTANTE: Componente importado
-import { iniciarApp, logout, useStore } from "./store";
+import { iniciarApp, logout, useStore, getEstado } from "./store";
 import { MODO_DEMO } from "./config/env";
 
 export default function App() {
@@ -46,7 +46,13 @@ export default function App() {
 
   // Carga inicial: repositorios (mock o API) + comunicación hacia el PWA
   useEffect(() => {
-    iniciarApp();
+    iniciarApp().then(() => {
+      // Si hay una sesión persistida de cliente, restauramos su vista PWA
+      const sesionRestaurada = getEstado().sesion;
+      if (sesionRestaurada?.usuario.rol === "cliente") {
+        setActiveTab("pwa");
+      }
+    });
     (window as any).triggerClientTab = () => {
       setActiveTab("pwa");
     };
@@ -54,6 +60,19 @@ export default function App() {
       delete (window as any).triggerClientTab;
     };
   }, []);
+
+  // Centraliza la redirección post-autenticación según el rol de la cuenta
+  const manejarAutenticado = (sesion: {
+    usuario: { rol: string };
+  }) => {
+    if (sesion.usuario.rol === "cliente") {
+      setAdminTab("dashboard");
+      setActiveTab("pwa");
+    } else {
+      setActiveTab("admin");
+      setAdminTab("dashboard");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-800 dark:text-slate-100 flex flex-col font-sans selection:bg-indigo-500/30 selection:text-indigo-200 transition-colors duration-200">
@@ -250,11 +269,7 @@ export default function App() {
             <main className="flex-grow p-6 lg:p-8 overflow-y-auto max-h-[calc(100vh-73px)] custom-scrollbar">
               {!isAdminLoggedIn ? (
                 <div className="max-w-4xl mx-auto py-12">
-                  <AdminLogin
-                    onLoginSuccess={() => {
-                      setAdminTab("dashboard");
-                    }}
-                  />
+                  <AdminLogin onAutenticado={manejarAutenticado} />
                 </div>
               ) : (
                 <>
@@ -286,9 +301,7 @@ export default function App() {
                   {adminTab === "profile" && <AdminProfile />}
                   {adminTab === "login" && (
                     <div className="max-w-4xl mx-auto py-4">
-                      <AdminLogin
-                        onLoginSuccess={() => alert("¡Autenticado con éxito!")}
-                      />
+                      <AdminLogin onAutenticado={manejarAutenticado} />
                     </div>
                   )}
                 </>
@@ -315,7 +328,7 @@ export default function App() {
               </p>
             </div>
 
-            <ClientPwa />
+            <ClientPwa onAutenticado={manejarAutenticado} />
           </main>
         )}
 

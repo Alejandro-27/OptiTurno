@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import AdminProfile from "./AdminProfile";
 import {
   Mail,
   Lock,
@@ -12,11 +11,13 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { login } from "../store";
+import AccessAuth from "./AccessAuth";
+import type { SesionDTO } from "../api/dto";
 
 export default function AdminLogin({
-  onLoginSuccess,
+  onAutenticado,
 }: {
-  onLoginSuccess: () => void;
+  onAutenticado: (sesion: SesionDTO) => void;
 }) {
   const [showRegister, setShowRegister] = useState(false);
 
@@ -34,8 +35,8 @@ export default function AdminLogin({
     setIsLoading(true);
 
     try {
-      await login(email.trim(), password);
-      onLoginSuccess();
+      const sesion = await login(email.trim(), password);
+      onAutenticado(sesion);
     } catch (err) {
       setErrorText(
         err instanceof Error ? err.message : "Error al iniciar sesión.",
@@ -45,10 +46,10 @@ export default function AdminLogin({
     }
   };
 
-  // Si se presiona el botón de registro, mostramos AdminProfile
+  // Si se presiona el botón de registro, mostramos el registro real de comercio
   if (showRegister) {
     return (
-      <div className="space-y-4">
+      <div className="space-y-4 max-w-md mx-auto">
         <button
           onClick={() => setShowRegister(false)}
           className="flex items-center gap-2 text-xs font-bold text-slate-600 dark:text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors cursor-pointer"
@@ -56,7 +57,19 @@ export default function AdminLogin({
           <ArrowLeft size={16} />
           Volver al Inicio de Sesión
         </button>
-        <AdminProfile />
+        <AccessAuth
+          tipoInicial="comercio"
+          onAutenticado={(sesion) => {
+            setShowRegister(false);
+            onAutenticado(sesion);
+          }}
+        />
+        <p className="text-center text-[11px] text-slate-500 dark:text-slate-400">
+          ¿Prefieres reservar citas como cliente?{" "}
+          <span className="font-bold text-indigo-600 dark:text-indigo-400">
+            Ve a la vista Cliente PWA.
+          </span>
+        </p>
       </div>
     );
   }

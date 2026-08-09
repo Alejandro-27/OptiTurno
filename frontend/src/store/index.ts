@@ -13,6 +13,7 @@ import {
   disponibilidadRepositorioMock,
 } from "../data/index";
 import type { ReservarTurnoInput } from "../data/repos/turnos";
+import type { RegistrarCuentaInput } from "../data/repos/auth";
 import { repositorios } from "../data/index";
 
 export interface AppState {
@@ -113,6 +114,9 @@ export async function iniciarApp(): Promise<void> {
     (r) => r.conFallback,
   );
 
+  // Restaura la sesión persistida (si existe) para volver a la vista por rol
+  const sesion = await repositorios.auth.recuperarSesion();
+
   setEstado((e) => ({
     ...e,
     inicializado: true,
@@ -121,6 +125,7 @@ export async function iniciarApp(): Promise<void> {
     turnos: turnos.datos,
     logs: actividad.datos,
     equipo: equipo.datos,
+    sesion,
     error: conFallback
       ? "La API del backend no respondió. Mostrando datos de demostración."
       : null,
@@ -132,6 +137,14 @@ export async function login(
   password: string,
 ): Promise<SesionDTO> {
   const sesion = await repositorios.auth.login(email, password);
+  setEstado((e) => ({ ...e, sesion }));
+  return sesion;
+}
+
+export async function registrar(
+  datos: RegistrarCuentaInput,
+): Promise<SesionDTO> {
+  const sesion = await repositorios.auth.registrar(datos);
   setEstado((e) => ({ ...e, sesion }));
   return sesion;
 }

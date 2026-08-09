@@ -48,6 +48,19 @@ export interface SesionDTO {
   usuario: UsuarioSesionDTO;
 }
 
+export interface LoginUsuarioInput {
+  email: string;
+  password: string;
+}
+
+export interface RegistrarUsuarioInput {
+  email: string;
+  password: string;
+  nombre: string;
+  telefono?: string;
+  rol?: string;
+}
+
 export interface SeederResponseDTO {
   mensaje: string;
   negocioId: string;
