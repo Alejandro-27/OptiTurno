@@ -4,8 +4,8 @@ import {
   crearTurnoService,
   limpiarTurnosExpiradosService,
   listarTurnosClienteService,
+  cancelarTurnoClienteService,
 } from "../services/turnos.service.js";
-import { request } from "node:https";
 
 interface ReservarTurnoBody {
   cliente_id: string;
@@ -80,6 +80,29 @@ export const misTurnosHandler = async (
     return reply
       .status(500)
       .send({ error: "Error al consultar tus turnos." });
+  }
+};
+
+// Cancela un turno propio del cliente autenticado
+export const cancelarTurnoHandler = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  try {
+    const { id } = request.params as { id: string };
+    const turno = await cancelarTurnoClienteService(request.usuario!.id, id);
+    return reply.status(200).send({
+      message: "Turno cancelado con éxito.",
+      turno,
+    });
+  } catch (error: any) {
+    if (error.status) {
+      return reply.status(error.status).send({ error: error.message });
+    }
+    request.log.error(error, "Error en cancelarTurnoHandler");
+    return reply
+      .status(500)
+      .send({ error: "Error interno al cancelar el turno." });
   }
 };
 

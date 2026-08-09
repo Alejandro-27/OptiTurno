@@ -452,13 +452,13 @@ export default function AdminProfile() {
               type="button"
               onClick={() => {
                 const win = window as any;
-                if (win.triggerClientTab) {
-                  win.triggerClientTab(); // Direct interactive loop jump to simulation!
+                if (win.abrirVistaCliente) {
+                  win.abrirVistaCliente(); // Salto directo a la vista del cliente
                 }
               }}
               className="flex-grow flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-indigo-600/15 active:scale-95"
             >
-              Ver Simulador Cliente
+              Abrir Vista Cliente
               <ArrowRight size={14} />
             </button>
           </div>

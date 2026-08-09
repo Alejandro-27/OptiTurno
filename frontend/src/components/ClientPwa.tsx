@@ -18,12 +18,10 @@ import {
   Clock,
   Star,
   Landmark,
-  LogOut,
-  UserCircle2,
 } from "lucide-react";
 import { initialServices } from "../data";
 import { Service } from "../types";
-import { reservarTurno, logout, useStore } from "../store";
+import { reservarTurno, useStore } from "../store";
 
 const SACAR_HORA_24H = (hora12: string): string => {
   const [hora, minutos] = hora12.replace(/\s*(AM|PM)/i, "").split(":").map(Number);
@@ -113,32 +111,9 @@ export default function ClientPwa() {
     setSelectedHour("");
   };
 
-  const cerrarSesion = async () => {
-    await logout();
-    setStep(1);
-    setSelectedHour("");
-  };
-
   return (
-    <div className="flex flex-col items-center justify-center py-6 px-4 select-none">
-      {/* Physical iPhone 15 Pro Wrapper Container */}
-      <div className="relative w-full max-w-[365px] h-[720px] bg-slate-100 dark:bg-slate-900 rounded-[48px] border-[8px] border-slate-300 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col ring-8 ring-slate-200 dark:ring-slate-950 transition-colors duration-200">
-        {/* Dynamic Island Notch */}
-        <div className="absolute top-2.5 left-1/2 -translate-x-1/2 w-28 h-6 bg-black rounded-full z-50 flex items-center justify-center p-1">
-          <div className="w-2.5 h-2.5 rounded-full bg-slate-900/40 border border-slate-800 flex-shrink-0"></div>
-          <div className="flex-1"></div>
-          <span className="w-1.5 h-1.5 rounded-full bg-blue-500/80 mr-2 animate-pulse"></span>
-        </div>
-
-        {/* Browser Top Bar Status indicators */}
-        <div className="bg-slate-200 dark:bg-slate-950 text-[10px] text-slate-700 dark:text-slate-300 px-6 pt-9 pb-2 flex justify-between font-bold select-none h-14 items-center transition-colors">
-          <span className="font-sans">09:41</span>
-          <div className="flex items-center gap-1.5 font-mono text-[9px] text-emerald-600 dark:text-emerald-400">
-            <span>● 5G</span>
-            <span>100%</span>
-          </div>
-        </div>
-
+    <div className="w-full mx-auto select-none">
+      <div className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col rounded-2xl transition-colors duration-200">
         {/* Simulated PWA Client-View Screen */}
         <div className="flex-grow flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 overflow-y-auto custom-scrollbar relative select-none transition-colors">
           {/* Header Bar */}
@@ -158,24 +133,9 @@ export default function ClientPwa() {
               </div>
             )}
             <div className="flex items-center gap-1.5">
-              {sesion && (
-                <span className="text-[9px] font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700 flex items-center gap-1 max-w-[90px] truncate">
-                  <UserCircle2 size={10} className="text-indigo-500 flex-shrink-0" />
-                  {sesion.usuario.nombre}
-                </span>
-              )}
               <span className="text-[9px] uppercase font-bold tracking-widest text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/15 px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-500/20">
-                PWA Cliente
+                Reservar Cita
               </span>
-              {sesion && (
-                <button
-                  onClick={cerrarSesion}
-                  title="Cerrar sesión"
-                  className="p-1 text-slate-400 dark:text-slate-500 hover:text-red-500 dark:hover:text-red-400 transition-colors"
-                >
-                  <LogOut size={13} />
-                </button>
-              )}
             </div>
           </div>
 
@@ -557,16 +517,7 @@ export default function ClientPwa() {
             </div>
           )}
         </div>
-
-        {/* iPhone physical outline home indicator bottom bar */}
-        <div className="bg-slate-200 dark:bg-slate-950 h-8 pb-1 pt-1 flex items-center justify-center select-none transition-colors">
-          <div className="w-32 h-1 bg-slate-400 dark:bg-slate-800 rounded-full"></div>
-        </div>
       </div>
-
-      <p className="text-[11px] text-slate-500 font-bold uppercase tracking-wider select-none text-center mt-3">
-        🖥️ Simulador Interactivo PWA cliente (Prueba el flujo)
-      </p>
     </div>
   );
 }

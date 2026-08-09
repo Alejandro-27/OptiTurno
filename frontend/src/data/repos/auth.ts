@@ -1,6 +1,10 @@
-import type { RegistrarUsuarioInput, SesionDTO } from "../../api/dto";
+import type {
+  RegistrarUsuarioInput,
+  SesionDTO,
+  UsuarioSesionDTO,
+} from "../../api/dto";
 import { setSessionToken, setSesionPersistida, getSesionPersistida } from "../session";
-import { loginUsuario, registrarUsuario } from "../../api/usuarios.api";
+import { loginUsuario, registrarUsuario, obtenerPerfil as obtenerPerfilApi, actualizarPerfil as actualizarPerfilApi } from "../../api/usuarios.api";
 
 export interface RegistrarCuentaInput {
   email: string;
@@ -15,6 +19,11 @@ export interface AuthRepositorio {
   registrar(datos: RegistrarCuentaInput): Promise<SesionDTO>;
   logout(): Promise<void>;
   recuperarSesion(): Promise<SesionDTO | null>;
+  obtenerPerfil(): Promise<UsuarioSesionDTO>;
+  actualizarPerfil(datos: {
+    nombre?: string;
+    telefono?: string;
+  }): Promise<UsuarioSesionDTO>;
 }
 
 const USUARIO_DEMO = {
@@ -98,6 +107,22 @@ export const authRepositorioMock: AuthRepositorio = {
   async recuperarSesion() {
     return getSesionPersistida();
   },
+  async obtenerPerfil() {
+    const sesion = getSesionPersistida();
+    if (!sesion) throw new Error("Sin sesión activa.");
+    return { ...sesion.usuario };
+  },
+  async actualizarPerfil(datos) {
+    const sesion = getSesionPersistida();
+    if (!sesion) throw new Error("Sin sesión activa.");
+    const perfil: UsuarioSesionDTO = {
+      ...sesion.usuario,
+      nombre: datos.nombre ?? sesion.usuario.nombre,
+      telefono: datos.telefono ?? sesion.usuario.telefono ?? null,
+    };
+    setSesionPersistida({ ...sesion, usuario: perfil });
+    return perfil;
+  },
 };
 
 export const authRepositorioApi: AuthRepositorio = {
@@ -124,5 +149,11 @@ export const authRepositorioApi: AuthRepositorio = {
   },
   async recuperarSesion() {
     return getSesionPersistida();
+  },
+  async obtenerPerfil() {
+    return obtenerPerfilApi();
+  },
+  async actualizarPerfil(datos) {
+    return actualizarPerfilApi(datos);
   },
 };

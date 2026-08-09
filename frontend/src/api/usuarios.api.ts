@@ -24,3 +24,18 @@ export const registrarUsuario = async (
   );
   return data;
 };
+
+// Perfil del usuario autenticado (GET /usuarios/me)
+export const obtenerPerfil = async (): Promise<UsuarioSesionDTO> => {
+  const { data } = await apiClient.get<UsuarioSesionDTO>("/usuarios/me");
+  return data;
+};
+
+// Actualiza nombre/teléfono del perfil propio (PUT /usuarios/me)
+export const actualizarPerfil = async (datos: {
+  nombre?: string;
+  telefono?: string;
+}): Promise<UsuarioSesionDTO> => {
+  const { data } = await apiClient.put<UsuarioSesionDTO>("/usuarios/me", datos);
+  return data;
+};

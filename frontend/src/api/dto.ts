@@ -36,11 +36,31 @@ export interface ReservarTurnoInputDTO {
   hora_inicio: string;
 }
 
+export interface MisTurnoDTO {
+  id: string;
+  fecha: string;
+  hora_inicio: string;
+  hora_fin: string;
+  estado: string;
+  created_at: string;
+  servicios: {
+    nombre: string;
+    precio: number;
+    duracion_minutos: number;
+  } | null;
+  profesionales: {
+    id: string;
+    especialidad: string;
+    usuarios: { nombre: string };
+  } | null;
+}
+
 export interface UsuarioSesionDTO {
   id: string;
   email: string;
   nombre: string;
   rol: string;
+  telefono?: string | null;
 }
 
 export interface SesionDTO {

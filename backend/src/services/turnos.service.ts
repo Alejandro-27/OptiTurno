@@ -183,3 +183,53 @@ export const listarTurnosClienteService = async (usuarioId: string) => {
 
   return turnos || [];
 };
+
+// Cancela un turno propio del cliente: valida propiedad y cambia el estado
+export const cancelarTurnoClienteService = async (
+  usuarioId: string,
+  turnoId: string,
+) => {
+  const { data: turno, error: errorBusqueda } = await supabase
+    .from("turnos")
+    .select("id, cliente_id, estado")
+    .eq("id", turnoId)
+    .single();
+
+  if (errorBusqueda || !turno) {
+    throw { status: 404, message: "El turno solicitado no existe." };
+  }
+
+  if (turno.cliente_id !== usuarioId) {
+    throw {
+      status: 403,
+      message: "No puedes cancelar un turno de otro cliente.",
+    };
+  }
+
+  if (turno.estado === "cancelado") {
+    throw { status: 409, message: "El turno ya se encuentra cancelado." };
+  }
+
+  const { data: actualizado, error } = await supabase
+    .from("turnos")
+    .update({ estado: "cancelado" })
+    .eq("id", turnoId)
+    .select(
+      `
+        id,
+        fecha,
+        hora_inicio,
+        hora_fin,
+        estado,
+        servicios:servicio_id (nombre, precio, duracion_minutos),
+        profesionales:profesional_id (id, especialidad, usuarios:usuario_id (nombre))
+      `,
+    )
+    .single();
+
+  if (error) {
+    throw { status: 400, message: error.message };
+  }
+
+  return actualizado;
+};

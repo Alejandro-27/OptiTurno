@@ -4,6 +4,7 @@ import {
   limpiarTurnosHandler,
   consultarDisponibilidadHandler,
   misTurnosHandler,
+  cancelarTurnoHandler,
 } from "../controllers/turnos.controller";
 
 import {
@@ -31,6 +32,18 @@ export const turnosRouter = async (fastify: FastifyInstance) => {
       preHandler: [verificarAutenticacion],
     },
     misTurnosHandler,
+  );
+
+  // Cancelación de un turno propio (PWA cliente)
+  fastify.patch(
+    "/:id/cancelar",
+    {
+      preHandler: [
+        verificarAutenticacion,
+        permitirRoles(["cliente", "superadmin", "admin_negocio"]),
+      ],
+    },
+    cancelarTurnoHandler,
   );
 
   // Solo accesible por el Super Administrador del sistema

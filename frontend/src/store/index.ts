@@ -5,7 +5,7 @@ import type {
   ActivityLog,
   DayAvailability,
 } from "../types";
-import type { SesionDTO } from "../api/dto";
+import type { MisTurnoDTO, SesionDTO, UsuarioSesionDTO } from "../api/dto";
 import {
   serviciosRepositorioMock,
   turnosRepositorioMock,
@@ -25,6 +25,8 @@ export interface AppState {
   logs: ActivityLog[];
   equipo: DayAvailability[];
   sesion: SesionDTO | null;
+  misTurnos: MisTurnoDTO[];
+  misTurnosCargando: boolean;
 }
 
 const estadoInicial: AppState = {
@@ -36,6 +38,8 @@ const estadoInicial: AppState = {
   logs: [],
   equipo: [],
   sesion: null,
+  misTurnos: [],
+  misTurnosCargando: false,
 };
 
 let estado: AppState = estadoInicial;
@@ -151,7 +155,45 @@ export async function registrar(
 
 export async function logout(): Promise<void> {
   await repositorios.auth.logout();
-  setEstado((e) => ({ ...e, sesion: null }));
+  setEstado((e) => ({ ...e, sesion: null, misTurnos: [] }));
+}
+
+// Turnos propios del cliente (GET /turnos/mios)
+export async function cargarMisTurnos(): Promise<MisTurnoDTO[]> {
+  setEstado((e) => ({ ...e, misTurnosCargando: true }));
+  try {
+    const turnos = await repositorios.turnos.listarMisTurnos(
+      getEstado().sesion?.usuario.id || "",
+    );
+    setEstado((e) => ({ ...e, misTurnos: turnos, misTurnosCargando: false }));
+    return turnos;
+  } catch (err) {
+    setEstado((e) => ({ ...e, misTurnosCargando: false }));
+    throw err;
+  }
+}
+
+// Cancelación de un turno propio del cliente
+export async function cancelarTurnoCliente(id: string): Promise<void> {
+  const actualizado = await repositorios.turnos.cancelarTurnoCliente(id);
+  setEstado((e) => ({
+    ...e,
+    misTurnos: e.misTurnos.map((t) => (t.id === id ? actualizado : t)),
+  }));
+}
+
+// Actualización del perfil propio (nombre/teléfono)
+export async function actualizarPerfil(datos: {
+  nombre?: string;
+  telefono?: string;
+}): Promise<UsuarioSesionDTO> {
+  const perfil = await repositorios.auth.actualizarPerfil(datos);
+  setEstado((e) =>
+    e.sesion
+      ? { ...e, sesion: { ...e.sesion, usuario: { ...e.sesion.usuario, ...perfil } } }
+      : e,
+  );
+  return perfil;
 }
 
 export async function guardarServicio(
