@@ -19,6 +19,7 @@ export type TipoCuenta = "cliente" | "comercio";
 
 interface AccessAuthProps {
   tipoInicial?: TipoCuenta;
+  modoInicial?: "login" | "registro";
   onAutenticado: (sesion: SesionDTO) => void;
 }
 
@@ -29,9 +30,10 @@ const ROL_POR_TIPO: Record<TipoCuenta, string> = {
 
 export default function AccessAuth({
   tipoInicial = "cliente",
+  modoInicial = "registro",
   onAutenticado,
 }: AccessAuthProps) {
-  const [modo, setModo] = useState<"login" | "registro">("login");
+  const [modo, setModo] = useState<"login" | "registro">(modoInicial);
   const [tipoCuenta, setTipoCuenta] = useState<TipoCuenta>(tipoInicial);
 
   const [nombre, setNombre] = useState("");

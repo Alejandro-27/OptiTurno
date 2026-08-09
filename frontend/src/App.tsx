@@ -28,6 +28,7 @@ import AdminAvailability from "./components/AdminAvailability";
 import AdminProfile from "./components/AdminProfile";
 import AdminLogin from "./components/AdminLogin";
 import ClientPwa from "./components/ClientPwa";
+import AccessAuth from "./components/AccessAuth";
 import ThemeToggle from "./components/ThemeToggle"; // <-- IMPORTANTE: Componente importado
 import { iniciarApp, logout, useStore, getEstado } from "./store";
 import { MODO_DEMO } from "./config/env";
@@ -73,6 +74,30 @@ export default function App() {
       setAdminTab("dashboard");
     }
   };
+
+  // Pantalla única de entrada: registro con elección Cliente | Comerciante
+  const renderLanding = () => (
+    <div className="flex-1 flex items-center justify-center p-6 lg:p-8 min-h-[calc(100vh-73px)]">
+      <div className="w-full max-w-md animate-scale-up">
+        <div className="text-center space-y-2 mb-6">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center font-extrabold text-white text-lg shadow-lg shadow-indigo-600/25 mx-auto">
+            OT
+          </div>
+          <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-50">
+            Únete a OptiTurno
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
+            Regístrate como Cliente o Comerciante y te llevaremos a tu panel
+            correspondiente.
+          </p>
+        </div>
+        <AccessAuth
+          modoInicial="registro"
+          onAutenticado={manejarAutenticado}
+        />
+      </div>
+    </div>
+  );
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-800 dark:text-slate-100 flex flex-col font-sans selection:bg-indigo-500/30 selection:text-indigo-200 transition-colors duration-200">
@@ -268,9 +293,7 @@ export default function App() {
             {/* Admin Content Canvas View */}
             <main className="flex-grow p-6 lg:p-8 overflow-y-auto max-h-[calc(100vh-73px)] custom-scrollbar">
               {!isAdminLoggedIn ? (
-                <div className="max-w-4xl mx-auto py-12">
-                  <AdminLogin onAutenticado={manejarAutenticado} />
-                </div>
+                renderLanding()
               ) : (
                 <>
                   <div className="mb-6 flex justify-between items-center flex-wrap gap-2 text-left">
@@ -311,7 +334,8 @@ export default function App() {
         )}
 
         {/* VIEW 2: CLIENT PWA SIMULATOR */}
-        {activeTab === "pwa" && (
+        {activeTab === "pwa" && !isAdminLoggedIn && renderLanding()}
+        {activeTab === "pwa" && isAdminLoggedIn && (
           <main className="flex-1 p-6 lg:p-8 flex flex-col items-center justify-center bg-slate-100 dark:bg-[#030612] min-h-[calc(100vh-73px)] transition-colors duration-200">
             <div className="max-w-3xl text-center space-y-4 mb-4 select-none">
               <span className="inline-block px-3 py-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-450 border border-emerald-500/25 rounded-full text-[10px] font-bold uppercase tracking-wider">
@@ -328,7 +352,7 @@ export default function App() {
               </p>
             </div>
 
-            <ClientPwa onAutenticado={manejarAutenticado} />
+            <ClientPwa />
           </main>
         )}
 
