@@ -14,6 +14,10 @@ node_modules/
 frontend/dist/
 dist/
 
+# Artefactos de tsc emitidos junto a los fuentes del backend (sin outDir)
+backend/src/**/*.js
+backend/src/**/*.js.map
+
 # Archivos de entorno local (Credenciales, tokens, etc.)
 .env
 .env.local

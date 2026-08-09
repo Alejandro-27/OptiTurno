@@ -1,8 +1,9 @@
-import fastify, { FastifyInstance } from "fastify";
+import { FastifyInstance } from "fastify";
 import {
   reservarTurnoHandler,
   limpiarTurnosHandler,
   consultarDisponibilidadHandler,
+  misTurnosHandler,
 } from "../controllers/turnos.controller";
 
 import {
@@ -11,7 +12,26 @@ import {
 } from "../middlewares/auth.middleware";
 
 export const turnosRouter = async (fastify: FastifyInstance) => {
-  fastify.post("/reservar", reservarTurnoHandler); // Reservar turnos
+  // Reservar turnos: exige sesión de cliente (cliente_id sale del token JWT)
+  fastify.post(
+    "/reservar",
+    {
+      preHandler: [
+        verificarAutenticacion,
+        permitirRoles(["cliente", "superadmin", "admin_negocio"]),
+      ],
+    },
+    reservarTurnoHandler,
+  );
+
+  // Historial de reservas del cliente autenticado (PWA)
+  fastify.get(
+    "/mios",
+    {
+      preHandler: [verificarAutenticacion],
+    },
+    misTurnosHandler,
+  );
 
   // Solo accesible por el Super Administrador del sistema
   fastify.post(

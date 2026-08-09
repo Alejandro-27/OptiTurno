@@ -6,13 +6,40 @@ import {
   sembrarDatosInicialesService,
 } from "../services/negocios.service.js";
 
+interface CuerpoUsuario {
+  id?: string;
+  nombre: string;
+  email: string;
+  telefono?: string;
+}
+
+interface CuerpoNegocio {
+  nombre: string;
+  slug: string;
+}
+
+interface CuerpoSucursal {
+  negocio_id: string;
+  nombre: string;
+  direccion: string;
+  telefono: string;
+}
+
+interface CuerpoServicio {
+  sucursal_id: string;
+  nombre: string;
+  descripcion: string;
+  precio: number;
+  duracion_minutos: number;
+}
+
 // Crear usuarios
 export const crearUsuarioHandler = async (
-  request: FastifyRequest<{ Body: any }>,
+  request: FastifyRequest,
   reply: FastifyReply,
 ) => {
   try {
-    const { id, nombre, email, telefono } = request.body;
+    const { id, nombre, email, telefono } = request.body as CuerpoUsuario;
     const { data, error } = await supabase
       .from("usuarios")
       .insert([{ id, nombre, email, telefono }])
@@ -28,11 +55,11 @@ export const crearUsuarioHandler = async (
 
 // Crear negocios
 export const crearNegocioHandler = async (
-  request: FastifyRequest<{ Body: any }>,
+  request: FastifyRequest,
   reply: FastifyReply,
 ) => {
   try {
-    const { nombre, slug } = request.body;
+    const { nombre, slug } = request.body as CuerpoNegocio;
     const { data, error } = await supabase
       .from("negocios")
       .insert([{ nombre, slug }])
@@ -48,11 +75,12 @@ export const crearNegocioHandler = async (
 
 // Registrar una Sucursal
 export const crearSucursalHandler = async (
-  request: FastifyRequest<{ Body: any }>,
+  request: FastifyRequest,
   reply: FastifyReply,
 ) => {
   try {
-    const { negocio_id, nombre, direccion, telefono } = request.body;
+    const { negocio_id, nombre, direccion, telefono } =
+      request.body as CuerpoSucursal;
     const { data, error } = await supabase
       .from("sucursales")
       .insert([{ negocio_id, nombre, direccion, telefono }])
@@ -68,12 +96,12 @@ export const crearSucursalHandler = async (
 
 // Registrar un Servicio
 export const crearServicioHandler = async (
-  request: FastifyRequest<{ Body: any }>,
+  request: FastifyRequest,
   reply: FastifyReply,
 ) => {
   try {
     const { sucursal_id, nombre, descripcion, precio, duracion_minutos } =
-      request.body;
+      request.body as CuerpoServicio;
     const { data, error } = await supabase
       .from("servicios")
       .insert([{ sucursal_id, nombre, descripcion, precio, duracion_minutos }])

@@ -1,13 +1,21 @@
-import { supabase } from "../config/database";
+import { supabase, supabaseAuth } from "../config/database";
+
+interface RegistrarDatos {
+  email: string;
+  password: string;
+  nombre: string;
+  telefono?: string;
+  rol?: string;
+}
 
 export const usuariosService = {
-  async registrar(datos: { email: string; password: string; nombre: string; telefono?: string; rol?: string }) {
-    
+  async registrar(datos: RegistrarDatos) {
     // 💡 USAR EL MODULO ADMIN: Registra y confirma al usuario de un solo golpe automáticamente
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email: datos.email,
       password: datos.password,
-      email_confirm: true // <--- Esto lo activa de inmediato sin mandar correos
+      email_confirm: true, // <--- Esto lo activa de inmediato sin mandar correos
+      user_metadata: { nombre: datos.nombre, telefono: datos.telefono || null },
     });
 
     if (authError) throw authError;
@@ -15,7 +23,7 @@ export const usuariosService = {
 
     const userUUID = authData.user.id;
 
-    // 2. Insertar los datos en tu tabla espejo pública 'usuarios' 
+    // 2. Insertar los datos en tu tabla espejo pública 'usuarios'
     const { data: perfilData, error: perfilError } = await supabase
       .from('usuarios')
       .insert([
@@ -43,5 +51,82 @@ export const usuariosService = {
     }
 
     return perfilData[0];
-  }
+  },
+
+  // Iniciar sesión (clientes PWA): valida credenciales contra Supabase Auth
+  // y devuelve el token JWT junto al perfil espejo de la tabla 'usuarios'
+  async login(datos: { email: string; password: string }) {
+    if (!supabaseAuth) {
+      throw new Error(
+        "El login no está disponible: configura SUPABASE_ANON_KEY en el backend.",
+      );
+    }
+
+    const { data: sesionData, error: sesionError } =
+      await supabaseAuth.auth.signInWithPassword({
+        email: datos.email,
+        password: datos.password,
+      });
+
+    if (sesionError || !sesionData.user || !sesionData.session) {
+      throw { status: 401, message: "Credenciales inválidas." };
+    }
+
+    // Buscar el perfil espejo y su rol en la tabla pública 'usuarios'
+    const { data: perfil, error: perfilError } = await supabase
+      .from("usuarios")
+      .select("id, email, nombre, telefono, rol")
+      .eq("id", sesionData.user.id)
+      .single();
+
+    if (perfilError || !perfil) {
+      throw {
+        status: 403,
+        message:
+          "Tu cuenta no tiene un perfil configurado en el sistema. Regístrate de nuevo.",
+      };
+    }
+
+    return {
+      token: sesionData.session.access_token,
+      usuario: perfil,
+    };
+  },
+
+  // Devuelve el perfil espejo del usuario autenticado
+  async obtenerPerfil(usuarioId: string) {
+    const { data: perfil, error } = await supabase
+      .from("usuarios")
+      .select("id, email, nombre, telefono, rol")
+      .eq("id", usuarioId)
+      .single();
+
+    if (error || !perfil) {
+      throw { status: 404, message: "Perfil no encontrado." };
+    }
+
+    return perfil;
+  },
+
+  // Actualiza los datos editables del perfil espejo
+  async actualizarPerfil(usuarioId: string, datos: { nombre?: string; telefono?: string }) {
+    const campos: { nombre?: string; telefono?: string } = {};
+    if (datos.nombre !== undefined) campos.nombre = datos.nombre;
+    if (datos.telefono !== undefined) campos.telefono = datos.telefono;
+
+    if (Object.keys(campos).length === 0) {
+      throw { status: 400, message: "No hay campos para actualizar." };
+    }
+
+    const { data: actualizado, error } = await supabase
+      .from("usuarios")
+      .update(campos)
+      .eq("id", usuarioId)
+      .select("id, email, nombre, telefono, rol")
+      .single();
+
+    if (error) throw { status: 400, message: error.message };
+
+    return actualizado;
+  },
 };

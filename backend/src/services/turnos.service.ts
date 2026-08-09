@@ -158,3 +158,28 @@ export const consultarDisponibilidadService = async (
     bloquesOcupados: turnosOcupados || [],
   };
 };
+
+// Historial de reservas del cliente autenticado (PWA -> /turnos/mios)
+export const listarTurnosClienteService = async (usuarioId: string) => {
+  const { data: turnos, error } = await supabase
+    .from("turnos")
+    .select(
+      `
+        id,
+        fecha,
+        hora_inicio,
+        hora_fin,
+        estado,
+        created_at,
+        servicios:servicio_id (nombre, precio, duracion_minutos),
+        profesionales:profesional_id (id, especialidad, usuarios:usuario_id (nombre))
+      `,
+    )
+    .eq("cliente_id", usuarioId)
+    .order("fecha", { ascending: false })
+    .order("hora_inicio", { ascending: false });
+
+  if (error) throw error;
+
+  return turnos || [];
+};

@@ -3,6 +3,7 @@ import {
   consultarDisponibilidadService,
   crearTurnoService,
   limpiarTurnosExpiradosService,
+  listarTurnosClienteService,
 } from "../services/turnos.service.js";
 import { request } from "node:https";
 
@@ -14,14 +15,18 @@ interface ReservarTurnoBody {
   hora_inicio: string;
 }
 
-// reservar turnos
+// reservar turnos (requiere sesión: cliente_id se toma del token JWT)
 export const reservarTurnoHandler = async (
-  request: FastifyRequest<{ Body: ReservarTurnoBody }>,
+  request: FastifyRequest,
   reply: FastifyReply,
 ) => {
   try {
-    // Delegamos toda la carga al servicio
-    const turno = await crearTurnoService(request.body);
+    // Delegamos toda la carga al servicio; el cliente sale del token autenticado
+    const cuerpo = request.body as ReservarTurnoBody;
+    const turno = await crearTurnoService({
+      ...cuerpo,
+      cliente_id: request.usuario!.id,
+    });
 
     return reply.status(201).send({
       message: "Turno pre-reservado con éxito. Pago pendiente.",
@@ -61,6 +66,22 @@ interface ConsultarDisponibilidadQuery {
   profesional_id: string;
   fecha: string;
 }
+
+// Historial de reservas del cliente autenticado
+export const misTurnosHandler = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  try {
+    const turnos = await listarTurnosClienteService(request.usuario!.id);
+    return reply.status(200).send(turnos);
+  } catch (error: any) {
+    request.log.error(error, "Error en misTurnosHandler");
+    return reply
+      .status(500)
+      .send({ error: "Error al consultar tus turnos." });
+  }
+};
 
 export const consultarDisponibilidadHandler = async (
   request: FastifyRequest<{ Querystring: ConsultarDisponibilidadQuery }>,

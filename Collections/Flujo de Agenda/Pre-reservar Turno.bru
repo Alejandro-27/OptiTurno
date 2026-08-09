@@ -7,12 +7,15 @@ meta {
 post {
   url: {{base_url}}/turnos/reservar
   body: json
-  auth: none
+  auth: bearer
+}
+
+headers {
+  Authorization: Bearer {{token_cliente}}
 }
 
 body:json {
   {
-  "cliente_id": "{{usuario_real_id}}",
   "profesional_id": "{{profesional_id}}",
   "servicio_id": "{{servicio_id}}",
   "fecha": "2026-06-15",

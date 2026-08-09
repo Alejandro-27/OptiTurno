@@ -1,0 +1,15 @@
+meta {
+  name: GET Mis Turnos
+  type: http
+  seq: 3
+}
+
+get {
+  url: {{base_url}}/turnos/mios
+  body: none
+  auth: bearer
+}
+
+headers {
+  Authorization: Bearer {{token_cliente}}
+}
