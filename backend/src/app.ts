@@ -15,8 +15,14 @@ const fastify = Fastify({
 
 const start = async () => {
   try {
+    // CORS: solo orígenes explícitos (nunca origin:true).
+    // En producción, definir CORS_ORIGINS="https://tu-app.vercel.app,https://otro" en el env.
+    const corsOrigins = process.env.CORS_ORIGINS
+      ? process.env.CORS_ORIGINS.split(",").map((s) => s.trim())
+      : ["http://localhost:4000", "http://127.0.0.1:4000"];
+
     // Middlewares / Plugins globales
-    await fastify.register(cors, { origin: true });
+    await fastify.register(cors, { origin: corsOrigins });
 
     // Registro de Módulos de Rutas de la API
     await fastify.register(usuariosRoutes, { prefix: '/api/usuarios' }); // Registrar usuarios

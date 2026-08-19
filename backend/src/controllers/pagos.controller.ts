@@ -7,11 +7,11 @@ interface WebhookPagoBody {
 }
 
 export const webhookPasarelaHandler = async (
-  request: FastifyRequest<{ Body: WebhookPagoBody }>,
+  request: FastifyRequest,
   reply: FastifyReply,
 ) => {
   try {
-    const { transaccionId, evento } = request.body;
+    const { transaccionId, evento } = request.body as WebhookPagoBody;
 
     if (!transaccionId) {
       return reply

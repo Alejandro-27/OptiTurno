@@ -49,7 +49,8 @@ export const crearUsuarioHandler = async (
     if (error) return reply.status(400).send({ error: error.message });
     return reply.status(201).send(data);
   } catch (err: any) {
-    return reply.status(500).send({ error: err.message });
+    request.log.error(err, "Error en crearUsuarioHandler");
+    return reply.status(500).send({ error: "Error interno al crear el usuario." });
   }
 };
 
@@ -69,7 +70,8 @@ export const crearNegocioHandler = async (
     if (error) return reply.status(400).send({ error: error.message });
     return reply.status(201).send(data);
   } catch (err: any) {
-    return reply.status(500).send({ error: err.message });
+    request.log.error(err, "Error en crearNegocioHandler");
+    return reply.status(500).send({ error: "Error interno al crear el negocio." });
   }
 };
 
@@ -90,7 +92,8 @@ export const crearSucursalHandler = async (
     if (error) return reply.status(400).send({ error: error.message });
     return reply.status(201).send(data);
   } catch (err: any) {
-    return reply.status(500).send({ error: err.message });
+    request.log.error(err, "Error en crearSucursalHandler");
+    return reply.status(500).send({ error: "Error interno al crear la sucursal." });
   }
 };
 
@@ -111,7 +114,8 @@ export const crearServicioHandler = async (
     if (error) return reply.status(400).send({ error: error.message });
     return reply.status(201).send(data);
   } catch (err: any) {
-    return reply.status(500).send({ error: err.message });
+    request.log.error(err, "Error en crearServicioHandler");
+    return reply.status(500).send({ error: "Error interno al crear el servicio." });
   }
 };
 

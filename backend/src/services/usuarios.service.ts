@@ -1,5 +1,9 @@
 import { supabase, supabaseAuth } from "../config/database";
 
+// Roles que un usuario puede solicitar en el registro público.
+// NUNCA incluir 'superadmin': ese rol solo debe asignarse manualmente en la BD.
+const ROLES_REGISTRO_PERMITIDOS = ["cliente", "admin_negocio"] as const;
+
 interface RegistrarDatos {
   email: string;
   password: string;
@@ -10,6 +14,11 @@ interface RegistrarDatos {
 
 export const usuariosService = {
   async registrar(datos: RegistrarDatos) {
+    const rol =
+      datos.rol && (ROLES_REGISTRO_PERMITIDOS as readonly string[]).includes(datos.rol)
+        ? datos.rol
+        : "cliente";
+
     // 💡 USAR EL MODULO ADMIN: Registra y confirma al usuario de un solo golpe automáticamente
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email: datos.email,
@@ -32,7 +41,7 @@ export const usuariosService = {
           nombre: datos.nombre,
           email: datos.email,
           telefono: datos.telefono || null,
-          rol: datos.rol || 'cliente'
+          rol
         }
       ])
       .select();
@@ -46,7 +55,7 @@ export const usuariosService = {
         nombre: datos.nombre,
         email: datos.email,
         telefono: datos.telefono || null,
-        rol: datos.rol || 'cliente'
+        rol
       };
     }
 

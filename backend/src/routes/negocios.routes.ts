@@ -29,8 +29,26 @@ export const negociosRoutes = async (fastify: FastifyInstance) => {
     ejecutarSeederHandler,
   );
 
-  fastify.post("/usuarios", crearUsuarioHandler);
-  fastify.post("/negocios", crearNegocioHandler);
-  fastify.post("/sucursales", crearSucursalHandler);
-  fastify.post("/servicios", crearServicioHandler);
+  // Endpoints de escritura: solo usuarios autenticados con rol administrativo.
+  // (El registro público de clientes/comercios va por /api/usuarios/registrar)
+  fastify.post(
+    "/usuarios",
+    { preHandler: [verificarAutenticacion, permitirRoles(["superadmin"])] },
+    crearUsuarioHandler,
+  );
+  fastify.post(
+    "/negocios",
+    { preHandler: [verificarAutenticacion, permitirRoles(["superadmin"])] },
+    crearNegocioHandler,
+  );
+  fastify.post(
+    "/sucursales",
+    { preHandler: [verificarAutenticacion, permitirRoles(["superadmin"])] },
+    crearSucursalHandler,
+  );
+  fastify.post(
+    "/servicios",
+    { preHandler: [verificarAutenticacion, permitirRoles(["admin_negocio", "superadmin"])] },
+    crearServicioHandler,
+  );
 };

@@ -80,7 +80,7 @@ export const permitirRoles = (rolesPermitidos: string[]) => {
     }
 
     if (!rolesPermitidos.includes(request.usuario.rol)) {
-      return reply.status(401).send({
+      return reply.status(403).send({
         error: "Acceso denegado.",
         detalles: `Tu rol (${request.usuario.rol}) no tiene los permisos requeridos para esta acción.`,
       });
