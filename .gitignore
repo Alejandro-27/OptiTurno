@@ -27,6 +27,7 @@ backend/src/**/*.js.map
 .turbo/
 .shared/
 .ninja/
+.cache/
 
 # --- BRUNO API CLIENT ---
 # Ignorar los valores de entornos locales y privados de Bruno
