@@ -71,8 +71,8 @@ export default function AdminAvailability() {
     <div className="space-y-6 animate-fade-in text-slate-800 dark:text-slate-100 flex flex-col relative pb-12 transition-colors duration-200">
       {/* Toast Banner */}
       {showToast && (
-        <div className="fixed top-4 right-4 bg-white dark:bg-slate-900 border-2 border-emerald-500 rounded-xl p-4 shadow-2xl z-[100] animate-bounce flex items-center gap-3">
-          <div className="p-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg">
+        <div className="fixed top-4 right-4 left-4 md:left-auto bg-white dark:bg-slate-900 border-2 border-emerald-500 rounded-xl p-4 shadow-2xl z-[100] animate-bounce flex items-center gap-3">
+          <div className="p-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg flex-shrink-0">
             <CheckCircle2 size={20} />
           </div>
           <div>
@@ -88,8 +88,8 @@ export default function AdminAvailability() {
 
       {/* Error Banner */}
       {errorText && (
-        <div className="fixed top-4 right-4 bg-white dark:bg-slate-900 border-2 border-rose-500 rounded-xl p-4 shadow-2xl z-[100] animate-bounce flex items-center gap-3">
-          <div className="p-1 bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-lg">
+        <div className="fixed top-4 right-4 left-4 md:left-auto bg-white dark:bg-slate-900 border-2 border-rose-500 rounded-xl p-4 shadow-2xl z-[100] animate-bounce flex items-center gap-3">
+          <div className="p-1 bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-lg flex-shrink-0">
             <AlertTriangle size={20} />
           </div>
           <div>
@@ -259,7 +259,7 @@ export default function AdminAvailability() {
         <button
           onClick={handleSave}
           disabled={isLoading}
-          className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-6 py-3 font-semibold text-xs uppercase tracking-wider transition-all disabled:opacity-50 shadow-lg shadow-indigo-600/15 active:scale-95"
+          className="flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-6 py-3 font-semibold text-xs uppercase tracking-wider transition-all disabled:opacity-50 shadow-lg shadow-indigo-600/15 active:scale-95 w-full md:w-auto"
         >
           {isLoading ? (
             <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>

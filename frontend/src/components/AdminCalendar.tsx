@@ -182,8 +182,8 @@ export default function AdminCalendar() {
     <div className="space-y-6 animate-fade-in text-slate-800 dark:text-slate-100 h-full flex flex-col relative transition-colors duration-200 overflow-y-auto pr-1">
       {/* Toast Notification */}
       {showToast && (
-        <div className="fixed top-4 right-4 bg-white dark:bg-slate-900 border-2 border-emerald-500 rounded-xl p-4 shadow-2xl z-[100] animate-bounce flex items-center gap-3">
-          <div className="p-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg">
+        <div className="fixed top-4 right-4 left-4 md:left-auto bg-white dark:bg-slate-900 border-2 border-emerald-500 rounded-xl p-4 shadow-2xl z-[100] animate-bounce flex items-center gap-3">
+          <div className="p-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg flex-shrink-0">
             <CheckCircle2 size={20} />
           </div>
           <p className="text-xs font-bold text-slate-800 dark:text-slate-100">
@@ -230,14 +230,14 @@ export default function AdminCalendar() {
           </div>
 
           {/* Campo de búsqueda */}
-          <div className="relative flex items-center">
+          <div className="relative flex items-center w-full sm:w-auto">
             <Search size={14} className="absolute left-3 text-slate-400" />
             <input
               type="text"
               placeholder="Buscar cliente o servicio..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg focus:outline-none focus:border-indigo-500 w-48 transition-all"
+              className="pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg focus:outline-none focus:border-indigo-500 w-full md:w-48 transition-all"
             />
           </div>
         </div>
@@ -282,14 +282,16 @@ export default function AdminCalendar() {
       {/* VISTA DIARIA */}
       {viewMode === "diario" && (
         <div className="border border-slate-200 dark:border-slate-800/80 rounded-xl overflow-hidden bg-white dark:bg-slate-950/90 shadow-sm dark:shadow-2xl flex-grow overflow-x-auto custom-scrollbar transition-colors duration-200">
-          <div className="min-w-[1000px] grid grid-cols-[100px_repeat(5,1fr)]">
+          <div className="min-w-[520px] md:min-w-[1000px] grid grid-cols-[70px_repeat(2,1fr)] md:grid-cols-[100px_repeat(5,1fr)]">
             <div className="bg-slate-50 dark:bg-[#0b1120] h-14 border-b border-r border-slate-200 dark:border-slate-800/50 sticky top-0 z-30 flex items-center justify-center">
               <Clock size={16} className="text-slate-400 dark:text-slate-500" />
             </div>
-            {columns.map((col) => (
+            {columns.map((col, i) => (
               <div
                 key={col.id}
-                className="bg-slate-50 dark:bg-[#0b1120] h-14 border-b border-r border-slate-200 dark:border-slate-800/50 sticky top-0 z-30 flex flex-col items-center justify-center p-2 text-center transition-all hover:bg-slate-100 dark:hover:bg-slate-900/60"
+                className={`bg-slate-50 dark:bg-[#0b1120] h-14 border-b border-r border-slate-200 dark:border-slate-800/50 sticky top-0 z-30 flex flex-col items-center justify-center p-2 text-center transition-all hover:bg-slate-100 dark:hover:bg-slate-900/60 ${
+                  i >= 2 ? "hidden md:flex" : ""
+                }`}
               >
                 <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">
                   {col.name}
@@ -306,14 +308,16 @@ export default function AdminCalendar() {
                   {hour}
                 </div>
 
-                {columns.map((col) => {
+                {columns.map((col, i) => {
                   const match = filteredBookings.find(
                     (b) => b.timeStart === hour && b.columnId === col.id,
                   );
                   return (
                     <div
                       key={`${hour}-${col.id}`}
-                      className="h-24 border-b border-r border-slate-200/80 dark:border-slate-800/20 bg-white dark:bg-slate-950/30 p-2 relative group hover:bg-slate-50 dark:hover:bg-slate-900/10 transition-colors"
+                      className={`h-24 border-b border-r border-slate-200/80 dark:border-slate-800/20 bg-white dark:bg-slate-950/30 p-2 relative group hover:bg-slate-50 dark:hover:bg-slate-900/10 transition-colors ${
+                        i >= 2 ? "hidden md:block" : ""
+                      }`}
                     >
                       {match ? (
                         <div
@@ -365,7 +369,7 @@ export default function AdminCalendar() {
       {/* VISTA SEMANAL */}
       {viewMode === "semanal" && (
         <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-950/90 shadow-sm p-4 flex-grow">
-          <div className="grid grid-cols-7 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-7 gap-2">
             {getWeekDays().map((dayDate, idx) => {
               const isSelectedDay =
                 dayDate.toDateString() === currentDate.toDateString();
@@ -373,7 +377,7 @@ export default function AdminCalendar() {
                 <div
                   key={idx}
                   onClick={() => setCurrentDate(dayDate)}
-                  className={`border rounded-xl p-3 min-h-[350px] cursor-pointer transition-all flex flex-col justify-between ${
+                  className={`border rounded-xl p-3 min-h-[140px] sm:min-h-[350px] cursor-pointer transition-all flex flex-col justify-between ${
                     isSelectedDay
                       ? "border-indigo-500 bg-indigo-50/30 dark:bg-indigo-950/20 shadow-md"
                       : "border-slate-200 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30"
@@ -460,14 +464,14 @@ export default function AdminCalendar() {
                 <div
                   key={idx}
                   onClick={() => setCurrentDate(dayDate)}
-                  className={`h-16 p-1.5 border rounded-lg cursor-pointer transition-all flex flex-col justify-between ${
+                  className={`h-14 sm:h-16 p-1 border rounded-lg cursor-pointer transition-all flex flex-col justify-between ${
                     isSelectedDay
                       ? "border-indigo-500 bg-indigo-50/40 dark:bg-indigo-950/30 shadow-sm"
                       : "border-slate-200/80 dark:border-slate-800/60 bg-white dark:bg-slate-900/30 hover:border-slate-300 dark:hover:border-slate-700"
                   }`}
                 >
                   <span
-                    className={`text-xs font-bold ${
+                    className={`text-[10px] sm:text-xs font-bold ${
                       isSelectedDay
                         ? "text-indigo-600 dark:text-indigo-400"
                         : "text-slate-700 dark:text-slate-300"
@@ -477,7 +481,7 @@ export default function AdminCalendar() {
                   </span>
 
                   <div className="mt-0.5">
-                    <span className="block text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 rounded py-0.5 px-1 text-center truncate">
+                    <span className="hidden sm:block text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 rounded py-0.5 px-1 text-center truncate">
                       4 Citas
                     </span>
                   </div>

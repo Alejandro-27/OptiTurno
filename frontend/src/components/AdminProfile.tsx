@@ -76,8 +76,8 @@ export default function AdminProfile() {
     <div className="space-y-6 animate-fade-in text-slate-800 dark:text-slate-100 max-w-4xl mx-auto transition-colors duration-200">
       {/* Toast Notification */}
       {showToast && (
-        <div className="fixed top-4 right-4 bg-white dark:bg-slate-900 border-2 border-emerald-500 rounded-xl p-4 shadow-2xl z-[100] animate-bounce flex items-center gap-3">
-          <div className="p-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg">
+        <div className="fixed top-4 right-4 left-4 md:left-auto bg-white dark:bg-slate-900 border-2 border-emerald-500 rounded-xl p-4 shadow-2xl z-[100] animate-bounce flex items-center gap-3">
+          <div className="p-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg flex-shrink-0">
             <CheckCircle2 size={20} />
           </div>
           <div>

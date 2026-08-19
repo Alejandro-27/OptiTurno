@@ -259,7 +259,7 @@ export default function ClientPwa() {
                   Horas Disponibles
                 </span>
 
-                <div className="grid grid-cols-3 gap-2">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
                   {availableHours.map((hr) => (
                     <div
                       key={hr}

@@ -171,46 +171,47 @@ export default function AdminCatalog() {
 
         {/* Catalog Table */}
         <div className="bg-white dark:bg-[#0b1120] border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm dark:shadow-xl transition-colors duration-200">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-50 dark:bg-slate-950/80 text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider border-b border-slate-200 dark:border-slate-800/80">
-                <th className="p-4 w-1/3">Nombre del Servicio</th>
-                <th className="p-4">Categoría</th>
-                <th className="p-4">Duración</th>
-                <th className="p-4">Precio (COP)</th>
-                <th className="p-4 text-center">Estado</th>
-                <th className="p-4 w-[120px] text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/30">
-              {filteredServices.map((svc) => (
-                <tr
-                  key={svc.id}
-                  className="hover:bg-slate-50/80 dark:hover:bg-slate-800/10 group transition-colors"
-                >
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold">
-                        ✂️
+          <div className="overflow-x-auto custom-scrollbar">
+            <table className="w-full text-left border-collapse min-w-[640px]">
+              <thead>
+                <tr className="bg-slate-50 dark:bg-slate-950/80 text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider border-b border-slate-200 dark:border-slate-800/80">
+                  <th className="p-4 w-1/3">Nombre del Servicio</th>
+                  <th className="p-4 hidden md:table-cell">Categoría</th>
+                  <th className="p-4 hidden lg:table-cell">Duración</th>
+                  <th className="p-4">Precio (COP)</th>
+                  <th className="p-4 text-center">Estado</th>
+                  <th className="p-4 w-[120px] text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/30">
+                {filteredServices.map((svc) => (
+                  <tr
+                    key={svc.id}
+                    className="hover:bg-slate-50/80 dark:hover:bg-slate-800/10 group transition-colors"
+                  >
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 rounded-lg bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-bold flex-shrink-0">
+                          ✂️
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                            {svc.name}
+                          </p>
+                          <p className="text-[10px] text-slate-400 font-medium">
+                            Standard Tier
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
-                          {svc.name}
-                        </p>
-                        <p className="text-[10px] text-slate-400 font-medium">
-                          Standard Tier
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-4">
-                    <span className="text-xs bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 py-0.5 rounded text-slate-600 dark:text-slate-350 font-medium">
-                      {svc.category}
-                    </span>
-                  </td>
-                  <td className="p-4 text-xs font-mono font-semibold text-slate-600 dark:text-slate-300">
-                    {svc.duration} min
-                  </td>
+                    </td>
+                    <td className="p-4 hidden md:table-cell">
+                      <span className="text-xs bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 py-0.5 rounded text-slate-600 dark:text-slate-350 font-medium">
+                        {svc.category}
+                      </span>
+                    </td>
+                    <td className="p-4 text-xs font-mono font-semibold text-slate-600 dark:text-slate-300 hidden lg:table-cell">
+                      {svc.duration} min
+                    </td>
                   <td className="p-4 text-xs font-mono font-bold text-slate-900 dark:text-slate-100">
                     ${svc.price.toLocaleString("es-CO")}
                   </td>
@@ -269,6 +270,7 @@ export default function AdminCatalog() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
 
