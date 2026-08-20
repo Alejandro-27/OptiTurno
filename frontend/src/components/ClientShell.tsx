@@ -130,6 +130,12 @@ export default function ClientShell() {
       </div>
 
       <div className="mt-auto p-4 space-y-3 border-t border-slate-200 dark:border-slate-800">
+        <div className="flex items-center justify-between px-2">
+          <span className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-500 tracking-widest">
+            Tema
+          </span>
+          <ThemeToggle />
+        </div>
         <div className="flex items-center gap-2.5 px-2">
           <div className="w-9 h-9 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 flex items-center justify-center flex-shrink-0">
             <UserCircle2 size={18} />
