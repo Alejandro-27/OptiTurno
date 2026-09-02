@@ -20,7 +20,27 @@ src/
 pnpm dev              # tsx watch src/app.ts (puerto 5000)
 pnpm build            # tsc → emite .js (hoy junto a los .ts; outDir a dist/ es pendiente)
 npx tsc --noEmit      # typecheck obligatorio antes de terminar
+
+# Base de datos local (Docker)
+pnpm db:start         # Levanta Supabase local (Postgres + Auth + API)
+pnpm db:stop          # Detiene los contenedores
+pnpm db:reset         # Resetea BD + corre migraciones + seed
+pnpm db:migration     # Crea nueva migración SQL
+pnpm db:status        # Estado de los contenedores
 ```
+
+## Base de datos local (Supabase CLI + Docker)
+
+El proyecto usa Supabase CLI para desarrollo local. Al ejecutar `pnpm db:start`:
+
+- **PostgreSQL** corre en `localhost:54322` (免得 conflicte con PG local en 5432)
+- **PostgREST API** en `localhost:54321` (el `SUPABASE_URL`)
+- **Auth** en `localhost:54321/auth/v1`
+- **Studio** (dashboard visual) en `localhost:54323`
+
+Las migraciones viven en `supabase/migrations/` y el seed en `supabase/seed.sql`.
+
+**Importante**: el seed.sql crea datos en las tablas públicas, pero los usuarios de Auth (`auth.users`) se crean vía la API admin o el Studio. Al hacer `db reset`, crea solo las tablas; los usuarios de Auth se crean con `supabase.auth.admin.createUser()` desde el backend o el Studio.
 
 ## Env (.env local, no versionar — ver .env.example)
 

@@ -2,6 +2,9 @@
   "name": "optiturno-root",
   "private": true,
   "scripts": {
-    "build:frontend": "pnpm --filter optiturno-frontend build"
+    "build:frontend": "pnpm --filter optiturno-frontend build",
+    "db:start": "npx supabase start",
+    "db:stop": "npx supabase stop",
+    "db:reset": "npx supabase db reset"
   }
 }

@@ -19,7 +19,7 @@ export const usuariosService = {
         ? datos.rol
         : "cliente";
 
-    // 💡 USAR EL MODULO ADMIN: Registra y confirma al usuario de un solo golpe automáticamente
+    // USAR EL MODULO ADMIN: Registra y confirma al usuario de un solo golpe automáticamente
     const { data: authData, error: authError } = await supabase.auth.admin.createUser({
       email: datos.email,
       password: datos.password,

@@ -6,7 +6,7 @@ export const obtenerServiciosPorSucursalService = async (
 ) => {
   const { data, error } = await supabase
     .from("servicios")
-    .select("id, nombre, descripción, precio, duracion_minutos")
+    .select("id, nombre, descripcion, precio, duracion_minutos")
     .eq("sucursal_id", sucursalId);
 
   if (error) throw error;
