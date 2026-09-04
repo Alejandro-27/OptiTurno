@@ -7,7 +7,11 @@ meta {
 post {
   url: {{base_url}}/sucursales
   body: json
-  auth: none
+  auth: bearer
+}
+
+headers {
+  Authorization: Bearer {{token_auth}}
 }
 
 body:json {
@@ -16,5 +20,12 @@ body:json {
     "nombre": "Sede Central Anapoima",
     "direccion": "Calle 4 #5-12",
     "telefono": "3101234567"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    const data = res.getBody();
+    bru.setEnvVar("sucursal_id", data.id);
   }
 }

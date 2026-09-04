@@ -7,7 +7,11 @@ meta {
 post {
   url: {{base_url}}/servicios
   body: json
-  auth: none
+  auth: bearer
+}
+
+headers {
+  Authorization: Bearer {{token_auth}}
 }
 
 body:json {
@@ -17,5 +21,12 @@ body:json {
     "descripcion": "Incluye lavado, perfilado de cejas y asesoría de imagen",
     "precio": 25000,
     "duracion_minutos": 30
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    const data = res.getBody();
+    bru.setEnvVar("servicio_id", data.id);
   }
 }

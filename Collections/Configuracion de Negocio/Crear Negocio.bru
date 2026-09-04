@@ -7,12 +7,23 @@ meta {
 post {
   url: {{base_url}}/negocios
   body: json
-  auth: none
+  auth: bearer
+}
+
+headers {
+  Authorization: Bearer {{token_auth}}
 }
 
 body:json {
   {
     "nombre": "Barberia El Elegante",
     "slug": "barberia-el-elegante"
+  }
+}
+
+script:post-response {
+  if (res.getStatus() === 201) {
+    const data = res.getBody();
+    bru.setEnvVar("negocio_id", data.id);
   }
 }

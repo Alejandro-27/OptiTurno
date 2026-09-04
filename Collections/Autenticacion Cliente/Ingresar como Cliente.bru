@@ -20,5 +20,6 @@ body:json {
 tests {
   script: const data = res.getBody();
   bru.setVar("token_cliente", data.token);
+  bru.setVar("token_auth", data.token);
   bru.setVar("usuario_real_id", data.usuario.id);
 }
