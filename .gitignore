@@ -29,6 +29,9 @@ backend/src/**/*.js.map
 .ninja/
 .cache/
 
+# Snippets temporales del Supabase Studio (consultas ad-hoc)
+supabase/snippets/
+
 # --- BRUNO API CLIENT ---
 # Ignorar los valores de entornos locales y privados de Bruno
 **/Collections/environments/*.local.bru

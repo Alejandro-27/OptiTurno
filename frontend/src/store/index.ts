@@ -4,6 +4,7 @@ import type {
   BookingEvent,
   ActivityLog,
   DayAvailability,
+  Profesional,
 } from "../types";
 import type { MisTurnoDTO, SesionDTO, UsuarioSesionDTO } from "../api/dto";
 import {
@@ -12,7 +13,7 @@ import {
   actividadRepositorioMock,
   disponibilidadRepositorioMock,
 } from "../data/index";
-import type { ReservarTurnoInput } from "../data/repos/turnos";
+import type { ReservarTurnoInput, ReservarTurnoResultado } from "../data/repos/turnos";
 import type { RegistrarCuentaInput } from "../data/repos/auth";
 import { repositorios } from "../data/index";
 
@@ -230,14 +231,14 @@ export async function eliminarServicio(id: string): Promise<void> {
 
 export async function reservarTurno(
   input: ReservarTurnoInput,
-): Promise<BookingEvent> {
-  const nuevo = await repositorios.turnos.reservarTurno(input);
+): Promise<ReservarTurnoResultado> {
+  const resultado = await repositorios.turnos.reservarTurno(input);
   setEstado((e) => ({
     ...e,
-    turnos: [nuevo, ...e.turnos],
-    logs: [logDeTurno(nuevo, "Nueva Cita"), ...e.logs].slice(0, 8),
+    turnos: [resultado.turno, ...e.turnos],
+    logs: [logDeTurno(resultado.turno, "Nueva Cita"), ...e.logs].slice(0, 8),
   }));
-  return nuevo;
+  return resultado;
 }
 
 export async function cancelarTurno(id: string): Promise<void> {
@@ -264,4 +265,20 @@ export async function guardarDisponibilidad(
 
 export function agregarLog(log: ActivityLog): void {
   setEstado((e) => ({ ...e, logs: [log, ...e.logs].slice(0, 8) }));
+}
+
+export async function listarProfesionales(
+  sucursalId?: string,
+): Promise<Profesional[]> {
+  const profesionales = await repositorios.profesionales.listarProfesionales(
+    sucursalId,
+  );
+  return profesionales;
+}
+
+export async function confirmarPago(
+  transaccionId: string,
+): Promise<{ success: boolean; message: string }> {
+  const resultado = await repositorios.pagos.confirmarPago(transaccionId);
+  return resultado;
 }

@@ -8,7 +8,8 @@ export const initialServices: Service[] = [
     price: 55000,
     duration: 45,
     status: 'Activo',
-    icon: 'scissors'
+    icon: 'scissors',
+    sucursalId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
   },
   {
     id: '2',
@@ -17,7 +18,8 @@ export const initialServices: Service[] = [
     price: 120000,
     duration: 90,
     status: 'Activo',
-    icon: 'spa'
+    icon: 'spa',
+    sucursalId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
   },
   {
     id: '3',
@@ -26,7 +28,8 @@ export const initialServices: Service[] = [
     price: 210000,
     duration: 120,
     status: 'Pausado',
-    icon: 'brush'
+    icon: 'brush',
+    sucursalId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
   },
   {
     id: '4',
@@ -35,7 +38,8 @@ export const initialServices: Service[] = [
     price: 35000,
     duration: 30,
     status: 'Activo',
-    icon: 'face'
+    icon: 'face',
+    sucursalId: 'bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb'
   }
 ];
 

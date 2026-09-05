@@ -5,6 +5,7 @@ export interface ServicioDTO {
   precio: number;
   duracion_minutos: number;
   estado?: string;
+  sucursal_id?: string;
 }
 
 export interface ProfesionalDTO {

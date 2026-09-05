@@ -1,5 +1,5 @@
-import type { Service, BookingEvent } from "../types";
-import type { ServicioDTO, UsuarioSesionDTO } from "../api/dto";
+import type { Service, BookingEvent, Profesional } from "../types";
+import type { ServicioDTO, UsuarioSesionDTO, ProfesionalDTO } from "../api/dto";
 
 const CATEGORIA_ICONOS: Record<string, string> = {
   "estética": "scissors",
@@ -40,6 +40,7 @@ export function servicioDtoToUI(dto: ServicioDTO): Service {
     duration: dto.duracion_minutos,
     status: dto.estado === "Pausado" ? "Pausado" : "Activo",
     icon: iconoDesdeNombre(dto.nombre),
+    sucursalId: dto.sucursal_id,
   };
 }
 
@@ -50,6 +51,15 @@ export function servicioUIToDto(svc: Service): Omit<ServicioDTO, "id"> {
     precio: svc.price,
     duracion_minutos: svc.duration,
     estado: svc.status,
+  };
+}
+
+export function profesionalDtoToUI(dto: ProfesionalDTO): Profesional {
+  return {
+    id: dto.id,
+    nombre: dto.usuarios.nombre,
+    especialidad: dto.especialidad,
+    usuarioId: dto.usuarios.id,
   };
 }
 

@@ -65,7 +65,7 @@ export const crearTurnoService = async (datos: CrearTurnoInput) => {
     throw errorTurno;
   }
 
-  const montoACobrar = servicio.precio;
+  const montoACobrar = servicio.precio * 0.5;
   const intencionPago = await crearIntencionPagoService({
     turno_id: nuevoTurno.id,
     monto: montoACobrar,

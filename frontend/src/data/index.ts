@@ -13,6 +13,11 @@ import {
   disponibilidadRepositorioApi,
 } from "./repos/disponibilidad";
 import { authRepositorioMock, authRepositorioApi } from "./repos/auth";
+import {
+  profesionalesRepositorioMock,
+  profesionalesRepositorioApi,
+} from "./repos/profesionales";
+import { pagosRepositorioMock, pagosRepositorioApi } from "./repos/pagos";
 
 export const repositorios = usarMocks()
   ? {
@@ -21,6 +26,8 @@ export const repositorios = usarMocks()
       actividad: actividadRepositorioMock,
       disponibilidad: disponibilidadRepositorioMock,
       auth: authRepositorioMock,
+      profesionales: profesionalesRepositorioMock,
+      pagos: pagosRepositorioMock,
     }
   : {
       servicios: serviciosRepositorioApi,
@@ -28,6 +35,8 @@ export const repositorios = usarMocks()
       actividad: actividadRepositorioApi,
       disponibilidad: disponibilidadRepositorioApi,
       auth: authRepositorioApi,
+      profesionales: profesionalesRepositorioApi,
+      pagos: pagosRepositorioApi,
     };
 
 export {
@@ -35,6 +44,8 @@ export {
   turnosRepositorioMock,
   actividadRepositorioMock,
   disponibilidadRepositorioMock,
+  profesionalesRepositorioMock,
+  pagosRepositorioMock,
 };
 export * from "../data";
 export * from "./session";

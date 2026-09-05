@@ -12,11 +12,23 @@ export interface ReservarTurnoInput {
   hora_inicio: string;
   cliente_nombre: string;
   servicio_nombre: string;
+  servicio_precio?: number;
+}
+
+export interface PagoRequerido {
+  monto: number;
+  clientSecret: string;
+  transaccionId: string;
+}
+
+export interface ReservarTurnoResultado {
+  turno: BookingEvent;
+  pagoRequerido: PagoRequerido;
 }
 
 export interface TurnosRepositorio {
   listarTurnos(): Promise<BookingEvent[]>;
-  reservarTurno(input: ReservarTurnoInput): Promise<BookingEvent>;
+  reservarTurno(input: ReservarTurnoInput): Promise<ReservarTurnoResultado>;
   cancelarTurno(id: string): Promise<void>;
   obtenerDisponibilidad(profesionalId: string, fecha: string): Promise<DisponibilidadDTO>;
   listarMisTurnos(clienteId: string): Promise<MisTurnoDTO[]>;
@@ -73,7 +85,15 @@ export const turnosRepositorioMock: TurnosRepositorio = {
       icon: iconoDesdeNombre(input.servicio_nombre),
     };
     cacheTurnos = [nuevo, ...(cacheTurnos || semillaTurnos())];
-    return nuevo;
+    const monto = (input.servicio_precio ?? 30000) * 0.5;
+    return {
+      turno: nuevo,
+      pagoRequerido: {
+        monto,
+        clientSecret: `secret_pi_simulada_${Math.random().toString(36).slice(2, 11)}`,
+        transaccionId: `pi_simulada_${Math.random().toString(36).slice(2, 11)}`,
+      },
+    };
   },
   async cancelarTurno(id) {
     cacheTurnos = (cacheTurnos || semillaTurnos()).filter((b) => b.id !== id);
@@ -117,24 +137,32 @@ export const turnosRepositorioApi: TurnosRepositorio = {
     );
   },
   async reservarTurno(input) {
-    await reservarTurno({
+    const resp = await reservarTurno({
       cliente_id: input.cliente_id,
       profesional_id: input.profesional_id,
       servicio_id: input.servicio_id,
       fecha: input.fecha,
       hora_inicio: input.hora_inicio,
     });
+    const turnoBackend = resp.turno;
     const nuevo: BookingEvent = {
-      id: crypto.randomUUID(),
+      id: turnoBackend.id,
       clientName: input.cliente_nombre,
       serviceName: input.servicio_nombre,
-      timeStart: input.hora_inicio,
-      timeEnd: "", // el backend no devuelve hora_fin en la reserva aún
+      timeStart: turnoBackend.hora_inicio,
+      timeEnd: turnoBackend.hora_fin,
       columnId: input.profesional_id,
       color: colorDesdeId(input.profesional_id),
       icon: iconoDesdeNombre(input.servicio_nombre),
     };
-    return nuevo;
+    return {
+      turno: nuevo,
+      pagoRequerido: turnoBackend.pagoRequerido || {
+        monto: (input.servicio_precio ?? 0) * 0.5,
+        clientSecret: "",
+        transaccionId: "",
+      },
+    };
   },
   async cancelarTurno() {
     throw new Error(

@@ -16,10 +16,31 @@ export const obtenerDisponibilidad = async (
 };
 
 // Envía la solicitud para pre-reservar un espacio y obtener las llaves de pago
+export interface TurnoReservadoDTO {
+  id: string;
+  estado: string;
+  fecha: string;
+  hora_inicio: string;
+  hora_fin: string;
+  pagoRequerido?: {
+    monto: number;
+    clientSecret: string;
+    transaccionId: string;
+  };
+}
+
+export interface ReservarTurnoResponseDTO {
+  message: string;
+  turno: TurnoReservadoDTO;
+}
+
 export const reservarTurno = async (
   datosReserva: ReservarTurnoInputDTO,
-) => {
-  const { data } = await apiClient.post("/turnos/reservar", datosReserva);
+): Promise<ReservarTurnoResponseDTO> => {
+  const { data } = await apiClient.post<ReservarTurnoResponseDTO>(
+    "/turnos/reservar",
+    datosReserva,
+  );
   return data;
 };
 

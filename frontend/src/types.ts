@@ -6,6 +6,7 @@ export interface Service {
   duration: number;
   status: 'Activo' | 'Pausado';
   icon: string;
+  sucursalId?: string;
 }
 
 export interface BookingEvent {
@@ -36,4 +37,11 @@ export interface DayAvailability {
   closeTime: string;
   restStart: string;
   restEnd: string;
+}
+
+export interface Profesional {
+  id: string;
+  nombre: string;
+  especialidad: string;
+  usuarioId: string;
 }
