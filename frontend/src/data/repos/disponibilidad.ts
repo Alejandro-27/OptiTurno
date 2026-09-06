@@ -1,5 +1,9 @@
 import type { DayAvailability } from "../../types";
 import { defaultAvailability } from "../../data/index";
+import {
+  obtenerDisponibilidadSemanal,
+  guardarDisponibilidadSemanal,
+} from "../../api/disponibilidad.api";
 
 export interface DisponibilidadRepositorio {
   listarDisponibilidad(): Promise<DayAvailability[]>;
@@ -26,13 +30,9 @@ export const disponibilidadRepositorioMock: DisponibilidadRepositorio = {
 
 export const disponibilidadRepositorioApi: DisponibilidadRepositorio = {
   async listarDisponibilidad() {
-    throw new Error(
-      "El endpoint de disponibilidad semanal aún no está disponible en el backend.",
-    );
+    return obtenerDisponibilidadSemanal();
   },
-  async guardarDisponibilidad() {
-    throw new Error(
-      "El endpoint para guardar disponibilidad semanal aún no está disponible en el backend.",
-    );
+  async guardarDisponibilidad(schedule) {
+    return guardarDisponibilidadSemanal(schedule);
   },
 };

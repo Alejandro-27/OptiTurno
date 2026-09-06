@@ -1,5 +1,10 @@
 import { apiClient } from "./api.client";
-import type { DisponibilidadDTO, MisTurnoDTO, ReservarTurnoInputDTO } from "./dto";
+import type {
+  DisponibilidadDTO,
+  MisTurnoDTO,
+  ReservarTurnoInputDTO,
+  TurnoAdminDTO,
+} from "./dto";
 
 // Consulta los horarios bloqueados y la jornada laboral de un profesional
 export const obtenerDisponibilidad = async (
@@ -50,8 +55,16 @@ export const obtenerMisTurnos = async (): Promise<MisTurnoDTO[]> => {
   return data;
 };
 
-// Cancela un turno propio (PATCH /turnos/:id/cancelar)
-export const cancelarTurno = async (id: string): Promise<MisTurnoDTO> => {
-  const { data } = await apiClient.patch<MisTurnoDTO>(`/turnos/${id}/cancelar`);
+// Agenda completa de la sucursal del admin (GET /turnos)
+export const listarTurnosAdmin = async (): Promise<TurnoAdminDTO[]> => {
+  const { data } = await apiClient.get<TurnoAdminDTO[]>("/turnos");
   return data;
+};
+
+// Cancela un turno (PATCH /turnos/:id/cancelar) — backend responde { message, turno }
+export const cancelarTurno = async (id: string): Promise<MisTurnoDTO> => {
+  const { data } = await apiClient.patch<{ message: string; turno: MisTurnoDTO }>(
+    `/turnos/${id}/cancelar`,
+  );
+  return data.turno;
 };

@@ -1,5 +1,16 @@
-import type { Service, BookingEvent, Profesional } from "../types";
-import type { ServicioDTO, UsuarioSesionDTO, ProfesionalDTO } from "../api/dto";
+import type {
+  Service,
+  BookingEvent,
+  Profesional,
+  ActivityLog,
+} from "../types";
+import type {
+  ServicioDTO,
+  UsuarioSesionDTO,
+  ProfesionalDTO,
+  TurnoAdminDTO,
+  ActivityLogDTO,
+} from "../api/dto";
 
 const CATEGORIA_ICONOS: Record<string, string> = {
   "estética": "scissors",
@@ -60,7 +71,29 @@ export function profesionalDtoToUI(dto: ProfesionalDTO): Profesional {
     nombre: dto.usuarios.nombre,
     especialidad: dto.especialidad,
     usuarioId: dto.usuarios.id,
+    email: dto.usuarios.email,
   };
+}
+
+// Evento del calendario admin desde el turno de la API
+export function turnoAdminDtoToUI(dto: TurnoAdminDTO): BookingEvent {
+  const profesionalId = dto.profesionales?.id || "sin-profesional";
+  const nombreServicio = dto.servicios?.nombre || "Sin servicio";
+  return {
+    id: dto.id,
+    clientName: dto.clientes?.nombre || "Cliente",
+    serviceName: nombreServicio,
+    timeStart: dto.hora_inicio.slice(0, 5),
+    timeEnd: dto.hora_fin.slice(0, 5),
+    columnId: profesionalId,
+    color: colorDesdeId(profesionalId),
+    icon: iconoDesdeNombre(nombreServicio),
+  };
+}
+
+// El backend ya entrega la forma final de los logs de actividad
+export function activityLogDtoToUI(dto: ActivityLogDTO): ActivityLog {
+  return { ...dto };
 }
 
 export function usuarioDTODesdeSesion(usuario: {

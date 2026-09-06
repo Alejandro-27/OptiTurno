@@ -5,7 +5,10 @@ import {
   limpiarTurnosExpiradosService,
   listarTurnosClienteService,
   cancelarTurnoClienteService,
+  listarTurnosAdminService,
+  cancelarTurnoAdminService,
 } from "../services/turnos.service.js";
+import { resolverSucursalDeUsuarioService } from "../services/negocios.service.js";
 
 interface ReservarTurnoBody {
   cliente_id: string;
@@ -83,14 +86,40 @@ export const misTurnosHandler = async (
   }
 };
 
-// Cancela un turno propio del cliente autenticado
+// Agenda completa de la sucursal del admin (Calendario Maestro)
+export const listarTurnosAdminHandler = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  try {
+    const sucursal = await resolverSucursalDeUsuarioService(request.usuario!.id);
+    if (!sucursal) {
+      return reply
+        .status(404)
+        .send({ error: "Aún no hay sucursales registradas." });
+    }
+    const turnos = await listarTurnosAdminService(sucursal.id);
+    return reply.status(200).send(turnos);
+  } catch (error: any) {
+    request.log.error(error, "Error en listarTurnosAdminHandler");
+    return reply
+      .status(500)
+      .send({ error: "Error al consultar la agenda de la sucursal." });
+  }
+};
+
+// Cancela un turno: clientes solo los propios; admin de la sucursal cualquiera de ella
 export const cancelarTurnoHandler = async (
   request: FastifyRequest,
   reply: FastifyReply,
 ) => {
   try {
     const { id } = request.params as { id: string };
-    const turno = await cancelarTurnoClienteService(request.usuario!.id, id);
+    const usuario = request.usuario!;
+    const esCliente = usuario.rol === "cliente";
+    const turno = esCliente
+      ? await cancelarTurnoClienteService(usuario.id, id)
+      : await cancelarTurnoAdminService(usuario.id, id);
     return reply.status(200).send({
       message: "Turno cancelado con éxito.",
       turno,

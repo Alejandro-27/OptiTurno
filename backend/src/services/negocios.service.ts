@@ -1,20 +1,43 @@
 import { supabase } from "../config/database";
 
+// Días de la semana en el orden de la UI, con su índice en la BD
+// (mismo criterio que JS getDay(): 0=Domingo ... 6=Sábado)
+const DIAS_SEMANA: Array<{ label: string; numero: number }> = [
+  { label: "Lunes", numero: 1 },
+  { label: "Martes", numero: 2 },
+  { label: "Miércoles", numero: 3 },
+  { label: "Jueves", numero: 4 },
+  { label: "Viernes", numero: 5 },
+  { label: "Sábado", numero: 6 },
+  { label: "Domingo", numero: 0 },
+];
+
+const HORARIO_DEFECTO = {
+  openTime: "09:00",
+  closeTime: "18:00",
+  restStart: "13:00",
+  restEnd: "14:00",
+};
+
+const horaCorta = (hora: string): string => hora.slice(0, 5);
+
 // Obtiene todos los servicios ofrecidos por una sucursal junto con su precio y duración
 export const obtenerServiciosPorSucursalService = async (
   sucursalId: string,
 ) => {
   const { data, error } = await supabase
     .from("servicios")
-    .select("id, nombre, descripcion, precio, duracion_minutos")
+    .select(
+      "id, nombre, descripcion, precio, duracion_minutos, sucursal_id, estado",
+    )
     .eq("sucursal_id", sucursalId);
 
   if (error) throw error;
   return data;
 };
 
-// Obtiene la lista de profesionales que atienden en una sucursal específica
-
+// Obtiene la lista de profesionales que atienden en una sucursal específica.
+// El join a 'usuarios' trae nombre/email del profesional.
 export const obtenerProfesionalesPorSucursalService = async (
   sucursalId: string,
 ) => {
@@ -22,15 +45,285 @@ export const obtenerProfesionalesPorSucursalService = async (
     .from("profesionales")
     .select(
       `
-          id,
-          especialidad,
-          usuario_id
-        `,
+        id,
+        especialidad,
+        sucursal_id,
+        usuarios:usuario_id (id, nombre, email)
+      `,
     )
     .eq("sucursal_id", sucursalId);
 
   if (error) throw error;
   return data;
+};
+
+// Lista todas las sucursales del sistema (catálogo público)
+export const listarSucursalesService = async () => {
+  const { data, error } = await supabase
+    .from("sucursales")
+    .select(
+      "id, negocio_id, nombre, direccion, telefono, negocios:negocio_id (nombre)",
+    )
+    .order("nombre", { ascending: true });
+
+  if (error) throw error;
+  return data || [];
+};
+
+// Devuelve una sucursal puntual por su id
+export const obtenerSucursalPorIdService = async (sucursalId: string) => {
+  const { data, error } = await supabase
+    .from("sucursales")
+    .select(
+      "id, negocio_id, nombre, direccion, telefono, negocios:negocio_id (nombre)",
+    )
+    .eq("id", sucursalId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+};
+
+// Resuelve la sucursal de un usuario: si es profesional/trabaja en una sucursal
+// se usa esa; en caso contrario se cae a la primera sucursal del sistema.
+export const resolverSucursalDeUsuarioService = async (usuarioId: string) => {
+  const { data: profesional } = await supabase
+    .from("profesionales")
+    .select("sucursal_id")
+    .eq("usuario_id", usuarioId)
+    .maybeSingle();
+
+  if (profesional?.sucursal_id) {
+    return obtenerSucursalPorIdService(profesional.sucursal_id);
+  }
+
+  const { data: primera } = await supabase
+    .from("sucursales")
+    .select("id")
+    .order("nombre", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+
+  if (!primera) return null;
+  return obtenerSucursalPorIdService(primera.id);
+};
+
+// Actualiza los datos editables de un servicio de la sucursal
+export const actualizarServicioService = async (
+  servicioId: string,
+  campos: {
+    nombre?: string;
+    descripcion?: string;
+    precio?: number;
+    duracion_minutos?: number;
+    estado?: string;
+  },
+) => {
+  if (Object.keys(campos).length === 0) {
+    throw { status: 400, message: "No hay campos para actualizar." };
+  }
+
+  const { data, error } = await supabase
+    .from("servicios")
+    .update(campos)
+    .eq("id", servicioId)
+    .select(
+      "id, nombre, descripcion, precio, duracion_minutos, sucursal_id, estado",
+    )
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) {
+    throw { status: 404, message: "El servicio solicitado no existe." };
+  }
+  return data;
+};
+
+// Elimina un servicio solo si no tiene turnos asociados (evita borrar historial)
+export const eliminarServicioService = async (servicioId: string) => {
+  const { count, error: errorCount } = await supabase
+    .from("turnos")
+    .select("id", { count: "exact", head: true })
+    .eq("servicio_id", servicioId);
+
+  if (errorCount) throw errorCount;
+
+  if (count && count > 0) {
+    throw {
+      status: 409,
+      message:
+        "No puedes eliminar un servicio que ya tiene turnos asociados.",
+    };
+  }
+
+  const { error } = await supabase
+    .from("servicios")
+    .delete()
+    .eq("id", servicioId);
+
+  if (error) throw error;
+};
+
+// Últimos eventos de la sucursal, para el stream de actividad del panel admin
+export const listarActividadService = async (sucursalId: string) => {
+  const { data, error } = await supabase
+    .from("turnos")
+    .select(
+      `
+        id,
+        created_at,
+        estado,
+        profesionales:profesional_id (sucursal_id),
+        clientes:cliente_id (nombre),
+        servicios:servicio_id (nombre)
+      `,
+    )
+    .eq("profesionales.sucursal_id", sucursalId)
+    .order("created_at", { ascending: false })
+    .limit(8);
+
+  if (error) throw error;
+
+  const ver = (turno: any) => {
+    const cliente = turno.clientes?.nombre || "Cliente";
+    const servicio = turno.servicios?.nombre || "Servicio";
+    const minutos = Math.max(
+      1,
+      Math.round((Date.now() - new Date(turno.created_at).getTime()) / 60000),
+    );
+    const timeSpan = `Hace ${minutos}m`;
+
+    if (turno.estado === "cancelado") {
+      return {
+        id: turno.id,
+        timeSpan,
+        icon: "alert-triangle",
+        iconColor: "text-amber-500",
+        title: "Cita Cancelada",
+        detail: `${cliente} - ${servicio}`,
+      };
+    }
+    if (turno.estado === "confirmado") {
+      return {
+        id: turno.id,
+        timeSpan,
+        icon: "check-circle",
+        iconColor: "text-emerald-500",
+        title: "Pago Procesado",
+        detail: `${cliente} - ${servicio}`,
+      };
+    }
+    return {
+      id: turno.id,
+      timeSpan,
+      icon: "clock",
+      iconColor: "text-indigo-400",
+      title: "Nueva Cita",
+      detail: `${cliente} - ${servicio}`,
+    };
+  };
+
+  return (data || []).map(ver);
+};
+
+// Obtiene la primera tabla de disponibilidad semanal de la sucursal.
+// Sirve de base para el panel "Disponibilidad"; se aplica a todos sus profesionales.
+export const listarDisponibilidadSemanalService = async (sucursalId: string) => {
+  const { data: principal } = await supabase
+    .from("profesionales")
+    .select("id")
+    .eq("sucursal_id", sucursalId)
+    .limit(1)
+    .maybeSingle();
+
+  const filaVacia = (label: string) => ({
+    day: label,
+    enabled: false,
+    ...HORARIO_DEFECTO,
+  });
+
+  if (!principal) {
+    return DIAS_SEMANA.map((d) => filaVacia(d.label));
+  }
+
+  const { data: horarios, error } = await supabase
+    .from("horarios_laborales")
+    .select("dia_semana, hora_inicio, hora_fin")
+    .eq("profesional_id", principal.id);
+
+  if (error) throw error;
+
+  return DIAS_SEMANA.map((d) => {
+    const horario = (horarios || []).find((h) => h.dia_semana === d.numero);
+    if (!horario) return filaVacia(d.label);
+    return {
+      day: d.label,
+      enabled: true,
+      ...HORARIO_DEFECTO,
+      openTime: horaCorta(horario.hora_inicio),
+      closeTime: horaCorta(horario.hora_fin),
+    };
+  });
+};
+
+// Persiste la disponibilidad semanal a todos los profesionales de la sucursal.
+export const guardarDisponibilidadSemanalService = async (
+  sucursalId: string,
+  schedule: Array<{
+    day: string;
+    enabled: boolean;
+    openTime: string;
+    closeTime: string;
+    restStart: string;
+    restEnd: string;
+  }>,
+) => {
+  const { data: profesionales, error: errorProf } = await supabase
+    .from("profesionales")
+    .select("id")
+    .eq("sucursal_id", sucursalId);
+
+  if (errorProf) throw errorProf;
+  if (!profesionales || profesionales.length === 0) {
+    throw {
+      status: 400,
+      message: "Aún no hay profesionales registrados en esta sucursal.",
+    };
+  }
+
+  for (const dia of DIAS_SEMANA) {
+    const registro = schedule.find((s) => s.day === dia.label);
+    const habilitado = registro?.enabled === true;
+
+    for (const profesional of profesionales) {
+      if (habilitado && registro) {
+        await supabase
+          .from("horarios_laborales")
+          .delete()
+          .eq("profesional_id", profesional.id)
+          .eq("dia_semana", dia.numero);
+
+        const { error } = await supabase.from("horarios_laborales").insert([
+          {
+            profesional_id: profesional.id,
+            dia_semana: dia.numero,
+            hora_inicio: `${registro.openTime}:00`,
+            hora_fin: `${registro.closeTime}:00`,
+          },
+        ]);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("horarios_laborales")
+          .delete()
+          .eq("profesional_id", profesional.id)
+          .eq("dia_semana", dia.numero);
+        if (error) throw error;
+      }
+    }
+  }
+
+  return listarDisponibilidadSemanalService(sucursalId);
 };
 
 // Script semilla para insertar datos iniciales de prueba en la base de datos

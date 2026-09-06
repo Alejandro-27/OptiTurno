@@ -5,6 +5,7 @@ import {
   BookOpen,
   Clock,
   UserCheck,
+  Users,
   LogOut,
   Database,
   Info,
@@ -18,6 +19,7 @@ import AdminCalendar from "./components/AdminCalendar";
 import AdminCatalog from "./components/AdminCatalog";
 import AdminAvailability from "./components/AdminAvailability";
 import AdminProfile from "./components/AdminProfile";
+import AdminTeam from "./components/AdminTeam";
 import ClientShell from "./components/ClientShell";
 import AccessAuth from "./components/AccessAuth";
 import ThemeToggle from "./components/ThemeToggle"; // <-- IMPORTANTE: Componente importado
@@ -117,6 +119,18 @@ export default function App() {
         >
           <BookOpen size={16} />
           Catálogo de Servicios
+        </button>
+
+        <button
+          onClick={() => irATab("team")}
+          className={`flex items-center gap-3 w-full px-4 py-3 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${
+            adminTab === "team"
+              ? "bg-indigo-600/10 text-indigo-600 dark:text-indigo-400 border-l-4 border-indigo-500 shadow-sm shadow-indigo-600/5"
+              : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-900/50 hover:text-slate-900 dark:hover:text-slate-100"
+          }`}
+        >
+          <Users size={16} />
+          Equipo
         </button>
 
         <button
@@ -323,6 +337,7 @@ export default function App() {
                 {adminTab === "dashboard" && "Panel General de Control"}
                 {adminTab === "calendar" && "Calendario Maestro"}
                 {adminTab === "catalog" && "Configuración de Catálogo"}
+                {adminTab === "team" && "Equipo de Profesionales"}
                 {adminTab === "availability" && "Semanas Horarias Laborales"}
                 {adminTab === "profile" && "Perfil Onboarding del Comercio"}
               </h2>
@@ -337,6 +352,7 @@ export default function App() {
           )}
           {adminTab === "calendar" && <AdminCalendar />}
           {adminTab === "catalog" && <AdminCatalog />}
+          {adminTab === "team" && <AdminTeam />}
           {adminTab === "availability" && <AdminAvailability />}
           {adminTab === "profile" && <AdminProfile />}
         </main>

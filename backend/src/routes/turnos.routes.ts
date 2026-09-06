@@ -5,6 +5,7 @@ import {
   consultarDisponibilidadHandler,
   misTurnosHandler,
   cancelarTurnoHandler,
+  listarTurnosAdminHandler,
 } from "../controllers/turnos.controller";
 
 import {
@@ -32,6 +33,18 @@ export const turnosRouter = async (fastify: FastifyInstance) => {
       preHandler: [verificarAutenticacion],
     },
     misTurnosHandler,
+  );
+
+  // Agenda de la sucursal del admin (Calendario Maestro)
+  fastify.get(
+    "/",
+    {
+      preHandler: [
+        verificarAutenticacion,
+        permitirRoles(["superadmin", "admin_negocio"]),
+      ],
+    },
+    listarTurnosAdminHandler,
   );
 
   // Cancelación de un turno propio (PWA cliente)

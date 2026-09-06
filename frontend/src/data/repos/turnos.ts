@@ -1,8 +1,14 @@
 import type { BookingEvent } from "../../types";
 import { initialBookings } from "../../data/index";
 import type { DisponibilidadDTO, MisTurnoDTO } from "../../api/dto";
-import { obtenerDisponibilidad, reservarTurno, obtenerMisTurnos, cancelarTurno as cancelarTurnoApi } from "../../api/turnos.api";
-import { colorDesdeId, iconoDesdeNombre } from "../mappers";
+import {
+  obtenerDisponibilidad,
+  reservarTurno,
+  obtenerMisTurnos,
+  cancelarTurno as cancelarTurnoApi,
+  listarTurnosAdmin,
+} from "../../api/turnos.api";
+import { colorDesdeId, iconoDesdeNombre, turnoAdminDtoToUI } from "../mappers";
 
 export interface ReservarTurnoInput {
   cliente_id: string;
@@ -132,9 +138,8 @@ export const turnosRepositorioMock: TurnosRepositorio = {
 
 export const turnosRepositorioApi: TurnosRepositorio = {
   async listarTurnos() {
-    throw new Error(
-      "El endpoint de listado de turnos aún no está disponible en el backend.",
-    );
+    const dtos = await listarTurnosAdmin();
+    return dtos.map(turnoAdminDtoToUI);
   },
   async reservarTurno(input) {
     const resp = await reservarTurno({
@@ -164,10 +169,8 @@ export const turnosRepositorioApi: TurnosRepositorio = {
       },
     };
   },
-  async cancelarTurno() {
-    throw new Error(
-      "El endpoint de cancelación de turnos aún no está disponible en el backend.",
-    );
+  async cancelarTurno(id) {
+    await cancelarTurnoApi(id);
   },
   async obtenerDisponibilidad(profesionalId, fecha) {
     return obtenerDisponibilidad(profesionalId, fecha);

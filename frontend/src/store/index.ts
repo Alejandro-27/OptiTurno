@@ -12,8 +12,10 @@ import {
   turnosRepositorioMock,
   actividadRepositorioMock,
   disponibilidadRepositorioMock,
+  profesionalesRepositorioMock,
 } from "../data/index";
 import type { ReservarTurnoInput, ReservarTurnoResultado } from "../data/repos/turnos";
+import type { DatosCrearProfesional } from "../data/repos/profesionales";
 import type { RegistrarCuentaInput } from "../data/repos/auth";
 import { repositorios } from "../data/index";
 
@@ -25,6 +27,8 @@ export interface AppState {
   turnos: BookingEvent[];
   logs: ActivityLog[];
   equipo: DayAvailability[];
+  profesionales: Profesional[];
+  sucursalId: string | null;
   sesion: SesionDTO | null;
   misTurnos: MisTurnoDTO[];
   misTurnosCargando: boolean;
@@ -38,6 +42,8 @@ const estadoInicial: AppState = {
   turnos: [],
   logs: [],
   equipo: [],
+  profesionales: [],
+  sucursalId: null,
   sesion: null,
   misTurnos: [],
   misTurnosCargando: false,
@@ -92,41 +98,79 @@ async function cargarConFallback<T>(
   }
 }
 
+const sinCarga = (): { datos: never[]; conFallback: boolean } => ({
+  datos: [],
+  conFallback: false,
+});
+
 export async function iniciarApp(): Promise<void> {
   if (estado.inicializado) return;
   setEstado((e) => ({ ...e, cargando: true }));
 
-  const [servicios, turnos, actividad, equipo] = await Promise.all([
+  // 1. Restaurar la sesión persistida (regla #1: siempre vía el repo de auth/session.ts)
+  const sesion = await repositorios.auth.recuperarSesion();
+  const esAdmin = Boolean(sesion && sesion.usuario.rol !== "cliente");
+
+  // 2. Resolver la sucursal: la del usuario si hay token, si no la primera del sistema.
+  //    Garantiza que el catálogo público y el panel usen datos reales en modo API.
+  let sucursalId: string | null = null;
+  try {
+    const sucursal = await repositorios.sucursales.obtenerSucursalActiva();
+    sucursalId = sucursal?.id || null;
+  } catch {
+    sucursalId = null;
+  }
+
+  // 3. Catálogos base: siempre (servicios y profesionales de la sucursal)
+  const [servicios, profesionales] = await Promise.all([
     cargarConFallback(
-      () => repositorios.servicios.listarServicios(),
+      () => repositorios.servicios.listarServicios(sucursalId || undefined),
       () => serviciosRepositorioMock.listarServicios(),
     ),
     cargarConFallback(
-      () => repositorios.turnos.listarTurnos(),
-      () => turnosRepositorioMock.listarTurnos(),
-    ),
-    cargarConFallback(
-      () => repositorios.actividad.listarActividad(),
-      () => actividadRepositorioMock.listarActividad(),
-    ),
-    cargarConFallback(
-      () => repositorios.disponibilidad.listarDisponibilidad(),
-      () => disponibilidadRepositorioMock.listarDisponibilidad(),
+      () =>
+        repositorios.profesionales.listarProfesionales(
+          sucursalId || undefined,
+        ),
+      () => profesionalesRepositorioMock.listarProfesionales(),
     ),
   ]);
 
-  const conFallback = [servicios, turnos, actividad, equipo].some(
-    (r) => r.conFallback,
-  );
+  // 4. Datos del panel admin: solo se cargan para cuentas de comercio
+  const turnos = esAdmin
+    ? await cargarConFallback(
+        () => repositorios.turnos.listarTurnos(),
+        () => turnosRepositorioMock.listarTurnos(),
+      )
+    : sinCarga();
 
-  // Restaura la sesión persistida (si existe) para volver a la vista por rol
-  const sesion = await repositorios.auth.recuperarSesion();
+  const actividad = esAdmin
+    ? await cargarConFallback(
+        () => repositorios.actividad.listarActividad(),
+        () => actividadRepositorioMock.listarActividad(),
+      )
+    : sinCarga();
+
+  const equipo = esAdmin
+    ? await cargarConFallback(
+        () => repositorios.disponibilidad.listarDisponibilidad(),
+        () => disponibilidadRepositorioMock.listarDisponibilidad(),
+      )
+    : sinCarga();
+
+  const conFallback = esAdmin
+    ? [servicios, profesionales, turnos, actividad, equipo].some(
+        (r) => r.conFallback,
+      )
+    : false;
 
   setEstado((e) => ({
     ...e,
     inicializado: true,
     cargando: false,
+    sucursalId,
     servicios: servicios.datos,
+    profesionales: profesionales.datos,
     turnos: turnos.datos,
     logs: actividad.datos,
     equipo: equipo.datos,
@@ -137,12 +181,86 @@ export async function iniciarApp(): Promise<void> {
   }));
 }
 
+// Recarga los datos del panel tras login/registro de un comercio.
+// Re-resuelve la sucursal (puede cambiar) y refresca todo lo del admin.
+export async function refrescarDatosAdmin(): Promise<void> {
+  const sesion = getEstado().sesion;
+  if (!sesion) return;
+
+  let sucursalId: string | null = null;
+  try {
+    const sucursal = await repositorios.sucursales.obtenerSucursalActiva();
+    sucursalId = sucursal?.id || null;
+  } catch {
+    sucursalId = getEstado().sucursalId;
+  }
+
+  let servicios = getEstado().servicios;
+  let profesionales = getEstado().profesionales;
+
+  if (sucursalId !== getEstado().sucursalId) {
+    const [rServ, rProf] = await Promise.all([
+      cargarConFallback(
+        () => repositorios.servicios.listarServicios(sucursalId || undefined),
+        () => serviciosRepositorioMock.listarServicios(),
+      ),
+      cargarConFallback(
+        () =>
+          repositorios.profesionales.listarProfesionales(
+            sucursalId || undefined,
+          ),
+        () => profesionalesRepositorioMock.listarProfesionales(),
+      ),
+    ]);
+    servicios = rServ.datos;
+    profesionales = rProf.datos;
+  }
+
+  const esAdmin = sesion.usuario.rol !== "cliente";
+  let turnos = getEstado().turnos;
+  let logs = getEstado().logs;
+  let equipo = getEstado().equipo;
+
+  if (esAdmin) {
+    const [rTurnos, rAct, rDisp] = await Promise.all([
+      cargarConFallback(
+        () => repositorios.turnos.listarTurnos(),
+        () => turnosRepositorioMock.listarTurnos(),
+      ),
+      cargarConFallback(
+        () => repositorios.actividad.listarActividad(),
+        () => actividadRepositorioMock.listarActividad(),
+      ),
+      cargarConFallback(
+        () => repositorios.disponibilidad.listarDisponibilidad(),
+        () => disponibilidadRepositorioMock.listarDisponibilidad(),
+      ),
+    ]);
+    turnos = rTurnos.datos;
+    logs = rAct.datos;
+    equipo = rDisp.datos;
+  }
+
+  setEstado((e) => ({
+    ...e,
+    sucursalId,
+    servicios,
+    profesionales,
+    turnos,
+    logs,
+    equipo,
+  }));
+}
+
 export async function login(
   email: string,
   password: string,
 ): Promise<SesionDTO> {
   const sesion = await repositorios.auth.login(email, password);
   setEstado((e) => ({ ...e, sesion }));
+  if (sesion.usuario.rol !== "cliente") {
+    await refrescarDatosAdmin().catch(() => undefined);
+  }
   return sesion;
 }
 
@@ -151,6 +269,9 @@ export async function registrar(
 ): Promise<SesionDTO> {
   const sesion = await repositorios.auth.registrar(datos);
   setEstado((e) => ({ ...e, sesion }));
+  if (sesion.usuario.rol !== "cliente") {
+    await refrescarDatosAdmin().catch(() => undefined);
+  }
   return sesion;
 }
 
@@ -213,7 +334,10 @@ export async function guardarServicio(
     }));
     return actualizado;
   }
-  const creado = await repositorios.servicios.crearServicio(svc);
+  const creado = await repositorios.servicios.crearServicio(
+    { ...svc, sucursalId: svc.sucursalId || getEstado().sucursalId || undefined },
+    getEstado().sucursalId || undefined,
+  );
   setEstado((e) => ({
     ...e,
     servicios: [{ ...creado }, ...e.servicios],
@@ -274,4 +398,25 @@ export async function listarProfesionales(
     sucursalId,
   );
   return profesionales;
+}
+
+// Alta de un profesional en la sucursal activa (pestaña Equipo)
+export async function crearProfesional(
+  datos: DatosCrearProfesional,
+): Promise<Profesional> {
+  const sucursalId = getEstado().sucursalId;
+  if (!sucursalId) {
+    throw new Error(
+      "Aún no hay una sucursal activa. Crea o selecciona una sucursal primero.",
+    );
+  }
+  const creado = await repositorios.profesionales.crearProfesional(
+    datos,
+    sucursalId,
+  );
+  setEstado((e) => ({
+    ...e,
+    profesionales: [...e.profesionales, creado],
+  }));
+  return creado;
 }

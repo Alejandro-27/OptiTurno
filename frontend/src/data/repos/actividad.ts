@@ -1,5 +1,7 @@
 import type { ActivityLog } from "../../types";
 import { initialActivityLogs } from "../../data/index";
+import { obtenerActividad } from "../../api/actividad.api";
+import { activityLogDtoToUI } from "../mappers";
 
 export interface ActividadRepositorio {
   listarActividad(): Promise<ActivityLog[]>;
@@ -19,8 +21,7 @@ export const actividadRepositorioMock: ActividadRepositorio = {
 
 export const actividadRepositorioApi: ActividadRepositorio = {
   async listarActividad() {
-    throw new Error(
-      "El endpoint de actividad en tiempo real aún no está disponible en el backend.",
-    );
+    const dtos = await obtenerActividad();
+    return dtos.map(activityLogDtoToUI);
   },
 };

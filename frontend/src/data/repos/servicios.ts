@@ -1,11 +1,19 @@
 import type { Service } from "../../types";
 import { initialServices } from "../../data/index";
-import { obtenerServicios } from "../../api/negocios.api";
-import { servicioDtoToUI } from "../mappers";
+import {
+  obtenerServicios,
+  crearServicio as crearServicioApi,
+  actualizarServicio as actualizarServicioApi,
+  eliminarServicio as eliminarServicioApi,
+} from "../../api/negocios.api";
+import { servicioDtoToUI, servicioUIToDto } from "../mappers";
 
 export interface ServiciosRepositorio {
   listarServicios(sucursalId?: string): Promise<Service[]>;
-  crearServicio(svc: Omit<Service, "id">): Promise<Service>;
+  crearServicio(
+    svc: Omit<Service, "id"> & { sucursalId?: string },
+    sucursalId?: string,
+  ): Promise<Service>;
   actualizarServicio(svc: Service): Promise<Service>;
   eliminarServicio(id: string): Promise<void>;
 }
@@ -21,7 +29,12 @@ export const serviciosRepositorioMock: ServiciosRepositorio = {
     return cacheServicios;
   },
   async crearServicio(svc) {
-    const nuevo: Service = { ...svc, id: crypto.randomUUID() };
+    const nuevo: Service = {
+      ...svc,
+      id: crypto.randomUUID(),
+      sucursalId: svc.sucursalId,
+      icon: svc.icon || "scissors",
+    } as Service;
     cacheServicios = [nuevo, ...(cacheServicios || semillaServicios())];
     return nuevo;
   },
@@ -46,19 +59,27 @@ export const serviciosRepositorioApi: ServiciosRepositorio = {
     const dtos = await obtenerServicios(sucursalId);
     return dtos.map(servicioDtoToUI);
   },
-  async crearServicio() {
-    throw new Error(
-      "El endpoint de creación de servicios aún no está disponible en el backend.",
-    );
+  async crearServicio(svc, sucursalId) {
+    const sucursal = sucursalId || svc.sucursalId;
+    if (!sucursal) {
+      throw new Error(
+        "Aún no hay una sucursal activa. Crea o selecciona una sucursal primero.",
+      );
+    }
+    const dto = await crearServicioApi(sucursal, servicioUIToDto(svc as Service));
+    return servicioDtoToUI(dto);
   },
-  async actualizarServicio() {
-    throw new Error(
-      "El endpoint de actualización de servicios aún no está disponible en el backend.",
-    );
+  async actualizarServicio(svc) {
+    const dto = await actualizarServicioApi(svc.id, {
+      nombre: svc.name,
+      descripcion: svc.category,
+      precio: svc.price,
+      duracion_minutos: svc.duration,
+      estado: svc.status,
+    });
+    return servicioDtoToUI(dto);
   },
-  async eliminarServicio() {
-    throw new Error(
-      "El endpoint de eliminación de servicios aún no está disponible en el backend.",
-    );
+  async eliminarServicio(id) {
+    await eliminarServicioApi(id);
   },
 };

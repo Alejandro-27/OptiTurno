@@ -7,6 +7,7 @@ export const profesionalesController = {
       const datos = request.body as {
         sucursal_id: string;
         nombre: string;
+        email?: string;
         especialidad?: string;
         telefono?: string;
       };

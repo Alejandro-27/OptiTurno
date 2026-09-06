@@ -4,6 +4,11 @@ import {
   obtenerServiciosPorSucursalService,
   obtenerProfesionalesPorSucursalService,
   sembrarDatosInicialesService,
+  listarSucursalesService,
+  obtenerSucursalPorIdService,
+  resolverSucursalDeUsuarioService,
+  actualizarServicioService,
+  eliminarServicioService,
 } from "../services/negocios.service.js";
 
 interface CuerpoUsuario {
@@ -31,6 +36,15 @@ interface CuerpoServicio {
   descripcion: string;
   precio: number;
   duracion_minutos: number;
+  estado?: string;
+}
+
+interface CuerpoActualizarServicio {
+  nombre?: string;
+  descripcion?: string;
+  precio?: number;
+  duracion_minutos?: number;
+  estado?: string;
 }
 
 // Crear usuarios
@@ -103,11 +117,20 @@ export const crearServicioHandler = async (
   reply: FastifyReply,
 ) => {
   try {
-    const { sucursal_id, nombre, descripcion, precio, duracion_minutos } =
+    const { sucursal_id, nombre, descripcion, precio, duracion_minutos, estado } =
       request.body as CuerpoServicio;
     const { data, error } = await supabase
       .from("servicios")
-      .insert([{ sucursal_id, nombre, descripcion, precio, duracion_minutos }])
+      .insert([
+        {
+          sucursal_id,
+          nombre,
+          descripcion,
+          precio,
+          duracion_minutos,
+          estado: estado || "Activo",
+        },
+      ])
       .select()
       .single();
 
@@ -116,6 +139,100 @@ export const crearServicioHandler = async (
   } catch (err: any) {
     request.log.error(err, "Error en crearServicioHandler");
     return reply.status(500).send({ error: "Error interno al crear el servicio." });
+  }
+};
+
+// Actualizar los campos editables de un servicio (incluye Activo/Pausado)
+export const actualizarServicioHandler = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  try {
+    const { id } = request.params as { id: string };
+    const campos = request.body as CuerpoActualizarServicio;
+    const actualizado = await actualizarServicioService(id, campos);
+    return reply.status(200).send(actualizado);
+  } catch (err: any) {
+    request.log.error(err, "Error en actualizarServicioHandler");
+    if (err.status) return reply.status(err.status).send({ error: err.message });
+    return reply
+      .status(500)
+      .send({ error: "Error interno al actualizar el servicio." });
+  }
+};
+
+// Eliminar un servicio (bloqueado si tiene turnos asociados)
+export const eliminarServicioHandler = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  try {
+    const { id } = request.params as { id: string };
+    await eliminarServicioService(id);
+    return reply
+      .status(200)
+      .send({ message: "Servicio eliminado con éxito." });
+  } catch (err: any) {
+    request.log.error(err, "Error en eliminarServicioHandler");
+    if (err.status) return reply.status(err.status).send({ error: err.message });
+    return reply
+      .status(500)
+      .send({ error: "Error interno al eliminar el servicio." });
+  }
+};
+
+// Lista las sucursales del sistema (catálogo público)
+export const listarSucursalesHandler = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  try {
+    const sucursales = await listarSucursalesService();
+    return reply.status(200).send(sucursales);
+  } catch (err: any) {
+    request.log.error(err, "Error en listarSucursalesHandler");
+    return reply
+      .status(500)
+      .send({ error: "Error al obtener las sucursales." });
+  }
+};
+
+// Devuelve una sucursal puntual
+export const obtenerSucursalHandler = async (
+  request: FastifyRequest<{ Params: { sucursalId: string } }>,
+  reply: FastifyReply,
+) => {
+  try {
+    const { sucursalId } = request.params;
+    const sucursal = await obtenerSucursalPorIdService(sucursalId);
+    if (!sucursal) {
+      return reply.status(404).send({ error: "La sucursal no existe." });
+    }
+    return reply.status(200).send(sucursal);
+  } catch (err: any) {
+    request.log.error(err, "Error en obtenerSucursalHandler");
+    return reply
+      .status(500)
+      .send({ error: "Error al obtener la sucursal." });
+  }
+};
+
+// Resuelve la sucursal del usuario autenticado (si trabaja en una, esa; si no, la primera)
+export const obtenerMiSucursalHandler = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  try {
+    const sucursal = await resolverSucursalDeUsuarioService(request.usuario!.id);
+    if (!sucursal) {
+      return reply.status(404).send({ error: "Aún no hay sucursales registradas." });
+    }
+    return reply.status(200).send(sucursal);
+  } catch (err: any) {
+    request.log.error(err, "Error en obtenerMiSucursalHandler");
+    return reply
+      .status(500)
+      .send({ error: "Error al resolver tu sucursal." });
   }
 };
 

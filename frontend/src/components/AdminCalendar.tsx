@@ -22,6 +22,7 @@ type ViewMode = "diario" | "semanal" | "mensual";
 
 export default function AdminCalendar() {
   const bookings = useStore((s) => s.turnos);
+  const profesionales = useStore((s) => s.profesionales);
   const [selectedBooking, setSelectedBooking] = useState<BookingEvent | null>(
     null,
   );
@@ -52,13 +53,11 @@ export default function AdminCalendar() {
     "17:00",
   ];
 
-  const columns = [
-    { id: "carlos", name: "Sillón 1", staff: "Carlos Gomez" },
-    { id: "elena", name: "Sillón 2", staff: "Elena Ruiz" },
-    { id: "marco", name: "Sillón 3", staff: "Marco Silva" },
-    { id: "sofia", name: "Manicura", staff: "Sofía Luna" },
-    { id: "ana", name: "Pedicura", staff: "Ana Belén" },
-  ];
+  const columns = profesionales.slice(0, 5).map((p, i) => ({
+    id: p.id,
+    name: `Sillón ${i + 1}`,
+    staff: p.nombre,
+  }));
 
   const monthsList = [
     "Enero",

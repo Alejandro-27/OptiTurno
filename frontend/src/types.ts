@@ -44,4 +44,5 @@ export interface Profesional {
   nombre: string;
   especialidad: string;
   usuarioId: string;
+  email?: string;
 }

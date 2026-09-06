@@ -11,11 +11,58 @@ export interface ServicioDTO {
 export interface ProfesionalDTO {
   id: string;
   especialidad: string;
+  sucursal_id?: string;
   usuarios: {
     id: string;
     nombre: string;
     email: string;
   };
+}
+
+// Sucursal con nombre del negocio embebido (catálogo público / resolución de sede)
+export interface SucursalDTO {
+  id: string;
+  negocio_id: string;
+  nombre: string;
+  direccion: string | null;
+  telefono: string | null;
+  negocios: { nombre: string } | null;
+}
+
+// Turno con datos de cliente/servicio/profesional embebidos (panel admin)
+export interface TurnoAdminDTO {
+  id: string;
+  fecha: string;
+  hora_inicio: string;
+  hora_fin: string;
+  estado: string;
+  created_at: string;
+  clientes: {
+    id: string;
+    nombre: string;
+    telefono: string | null;
+  } | null;
+  servicios: {
+    nombre: string;
+    precio: number;
+    duracion_minutos: number;
+  } | null;
+  profesionales: {
+    id: string;
+    especialidad: string;
+    sucursal_id: string;
+    usuarios: { nombre: string };
+  } | null;
+}
+
+// Evento de la actividad reciente (compatible con ActivityLog de la UI)
+export interface ActivityLogDTO {
+  id: string;
+  timeSpan: string;
+  icon: string;
+  iconColor: string;
+  title: string;
+  detail: string;
 }
 
 export interface BloqueOcupadoDTO {

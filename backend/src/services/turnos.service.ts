@@ -1,5 +1,6 @@
 import { supabase } from "../config/database.js";
 import { crearIntencionPagoService } from "./pagos.service.js";
+import { resolverSucursalDeUsuarioService } from "./negocios.service.js";
 
 interface CrearTurnoInput {
   cliente_id: string;
@@ -203,6 +204,92 @@ export const cancelarTurnoClienteService = async (
     throw {
       status: 403,
       message: "No puedes cancelar un turno de otro cliente.",
+    };
+  }
+
+  if (turno.estado === "cancelado") {
+    throw { status: 409, message: "El turno ya se encuentra cancelado." };
+  }
+
+  const { data: actualizado, error } = await supabase
+    .from("turnos")
+    .update({ estado: "cancelado" })
+    .eq("id", turnoId)
+    .select(
+      `
+        id,
+        fecha,
+        hora_inicio,
+        hora_fin,
+        estado,
+        servicios:servicio_id (nombre, precio, duracion_minutos),
+        profesionales:profesional_id (id, especialidad, usuarios:usuario_id (nombre))
+      `,
+    )
+    .single();
+
+  if (error) {
+    throw { status: 400, message: error.message };
+  }
+
+  return actualizado;
+};
+
+// Agenda de la sucursal para el Calendario Maestro (panel admin)
+export const listarTurnosAdminService = async (sucursalId: string) => {
+  const { data: turnos, error } = await supabase
+    .from("turnos")
+    .select(
+      `
+        id,
+        fecha,
+        hora_inicio,
+        hora_fin,
+        estado,
+        created_at,
+        clientes:cliente_id (id, nombre, telefono),
+        servicios:servicio_id (nombre, precio, duracion_minutos),
+        profesionales:profesional_id (id, especialidad, sucursal_id, usuarios:usuario_id (nombre))
+      `,
+    )
+    .eq("profesionales.sucursal_id", sucursalId)
+    .order("hora_inicio", { ascending: true });
+
+  if (error) throw error;
+  return turnos || [];
+};
+
+// Cancela un turno con rol admin: valida que pertenezca a la sucursal del usuario
+export const cancelarTurnoAdminService = async (
+  usuarioId: string,
+  turnoId: string,
+) => {
+  const sucursal = await resolverSucursalDeUsuarioService(usuarioId);
+  if (!sucursal) {
+    throw {
+      status: 403,
+      message: "Tu cuenta no está vinculada a ninguna sucursal.",
+    };
+  }
+
+  const { data: turno, error: errorBusqueda } = await supabase
+    .from("turnos")
+    .select("id, estado, profesionales:profesional_id (id, sucursal_id)")
+    .eq("id", turnoId)
+    .single();
+
+  if (errorBusqueda || !turno) {
+    throw { status: 404, message: "El turno solicitado no existe." };
+  }
+
+  const profesional = Array.isArray(turno.profesionales)
+    ? turno.profesionales[0]
+    : turno.profesionales;
+
+  if (!profesional || profesional.sucursal_id !== sucursal.id) {
+    throw {
+      status: 403,
+      message: "No puedes cancelar turnos de otra sucursal.",
     };
   }
 
