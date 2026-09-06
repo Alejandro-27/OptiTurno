@@ -3,6 +3,7 @@ export interface PagosRepositorio {
 }
 
 export const pagosRepositorioMock: PagosRepositorio = {
+  // Demo: confirma localmente sin backend ni pasarela.
   async confirmarPago(transaccionId) {
     return {
       success: true,
@@ -12,11 +13,13 @@ export const pagosRepositorioMock: PagosRepositorio = {
 };
 
 export const pagosRepositorioApi: PagosRepositorio = {
+  // Stripe confirma el pago vía webhook directo al backend (/api/pagos/webhook).
+  // El frontend NO simula el webhook: aquí simplemente confirmamos la UX tras
+  // obtener `paymentIntent.status === "succeeded"` en el Payment Element.
   async confirmarPago(transaccionId) {
-    const { simularWebhookPagoExitoso } = await import("../../api/pagos.api");
-    return simularWebhookPagoExitoso({
-      transaccionId,
-      evento: "pago_aprobado",
-    });
+    return {
+      success: true,
+      message: "Pago aprobado por la pasarela.",
+    };
   },
 };

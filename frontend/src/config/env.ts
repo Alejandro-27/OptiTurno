@@ -2,6 +2,7 @@ export const env = {
   API_URL: import.meta.env.VITE_API_URL || "http://localhost:5000/api",
   SUPABASE_URL: import.meta.env.VITE_SUPABASE_URL || "",
   SUPABASE_ANON_KEY: import.meta.env.VITE_SUPABASE_ANON_KEY || "",
+  STRIPE_PK: import.meta.env.VITE_STRIPE_PK || "",
 };
 
 export function usarMocks(): boolean {

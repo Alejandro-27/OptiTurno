@@ -275,10 +275,3 @@ export async function listarProfesionales(
   );
   return profesionales;
 }
-
-export async function confirmarPago(
-  transaccionId: string,
-): Promise<{ success: boolean; message: string }> {
-  const resultado = await repositorios.pagos.confirmarPago(transaccionId);
-  return resultado;
-}

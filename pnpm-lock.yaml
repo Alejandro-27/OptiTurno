@@ -38,6 +38,9 @@ importers:
       '@google/genai':
         specifier: ^2.4.0
         version: 2.8.0
+      '@stripe/stripe-js':
+        specifier: ^9.15.0
+        version: 9.15.0
       '@supabase/supabase-js':
         specifier: ^2.108.1
         version: 2.108.1
@@ -704,6 +707,10 @@ packages:
     resolution: {integrity: sha512-X+zaP2x+j4RXGfbp/seSoRHWnPxzApilDszisZxbYH5C/jTxFhCtDNdPGZb9lJyYPs24wGxruPF7Y+sIXt9Gzw==}
     cpu: [x64]
     os: [win32]
+
+  '@stripe/stripe-js@9.15.0':
+    resolution: {integrity: sha512-0ySfsYH9XzfEspNS6MXMU2cjGsxNXWDQT9JxS43nOAatj6jDEP0fLBm2BanfblzU/GL/kDjFFcKmGInHmrASeg==}
+    engines: {node: '>=12.16'}
 
   '@supabase/auth-js@2.108.1':
     resolution: {integrity: sha512-Lle5rKU8f9LF3K5dDd8Or8mkkG+ptzRZZWKPVMm9B9UuovH65Ss2+iFnQqRsCqaGouvJEcTWyl0cj2riNrrDLQ==}
@@ -2002,6 +2009,8 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.61.1':
     optional: true
+
+  '@stripe/stripe-js@9.15.0': {}
 
   '@supabase/auth-js@2.108.1':
     dependencies:

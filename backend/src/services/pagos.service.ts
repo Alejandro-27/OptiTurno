@@ -1,4 +1,5 @@
 import { supabase } from "../config/database.js";
+import { stripe } from "../config/stripe.js";
 
 interface CrearIntencionInput {
   turno_id: string;
@@ -8,11 +9,17 @@ interface CrearIntencionInput {
 export const crearIntencionPagoService = async (datos: CrearIntencionInput) => {
   const { turno_id, monto } = datos;
 
-  // En un entorno real, aquí llamaría a:
-  // const paymentIntent = await stripe.paymentIntents.create({ amount: monto * 100, currency: 'cop' });
+  // Creamos el PaymentIntent real en Stripe (monto en centavos).
+  const paymentIntent = await stripe.paymentIntents.create({
+    amount: Math.round(monto * 100),
+    currency: "cop",
+    automatic_payment_methods: { enabled: true },
+    metadata: { turno_id },
+  });
 
-  // Por ahora, simulamos la creación generando un ID único de transacción ficticio
-  const transaccionSimuladaId = `pi_simulada_${Math.random().toString(36).substr(2, 9)}`;
+  if (!paymentIntent.client_secret) {
+    throw { status: 500, message: "No se pudo obtener el client_secret del PaymentIntent." };
+  }
 
   // Registrar el intento de pago en la tabla 'pagos_garantia' como 'pendiente'
   const { data: pago, error } = await supabase
@@ -20,8 +27,8 @@ export const crearIntencionPagoService = async (datos: CrearIntencionInput) => {
     .insert([
       {
         turno_id,
-        pasarela: "stripe", // PUede ser cualquier otra pasarela de pago
-        transaccion_id: transaccionSimuladaId,
+        pasarela: "stripe",
+        transaccion_id: paymentIntent.id,
         monto,
         estado: "pendiente",
       },
@@ -32,14 +39,14 @@ export const crearIntencionPagoService = async (datos: CrearIntencionInput) => {
   if (error) throw error;
 
   return {
-    clientSecret: `secret_${transaccionSimuladaId}`, // Lo necesitará el frontend para renderizar el formulario de pago
+    clientSecret: paymentIntent.client_secret,
     pagoId: pago.id,
-    transaccionId: transaccionSimuladaId,
+    transaccionId: paymentIntent.id as string,
   };
 };
 
 /**
- * Lógica que se ejecutará cuando la pasarela nos confirme el pago (Webhook)
+ * Lógica que se ejecutará cuando Stripe nos confirme el pago (Webhook)
  */
 export const confirmarPagoService = async (transaccionId: string) => {
   // Buscar el registro del pago de garantía

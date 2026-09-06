@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import {
-  CalendarCheck,
   Check,
   AlertTriangle,
   ArrowLeft,
@@ -8,7 +7,6 @@ import {
   MapPin,
   Clock,
   Star,
-  CreditCard,
   ShieldCheck,
   Wallet,
   UserRound,
@@ -18,11 +16,11 @@ import { repositorios, turnosRepositorioMock } from "../data/index";
 import { Service, Profesional } from "../types";
 import {
   reservarTurno,
-  confirmarPago,
   listarProfesionales,
   useStore,
 } from "../store";
 import type { DisponibilidadDTO } from "../api/dto";
+import PaymentForm from "./PaymentForm";
 
 const SACAR_HORA_24H = (hora12: string): string => {
   const [hora, minutos] = hora12.replace(/\s*(AM|PM)/i, "").split(":").map(Number);
@@ -215,23 +213,6 @@ export default function ClientPwa() {
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "No se pudo pre-reservar el turno.",
-      );
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const handlePagar = async () => {
-    if (!pagoRequerido) return;
-    setIsSubmitting(true);
-    setError(null);
-    try {
-      await confirmarPago(pagoRequerido.transaccionId);
-      setPagoConfirmado(true);
-      setStep(5);
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "No se pudo confirmar el pago.",
       );
     } finally {
       setIsSubmitting(false);
@@ -645,20 +626,17 @@ export default function ClientPwa() {
                 </p>
               </div>
 
-              <button
-                onClick={handlePagar}
-                disabled={isSubmitting}
-                className="w-full py-3 mt-auto bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-extrabold rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-emerald-500/20 flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50"
-              >
-                {isSubmitting ? (
-                  <span className="w-4 h-4 border-2 border-slate-950 border-t-transparent rounded-full animate-spin"></span>
-                ) : (
-                  <CreditCard size={14} className="text-slate-950" />
-                )}
-                {isSubmitting
-                  ? "Procesando pago..."
-                  : `Pagar $${Math.round(pagoRequerido.monto).toLocaleString("es-CO")}`}
-              </button>
+              <div className="mt-auto space-y-4">
+                <PaymentForm
+                  clientSecret={pagoRequerido.clientSecret}
+                  monto={pagoRequerido.monto}
+                  onExito={() => {
+                    setPagoConfirmado(true);
+                    setStep(5);
+                  }}
+                  onError={(mensaje) => setError(mensaje)}
+                />
+              </div>
             </div>
           )}
 

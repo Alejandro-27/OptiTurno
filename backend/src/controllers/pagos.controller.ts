@@ -1,31 +1,36 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { confirmarPagoService } from "../services/pagos.service.js";
 
-interface WebhookPagoBody {
-  transaccionId: string;
-  evento: string; // Ej: 'payment_intent.succeeded'
-}
-
+// Recibe el evento ya verificado por el middleware (request.stripeEvento).
 export const webhookPasarelaHandler = async (
   request: FastifyRequest,
   reply: FastifyReply,
 ) => {
   try {
-    const { transaccionId, evento } = request.body as WebhookPagoBody;
+    const evento = request.stripeEvento;
 
-    if (!transaccionId) {
-      return reply
-        .status(400)
-        .send({ error: "Falta el transaccionId en la petición." });
+    if (!evento) {
+      return reply.status(400).send({ error: "Evento de Stripe no verificado." });
     }
 
-    // Solo procesamos si el evento es una confirmación de éxito
-    if (evento === "payment_intent.succeeded" || evento === "pago_aprobado") {
+    // Solo procesamos la confirmación de un PaymentIntent exitoso
+    if (evento.type === "payment_intent.succeeded") {
+      const paymentIntent = evento.data.object;
+
+      const transaccionId =
+        "id" in paymentIntent
+          ? (paymentIntent as { id: string }).id
+          : undefined;
+
+      if (!transaccionId) {
+        return reply.status(400).send({ error: "PaymentIntent sin id." });
+      }
+
       const resultado = await confirmarPagoService(transaccionId);
       return reply.status(200).send(resultado);
     }
 
-    // Si llega otro tipo de evento (ej: pago fallido), respondemos OK pero no confirmamos el turno
+    // Otros eventos (pago fallido, etc.): respondemos OK pero no confirmamos el turno
     return reply.status(200).send({
       message: "Evento recibido pero no requiere acción en la agenda.",
     });

@@ -1,52 +1,47 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { createHmac, timingSafeEqual } from "node:crypto";
+import type Stripe from "stripe";
+import { stripe } from "../config/stripe.js";
 
-// Verifica que el webhook de pagos provenga de nuestra pasarela (o simulador),
-// firmando los campos del body con HMAC-SHA256 y el secret PAGOS_WEBHOOK_SECRET.
+declare module "fastify" {
+  interface FastifyRequest {
+    stripeEvento?: Stripe.Event;
+  }
+}
+
+// Verifica que el webhook provenga realmente de Stripe usando la firma
+// `stripe-signature` del header y el secret STRIPE_WEBHOOK_SECRET.
+// El payload debe llegar como Buffer crudo (se configura el body parser en la ruta).
 export const verificarFirmaWebhook = async (
   request: FastifyRequest,
   reply: FastifyReply,
 ) => {
-  const secret = process.env.PAGOS_WEBHOOK_SECRET;
+  const secret = process.env.STRIPE_WEBHOOK_SECRET;
 
   if (!secret) {
     return reply.status(503).send({
-      error: "Webhook de pagos no configurado: falta PAGOS_WEBHOOK_SECRET en el servidor.",
+      error: "Webhook de Stripe no configurado: falta STRIPE_WEBHOOK_SECRET en el servidor.",
     });
   }
 
-  const firmaRecibida = request.headers["x-webhook-firma"];
+  const firma = request.headers["stripe-signature"];
 
-  if (!firmaRecibida || typeof firmaRecibida !== "string") {
-    return reply
-      .status(401)
-      .send({ error: "Firma de webhook ausente." });
-  }
-
-  const { transaccionId, evento } = request.body as {
-    transaccionId?: string;
-    evento?: string;
-  };
-
-  if (!transaccionId || !evento) {
+  if (!firma || typeof firma !== "string") {
     return reply
       .status(400)
-      .send({ error: "Falta transaccionId o evento en la petición." });
+      .send({ error: "Firma de webhook de Stripe ausente." });
   }
 
-  const firmaEsperada = createHmac("sha256", secret)
-    .update(`${evento}.${transaccionId}`)
-    .digest("hex");
+  const payload = request.body;
 
-  const esperadaBuffer = Buffer.from(firmaEsperada);
-  const recibidaBuffer = Buffer.from(firmaRecibida);
+  // Normalizar a Buffer: con el parser scoped de la ruta ya llega crudo,
+  // pero por defensa convertimos por si llega ya parseado (JSON).
+  const raw = payload instanceof Buffer ? payload : Buffer.from(JSON.stringify(payload));
 
-  if (
-    esperadaBuffer.length !== recibidaBuffer.length ||
-    !timingSafeEqual(esperadaBuffer, recibidaBuffer)
-  ) {
-    return reply
-      .status(401)
-      .send({ error: "Firma de webhook inválida." });
+  try {
+    const evento = stripe.webhooks.constructEvent(raw, firma, secret);
+    request.stripeEvento = evento;
+  } catch (err) {
+    request.log.error(err, "Error verificando firma del webhook de Stripe");
+    return reply.status(400).send({ error: "Firma de webhook de Stripe inválida." });
   }
 };
