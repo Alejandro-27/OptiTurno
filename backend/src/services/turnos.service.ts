@@ -1,5 +1,4 @@
 import { supabase } from "../config/database.js";
-import { crearIntencionPagoService } from "./pagos.service.js";
 import { resolverSucursalDeUsuarioService } from "./negocios.service.js";
 
 interface CrearTurnoInput {
@@ -46,7 +45,7 @@ export const crearTurnoService = async (datos: CrearTurnoInput) => {
         fecha,
         hora_inicio,
         hora_fin,
-        estado: "pendiente_pago",
+        estado: "confirmado",
       },
     ])
     .select()
@@ -66,20 +65,7 @@ export const crearTurnoService = async (datos: CrearTurnoInput) => {
     throw errorTurno;
   }
 
-  const montoACobrar = servicio.precio * 0.5;
-  const intencionPago = await crearIntencionPagoService({
-    turno_id: nuevoTurno.id,
-    monto: montoACobrar,
-  });
-
-  return {
-    ...nuevoTurno,
-    pagoRequerido: {
-      monto: montoACobrar,
-      clientSecret: intencionPago.clientSecret,
-      transaccionId: intencionPago.transaccionId,
-    },
-  };
+  return { ...nuevoTurno };
 };
 
 export const limpiarTurnosExpiradosService = async (

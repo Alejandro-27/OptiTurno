@@ -20,18 +20,13 @@ export const obtenerDisponibilidad = async (
   return data;
 };
 
-// Envía la solicitud para pre-reservar un espacio y obtener las llaves de pago
+// Envía la solicitud para reservar un turno
 export interface TurnoReservadoDTO {
   id: string;
   estado: string;
   fecha: string;
   hora_inicio: string;
   hora_fin: string;
-  pagoRequerido?: {
-    monto: number;
-    clientSecret: string;
-    transaccionId: string;
-  };
 }
 
 export interface ReservarTurnoResponseDTO {

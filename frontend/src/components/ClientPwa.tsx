@@ -7,8 +7,6 @@ import {
   MapPin,
   Clock,
   Star,
-  ShieldCheck,
-  Wallet,
   UserRound,
 } from "lucide-react";
 import { initialServices } from "../data";
@@ -20,7 +18,6 @@ import {
   useStore,
 } from "../store";
 import type { DisponibilidadDTO } from "../api/dto";
-import PaymentForm from "./PaymentForm";
 
 const SACAR_HORA_24H = (hora12: string): string => {
   const [hora, minutos] = hora12.replace(/\s*(AM|PM)/i, "").split(":").map(Number);
@@ -105,7 +102,7 @@ const construirSlots = (
 export default function ClientPwa() {
   const servicios = useStore((s) => s.servicios);
   const sesion = useStore((s) => s.sesion);
-  const [step, setStep] = useState<1 | 2 | 3 | 4 | 5>(1); // 1: catálogo, 2: profesional, 3: fecha/hora, 4: pago, 5: éxito
+  const [step, setStep] = useState<1 | 2 | 3 | 5>(1); // 1: catálogo, 2: profesional, 3: fecha/hora, 5: éxito
 
   const [selectedService, setSelectedService] = useState<Service>(
     servicios[0] || initialServices[0],
@@ -118,13 +115,7 @@ export default function ClientPwa() {
   const [selectedHour, setSelectedHour] = useState<string>("");
   const [disponibilidad, setDisponibilidad] = useState<DisponibilidadDTO | null>(null);
   const [disponibilidadCargando, setDisponibilidadCargando] = useState(false);
-  const [pagoRequerido, setPagoRequerido] = useState<{
-    monto: number;
-    clientSecret: string;
-    transaccionId: string;
-  } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [pagoConfirmado, setPagoConfirmado] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Fechas de los próximos 14 días
@@ -197,7 +188,7 @@ export default function ClientPwa() {
     setError(null);
     try {
       const clienteId = sesion?.usuario.id;
-      const resultado = await reservarTurno({
+      await reservarTurno({
         cliente_id: clienteId || "cli-demo",
         profesional_id: selectedProfesional!.id,
         servicio_id: selectedService!.id,
@@ -207,9 +198,7 @@ export default function ClientPwa() {
         servicio_nombre: selectedService!.name,
         servicio_precio: selectedService!.price,
       });
-      setPagoRequerido(resultado.pagoRequerido);
-      setPagoConfirmado(false);
-      setStep(4);
+      setStep(5);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "No se pudo pre-reservar el turno.",
@@ -225,20 +214,12 @@ export default function ClientPwa() {
     setSelectedDate("");
     setSelectedDateISO("");
     setSelectedProfesional(null);
-    setPagoRequerido(null);
-    setPagoConfirmado(false);
     setError(null);
   };
 
   const pasoAnterior = () => {
     setError(null);
-    if (step === 4 && pagoRequerido) {
-      // Volver a elegir hora (la pre-reserva queda como pendiente, se purga sola)
-      setPagoRequerido(null);
-      setStep(3);
-      return;
-    }
-    setStep((prev) => Math.max(1, prev - 1) as 1 | 2 | 3 | 4 | 5);
+    setStep((prev) => Math.max(1, prev - 1) as 1 | 2 | 3 | 5);
   };
 
   const { disponible, ocupado } = construirSlots(disponibilidad);
@@ -327,11 +308,6 @@ export default function ClientPwa() {
                             <span className="font-bold font-mono text-slate-800 dark:text-slate-200">
                               ${svc.price.toLocaleString("es-CO")} COP
                             </span>
-                          </div>
-                          <div className="flex items-center gap-1 text-[9px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                            <Wallet size={10} />
-                            Reserva con el 50% (
-                            ${Math.round(svc.price * 0.5).toLocaleString("es-CO")})
                           </div>
                         </div>
 
@@ -538,9 +514,6 @@ export default function ClientPwa() {
                   <span className="font-mono text-slate-900 dark:text-slate-100">
                     ${selectedService.price.toLocaleString("es-CO")}
                   </span>
-                  <span className="block text-emerald-600 dark:text-emerald-400 normal-case font-semibold">
-                    Reserva: ${Math.round(selectedService.price * 0.5).toLocaleString("es-CO")}
-                  </span>
                 </div>
                 <button
                   onClick={handleElegirHora}
@@ -560,86 +533,6 @@ export default function ClientPwa() {
             </div>
           )}
 
-          {/* STEP 4: PAYMENT */}
-          {step === 4 && pagoRequerido && (
-            <div className="p-4 space-y-6 flex-grow flex flex-col select-none text-left">
-              <div className="space-y-1">
-                <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
-                  Pago de Reserva
-                </span>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-50">
-                  Abona el 50% para reservar
-                </h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Tu espacio queda reservado al abonar el depósito de garantía.
-                </p>
-              </div>
-
-              <div className="bg-white dark:bg-slate-900/60 p-4 border border-slate-200 dark:border-slate-800/80 rounded-xl space-y-2 shadow-sm">
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-500 dark:text-slate-400">Servicio:</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200">
-                    {selectedService.name}
-                  </span>
-                </div>
-                {selectedProfesional && (
-                  <div className="flex justify-between text-xs">
-                    <span className="text-slate-500 dark:text-slate-400">Profesional:</span>
-                    <span className="font-semibold text-slate-800 dark:text-slate-200">
-                      {selectedProfesional.nombre}
-                    </span>
-                  </div>
-                )}
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-500 dark:text-slate-400">Fecha:</span>
-                  <span className="font-semibold text-slate-800 dark:text-slate-200">
-                    {selectedDate}
-                  </span>
-                </div>
-                <div className="flex justify-between text-xs">
-                  <span className="text-slate-500 dark:text-slate-400">Hora:</span>
-                  <span className="font-bold text-emerald-600 dark:text-emerald-400 font-mono">
-                    {selectedHour}
-                  </span>
-                </div>
-                <div className="border-t border-slate-200 dark:border-slate-800/80 pt-2 flex justify-between items-center text-xs">
-                  <span className="text-slate-500 dark:text-slate-400">Valor del servicio:</span>
-                  <span className="font-bold text-slate-800 dark:text-slate-200 font-mono">
-                    ${selectedService.price.toLocaleString("es-CO")}
-                  </span>
-                </div>
-                <div className="flex justify-between items-center text-sm">
-                  <span className="text-indigo-600 dark:text-indigo-400 font-bold">
-                    Depósito (50%):
-                  </span>
-                  <span className="font-extrabold text-indigo-600 dark:text-indigo-400 font-mono text-sm">
-                    ${Math.round(pagoRequerido.monto).toLocaleString("es-CO")}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-start gap-2 bg-indigo-500/10 border border-indigo-500/20 p-3 rounded-lg text-indigo-700 dark:text-indigo-300">
-                <ShieldCheck size={16} className="mt-0.5 flex-shrink-0" />
-                <p className="text-[10px] font-semibold leading-relaxed">
-                  Pago seguro y encriptado. El depósito se descuenta del valor total
-                  de tu servicio. Solo pagas ahora el 50% ({Math.round(pagoRequerido.monto).toLocaleString("es-CO")} COP).
-                </p>
-              </div>
-
-              <div className="mt-auto space-y-4">
-                <PaymentForm
-                  clientSecret={pagoRequerido.clientSecret}
-                  monto={pagoRequerido.monto}
-                  onExito={() => {
-                    setPagoConfirmado(true);
-                    setStep(5);
-                  }}
-                  onError={(mensaje) => setError(mensaje)}
-                />
-              </div>
-            </div>
-          )}
-
           {/* STEP 5: SUCCESS CONFIRMATION */}
           {step === 5 && (
             <div className="p-6 space-y-6 flex-grow flex flex-col justify-center text-center animate-scale-up select-none">
@@ -652,7 +545,7 @@ export default function ClientPwa() {
                   ¡Cita Confirmada con Éxito!
                 </h3>
                 <p className="text-xs text-slate-600 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
-                  Tu pago fue aprobado y tu espacio quedó reservado. Te
+                  Tu espacio quedó reservado. Te
                   notificaremos a tu número de WhatsApp registrado.
                 </p>
               </div>
@@ -696,10 +589,10 @@ export default function ClientPwa() {
                   </div>
                   <div>
                     <span className="text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold block">
-                      Depósito:
+                      Valor:
                     </span>
                     <span className="font-bold text-indigo-600 dark:text-indigo-400 block mt-0.5">
-                      {pagoRequerido ? `$${Math.round(pagoRequerido.monto).toLocaleString("es-CO")}` : "—"}
+                      ${selectedService.price.toLocaleString("es-CO")}
                     </span>
                   </div>
                 </div>

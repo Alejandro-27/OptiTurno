@@ -49,8 +49,6 @@ Las migraciones viven en `supabase/migrations/` y el seed en `supabase/seed.sql`
 - `SUPABASE_SERVICE_ROLE_KEY` → cliente admin `supabase` (operaciones de escritura)
 - `SUPABASE_ANON_KEY` → cliente `supabaseAuth` (login con signInWithPassword). Fallback legacy: `SUPABASE_KEY`.
 - `CORS_ORIGINS` → whitelist de orígenes separados por coma (default: `http://localhost:4000,http://127.0.0.1:4000`). Nunca `origin: true`.
-- `STRIPE_SECRET_KEY` → clave secreta de Stripe (sk_test_/sk_live_). Sin ella, el backend lanza error al iniciar.
-- `STRIPE_WEBHOOK_SECRET` → secret de firma del webhook (`whsec_...`). En local lo entrega `stripe listen`; sin él, `/api/pagos/webhook` responde 503 (deshabilitado por defecto). La verificación usa `stripe.webhooks.constructEvent` con el header `stripe-signature`.
 
 Si falta `SUPABASE_ANON_KEY`, el login devuelve "El login no esta disponible" — el login se hace con el cliente anónimo, NO con el service role.
 
@@ -78,11 +76,10 @@ Si falta `SUPABASE_ANON_KEY`, el login devuelve "El login no esta disponible" �
 | `PATCH /api/turnos/:id/cancelar` | JWT (cliente) | Valida propiedad |
 | `POST /api/turnos/limpiar-expirados` | admin_negocio/superadmin | |
 | `POST /api/seed` | superadmin | Datos demo |
-| `POST /api/pagos/webhook` | Firma Stripe (`stripe-signature`, verificado con `stripe.webhooks.constructEvent`) | Body crudo (Buffer) requerido; sin `STRIPE_WEBHOOK_SECRET` responde 503. Lo llama Stripe directamente, NUNCA el frontend. |
 
 ## Queries y datos
 
-- Tablas: `usuarios`, `negocios`, `sucursales`, `servicios`, `profesionales`, `turnos`, `pagos_garantia`, `horarios_laborales`, `intenciones_de_pago`.
+- Tablas: `usuarios`, `negocios`, `sucursales`, `servicios`, `profesionales`, `turnos`, `horarios_laborales`.
 - Los joins de `turnos` suelen incluir `servicios (nombre, precio)` y `profesionales (especialidad) → usuarios (nombre)`.
 - El seeder de `negocios.service.ts` es la fuente de datos demo (UUIDs fijos 11111111-…/22222222-…).
 - Cuidado con el typo histórico `descripción` (con tilde) en un SELECT de servicios — verificar contra el esquema real.

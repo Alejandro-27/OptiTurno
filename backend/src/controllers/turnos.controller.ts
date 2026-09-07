@@ -32,7 +32,7 @@ export const reservarTurnoHandler = async (
     });
 
     return reply.status(201).send({
-      message: "Turno pre-reservado con éxito. Pago pendiente.",
+      message: "Turno reservado con éxito.",
       turno,
     });
   } catch (error: any) {

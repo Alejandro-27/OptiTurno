@@ -21,15 +21,8 @@ export interface ReservarTurnoInput {
   servicio_precio?: number;
 }
 
-export interface PagoRequerido {
-  monto: number;
-  clientSecret: string;
-  transaccionId: string;
-}
-
 export interface ReservarTurnoResultado {
   turno: BookingEvent;
-  pagoRequerido: PagoRequerido;
 }
 
 export interface TurnosRepositorio {
@@ -91,15 +84,7 @@ export const turnosRepositorioMock: TurnosRepositorio = {
       icon: iconoDesdeNombre(input.servicio_nombre),
     };
     cacheTurnos = [nuevo, ...(cacheTurnos || semillaTurnos())];
-    const monto = (input.servicio_precio ?? 30000) * 0.5;
-    return {
-      turno: nuevo,
-      pagoRequerido: {
-        monto,
-        clientSecret: `secret_pi_simulada_${Math.random().toString(36).slice(2, 11)}`,
-        transaccionId: `pi_simulada_${Math.random().toString(36).slice(2, 11)}`,
-      },
-    };
+    return { turno: nuevo };
   },
   async cancelarTurno(id) {
     cacheTurnos = (cacheTurnos || semillaTurnos()).filter((b) => b.id !== id);
@@ -160,14 +145,7 @@ export const turnosRepositorioApi: TurnosRepositorio = {
       color: colorDesdeId(input.profesional_id),
       icon: iconoDesdeNombre(input.servicio_nombre),
     };
-    return {
-      turno: nuevo,
-      pagoRequerido: turnoBackend.pagoRequerido || {
-        monto: (input.servicio_precio ?? 0) * 0.5,
-        clientSecret: "",
-        transaccionId: "",
-      },
-    };
+    return { turno: nuevo };
   },
   async cancelarTurno(id) {
     await cancelarTurnoApi(id);

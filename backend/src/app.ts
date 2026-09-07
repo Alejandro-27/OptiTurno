@@ -2,7 +2,6 @@ import Fastify from "fastify";
 import cors from "@fastify/cors";
 import dotenv from "dotenv";
 import { turnosRouter } from "./routes/turnos.routes.js";
-import { pagosRoutes } from "./routes/pagos.routes.js";
 import { negociosRoutes } from "./routes/negocios.routes.js";
 import profesionalesRoutes from './routes/profesionales.routes';
 import usuariosRoutes from './routes/usuarios.routes';
@@ -29,7 +28,6 @@ const start = async () => {
     // Registro de Módulos de Rutas de la API
     await fastify.register(usuariosRoutes, { prefix: '/api/usuarios' }); // Registrar usuarios
     await fastify.register(turnosRouter, { prefix: "/api/turnos" }); // Ruta de los turnos
-    await fastify.register(pagosRoutes, { prefix: "/api/pagos" }); // Ruta de pagos
     await fastify.register(negociosRoutes, { prefix: "/api" }); // Insertar un negocio, una sucursal física y 3 servicios estructurados con precios a supabase /api/seed
     await fastify.register(profesionalesRoutes, { prefix: '/api/profesionales' }); // Registrar profesionales
     await fastify.register(actividadRoutes, { prefix: '/api/actividad' }); // Actividad reciente de la sucursal (panel admin)
