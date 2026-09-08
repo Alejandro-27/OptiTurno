@@ -23,7 +23,10 @@ const start = async () => {
       : ["http://localhost:4000", "http://127.0.0.1:4000"];
 
     // Middlewares / Plugins globales
-    await fastify.register(cors, { origin: corsOrigins });
+    await fastify.register(cors, {
+      origin: corsOrigins,
+      methods: ["GET", "HEAD", "PUT", "POST", "PATCH", "DELETE"],
+    });
 
     // Registro de Módulos de Rutas de la API
     await fastify.register(usuariosRoutes, { prefix: '/api/usuarios' }); // Registrar usuarios
