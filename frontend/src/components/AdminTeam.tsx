@@ -169,9 +169,14 @@ export default function AdminTeam() {
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 z-50 overflow-hidden bg-slate-950/60 backdrop-blur-sm flex justify-end animate-fade-in">
-          <div className="bg-white dark:bg-[#0b1120] border-l border-slate-200 dark:border-slate-800 w-full max-w-md h-full flex flex-col justify-between shadow-2xl animate-slide-left p-6">
-            <form onSubmit={handleSubmit} className="flex flex-col h-full justify-between space-y-6">
+        <div
+          className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex justify-end animate-fade-in"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowForm(false);
+          }}
+        >
+          <div className="bg-white dark:bg-[#0b1120] border-l border-slate-200 dark:border-slate-800 w-full max-w-md h-full overflow-y-auto flex flex-col shadow-2xl animate-slide-left p-6 custom-scrollbar">
+            <form onSubmit={handleSubmit} className="flex flex-col justify-between space-y-6 min-h-full">
               <div className="space-y-6">
                 <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800/80">
                   <div className="flex items-center gap-2">
