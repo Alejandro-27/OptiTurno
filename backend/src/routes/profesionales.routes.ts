@@ -11,4 +11,16 @@ export default async function profesionalesRoutes(fastify: FastifyInstance) {
     { preHandler: [verificarAutenticacion, permitirRoles(["admin_negocio", "superadmin"])] },
     profesionalesController.crear,
   );
+
+  fastify.put(
+    "/:id",
+    { preHandler: [verificarAutenticacion, permitirRoles(["admin_negocio", "superadmin"])] },
+    profesionalesController.editar,
+  );
+
+  fastify.delete(
+    "/:id",
+    { preHandler: [verificarAutenticacion, permitirRoles(["admin_negocio", "superadmin"])] },
+    profesionalesController.eliminar,
+  );
 }

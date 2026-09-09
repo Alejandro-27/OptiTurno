@@ -15,7 +15,7 @@ import {
   profesionalesRepositorioMock,
 } from "../data/index";
 import type { ReservarTurnoInput, ReservarTurnoResultado } from "../data/repos/turnos";
-import type { DatosCrearProfesional } from "../data/repos/profesionales";
+import type { DatosCrearProfesional, DatosEditarProfesional } from "../data/repos/profesionales";
 import type { RegistrarCuentaInput } from "../data/repos/auth";
 import { repositorios } from "../data/index";
 
@@ -419,4 +419,31 @@ export async function crearProfesional(
     profesionales: [...e.profesionales, creado],
   }));
   return creado;
+}
+
+// Actualización de un profesional existente (pestaña Equipo)
+export async function editarProfesional(
+  id: string,
+  datos: DatosEditarProfesional,
+): Promise<Profesional> {
+  const actualizado = await repositorios.profesionales.editarProfesional(
+    id,
+    datos,
+  );
+  setEstado((e) => ({
+    ...e,
+    profesionales: e.profesionales.map((p) =>
+      p.id === id ? { ...actualizado } : p,
+    ),
+  }));
+  return actualizado;
+}
+
+// Eliminación de un profesional (pestaña Equipo)
+export async function eliminarProfesional(id: string): Promise<void> {
+  await repositorios.profesionales.eliminarProfesional(id);
+  setEstado((e) => ({
+    ...e,
+    profesionales: e.profesionales.filter((p) => p.id !== id),
+  }));
 }

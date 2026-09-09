@@ -121,4 +121,93 @@ export const profesionalesService = {
       },
     };
   },
+
+  async editar(
+    id: string,
+    datos: { nombre?: string; especialidad?: string; telefono?: string },
+  ) {
+    const { data: profesional, error: profError } = await supabase
+      .from("profesionales")
+      .select("id, usuario_id, sucursal_id, especialidad")
+      .eq("id", id)
+      .single();
+
+    if (profError || !profesional) {
+      throw { status: 404, message: "Profesional no encontrado." };
+    }
+
+    // 1. Actualizar la especialidad (si viene)
+    if (datos.especialidad !== undefined) {
+      const { error } = await supabase
+        .from("profesionales")
+        .update({ especialidad: datos.especialidad })
+        .eq("id", id);
+      if (error) {
+        throw { status: 400, message: "No se pudo actualizar el profesional." };
+      }
+    }
+
+    // 2. Actualizar nombre/teléfono en el perfil espejo 'usuarios' (si vienen)
+    const perfil: { nombre?: string; telefono?: string | null } = {};
+    if (datos.nombre !== undefined) perfil.nombre = datos.nombre;
+    if (datos.telefono !== undefined) perfil.telefono = datos.telefono || null;
+    if (Object.keys(perfil).length > 0) {
+      const { error } = await supabase
+        .from("usuarios")
+        .update(perfil)
+        .eq("id", profesional.usuario_id);
+      if (error) {
+        throw { status: 400, message: "No se pudo actualizar el perfil." };
+      }
+    }
+
+    // 3. Devolver el profesional actualizado (mismo shape que el listado)
+    const { data: actualizado, error: finalError } = await supabase
+      .from("profesionales")
+      .select(
+        `
+          id,
+          especialidad,
+          sucursal_id,
+          usuarios:usuario_id (id, nombre, email)
+        `,
+      )
+      .eq("id", id)
+      .single();
+
+    if (finalError || !actualizado) {
+      throw { status: 400, message: "No se pudo consultar el profesional." };
+    }
+    return actualizado;
+  },
+
+  async eliminar(id: string) {
+    const { data: profesional, error: profError } = await supabase
+      .from("profesionales")
+      .select("id, usuario_id")
+      .eq("id", id)
+      .single();
+
+    if (profError || !profesional) {
+      throw { status: 404, message: "Profesional no encontrado." };
+    }
+
+    // 1. Eliminar el vínculo (cascada: turnos y horarios_laborales del profesional)
+    const { error: deleteError } = await supabase
+      .from("profesionales")
+      .delete()
+      .eq("id", id);
+
+    if (deleteError) {
+      throw {
+        status: 400,
+        message: "No se pudo eliminar el profesional.",
+      };
+    }
+
+    // 2. Limpiar el perfil espejo 'usuarios' (mejor esfuerzo)
+    await supabase.from("usuarios").delete().eq("id", profesional.usuario_id).eq("rol", "cliente");
+
+    return { id, eliminado: true };
+  },
 };

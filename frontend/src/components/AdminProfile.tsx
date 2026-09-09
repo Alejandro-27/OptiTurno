@@ -193,20 +193,22 @@ export default function AdminProfile() {
               <label className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
                 Categoría Comercial
               </label>
-              <select
+              <input
+                list="categorias-comerciales"
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 transition-all cursor-pointer"
-              >
-                <option value="Estética & Barberías">
-                  Estética & Barberías
-                </option>
-                <option value="Salud & Spa">Salud & Spa</option>
-                <option value="Clínicas Dentales">Clínicas Dentales</option>
-                <option value="Consultorios Médicos">
-                  Consultorios Médicos
-                </option>
-              </select>
+                placeholder="Elige una o escribe la tuya..."
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all cursor-text"
+              />
+              <datalist id="categorias-comerciales">
+                <option value="Estética & Barberías" />
+                <option value="Salud & Spa" />
+                <option value="Clínicas Dentales" />
+                <option value="Consultorios Médicos" />
+              </datalist>
+              <p className="text-[9px] text-slate-400 dark:text-slate-500">
+                Puedes seleccionar una categoría existente o escribir una nueva.
+              </p>
             </div>
 
             <div className="space-y-1.5 md:col-span-2">

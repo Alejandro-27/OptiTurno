@@ -23,6 +23,57 @@ export default function AdminDashboard({
 }) {
   const logs = useStore((s) => s.logs);
   const [animateHeartbeat, setAnimateHeartbeat] = useState<boolean>(false);
+  const [rango, setRango] = useState<"7D" | "30D">("7D");
+
+  const picos7D = {
+    valores: [30, 45, 38, 62, 80, 92, 55, 70, 85, 60, 40, 28, 20, 15],
+    labels: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
+    metrica: {
+      diaPico: "Sábado",
+      carga: "84%",
+      espera: "12 min",
+      eficiencia: "91.5%",
+    },
+  };
+
+  const picos30D = {
+    valores: [
+      25, 32, 28, 41, 55, 70, 62, 48, 36, 44, 58, 74, 88, 92, 80, 66, 52, 45,
+      60, 75, 90, 96, 84, 68, 54, 47, 63, 78, 92, 86,
+    ],
+    labels: ["Sem 1", "Sem 2", "Sem 3", "Sem 4"],
+    metrica: {
+      diaPico: "Viernes",
+      carga: "76%",
+      espera: "9 min",
+      eficiencia: "93.2%",
+    },
+  };
+
+  const datosPico = rango === "7D" ? picos7D : picos30D;
+
+  // Genera path suave (Catmull-Rom → bezier cúbica) para la línea del gráfico
+  const trazoSuave = (valores: number[]): string => {
+    const n = valores.length;
+    const puntos: [number, number][] = valores.map((v, i) => [
+      (i * 800) / (n - 1),
+      200 - v * 1.5,
+    ]);
+    if (puntos.length < 2) return "";
+    let d = `M${puntos[0][0]},${puntos[0][1]}`;
+    for (let i = 0; i < puntos.length - 1; i++) {
+      const p0 = puntos[i - 1] || puntos[i];
+      const p1 = puntos[i];
+      const p2 = puntos[i + 1];
+      const p3 = puntos[i + 2] || p2;
+      d += ` C${p1[0] + (p2[0] - p0[0]) / 6},${p1[1] + (p2[1] - p0[1]) / 6} ${p2[0] - (p3[0] - p1[0]) / 6},${p2[1] - (p3[1] - p1[1]) / 6} ${p2[0]},${p2[1]}`;
+    }
+    return d;
+  };
+
+  const linea = trazoSuave(datosPico.valores);
+  const area = `${linea} L800,200 L0,200 Z`;
+  const metrica = datosPico.metrica;
 
   // Auto log emitter ticker simulation (every 12 seconds adding a new randomized activity stream)
   useEffect(() => {
@@ -210,12 +261,26 @@ export default function AdminDashboard({
               </p>
             </div>
             <div className="flex gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-lg">
-              <span className="px-3 py-1 bg-indigo-600 text-white dark:bg-indigo-600/15 dark:text-indigo-400 font-bold text-[10px] rounded cursor-pointer shadow-sm">
+              <button
+                onClick={() => setRango("7D")}
+                className={`px-3 py-1 font-bold text-[10px] rounded transition-colors cursor-pointer ${
+                  rango === "7D"
+                    ? "bg-indigo-600 text-white dark:bg-indigo-600/15 dark:text-indigo-400 shadow-sm"
+                    : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                }`}
+              >
                 7D
-              </span>
-              <span className="px-3 py-1 text-slate-500 dark:text-slate-400 font-bold text-[10px] rounded cursor-pointer hover:text-slate-900 dark:hover:text-slate-200">
+              </button>
+              <button
+                onClick={() => setRango("30D")}
+                className={`px-3 py-1 font-bold text-[10px] rounded transition-colors cursor-pointer ${
+                  rango === "30D"
+                    ? "bg-indigo-600 text-white dark:bg-indigo-600/15 dark:text-indigo-400 shadow-sm"
+                    : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
+                }`}
+              >
                 30D
-              </span>
+              </button>
             </div>
           </div>
 
@@ -276,25 +341,19 @@ export default function AdminDashboard({
               />
               {/* Area */}
               <path
-                d="M0,200 L0,150 C100,120 150,180 200,80 C250,-20 300,150 400,120 C500,90 600,40 700,100 C750,130 800,50 800,50 L800,200 Z"
+                d={area}
                 fill="url(#gradient-area-fill)"
               ></path>
               {/* Neon Line */}
               <path
-                d="M0,150 C100,120 150,180 200,80 C250,-20 300,150 400,120 C500,90 600,40 700,100 C750,130 800,50 800,50"
+                d={linea}
                 fill="none"
                 stroke="url(#gradient-line-accent)"
                 strokeWidth="3"
               ></path>
             </svg>
             <div className="absolute inset-x-0 bottom-0 flex justify-between text-[10px] text-slate-500 dark:text-slate-400 px-2 font-medium">
-              <span>Lun</span>
-              <span>Mar</span>
-              <span>Mie</span>
-              <span>Jue</span>
-              <span>Vie</span>
-              <span>Sab</span>
-              <span>Dom</span>
+              {datosPico.labels.map((l) => <span key={l}>{l}</span>)}
             </div>
           </div>
 
@@ -305,7 +364,7 @@ export default function AdminDashboard({
                 Día pico
               </p>
               <p className="text-base font-bold text-slate-900 dark:text-slate-100 mt-1">
-                Jueves
+                {metrica.diaPico}
               </p>
             </div>
             <div>
@@ -313,7 +372,7 @@ export default function AdminDashboard({
                 Carga diaria promedio
               </p>
               <p className="text-base font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-                82%
+                {metrica.carga}
               </p>
             </div>
             <div>
@@ -321,7 +380,7 @@ export default function AdminDashboard({
                 Tiempo de espera
               </p>
               <p className="text-base font-bold text-slate-900 dark:text-slate-100 mt-1">
-                12 min
+                {metrica.espera}
               </p>
             </div>
             <div>
@@ -329,7 +388,7 @@ export default function AdminDashboard({
                 Eficiencia
               </p>
               <p className="text-base font-bold text-indigo-600 dark:text-indigo-400 mt-1">
-                94.8%
+                {metrica.eficiencia}
               </p>
             </div>
           </div>
