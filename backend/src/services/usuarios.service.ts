@@ -4,6 +4,9 @@ import { supabase, supabaseAuth } from "../config/database";
 // NUNCA incluir 'superadmin': ese rol solo debe asignarse manualmente en la BD.
 const ROLES_REGISTRO_PERMITIDOS = ["cliente", "admin_negocio"] as const;
 
+// Roles editables por el superadmin en la gestión de usuarios
+const ROLES_SISTEMA = ["cliente", "admin_negocio", "superadmin", "empleado"] as const;
+
 interface RegistrarDatos {
   email: string;
   password: string;
@@ -135,6 +138,101 @@ export const usuariosService = {
       .single();
 
     if (error) throw { status: 400, message: error.message };
+
+    return actualizado;
+  },
+
+  // Lista todos los usuarios del sistema (panel superadmin)
+  async listarUsuarios() {
+    const { data, error } = await supabase
+      .from("usuarios")
+      .select("id, nombre, email, telefono, rol")
+      .order("nombre", { ascending: true });
+
+    if (error) throw { status: 400, message: error.message };
+    return data || [];
+  },
+
+  // Edita el correo (único) y/o el rol de un usuario (solo superadmin)
+  async editarUsuario(
+    usuarioId: string,
+    actorId: string,
+    datos: { email?: string; rol?: string },
+  ) {
+    // Cargar el estado actual para saber qué cambia de verdad
+    const { data: actual, error: errActual } = await supabase
+      .from("usuarios")
+      .select("email, rol")
+      .eq("id", usuarioId)
+      .single();
+
+    if (errActual || !actual) {
+      throw { status: 404, message: "El usuario no existe." };
+    }
+
+    const cambios: { email?: string; rol?: string } = {};
+
+    // Dirección nueva → sincronizar Supabase Auth + tabla espejo
+    if (datos.email !== undefined && datos.email.trim().toLowerCase() !== actual.email) {
+      const email = datos.email.trim().toLowerCase();
+      if (!email) throw { status: 400, message: "El correo no puede estar vacío." };
+
+      // Unicidad del correo
+      const { data: existente } = await supabase
+        .from("usuarios")
+        .select("id")
+        .eq("email", email)
+        .neq("id", usuarioId)
+        .maybeSingle();
+
+      if (existente) {
+        throw {
+          status: 409,
+          message: "El correo ya está en uso por otro usuario.",
+        };
+      }
+
+      // Sincroniza en Supabase Auth y confirma el correo sin correos de verificación
+      const { error: authError } = await supabase.auth.admin.updateUserById(
+        usuarioId,
+        { email, email_confirm: true },
+      );
+      if (authError) {
+        throw {
+          status: 400,
+          message: "No se pudo actualizar el correo de la cuenta.",
+        };
+      }
+
+      cambios.email = email;
+    }
+
+    // Rol nuevo → solo actualiza la tabla espejo (el JWT lee el rol de la BD)
+    if (datos.rol !== undefined && datos.rol !== actual.rol) {
+      const rol = datos.rol.trim();
+      if (!(ROLES_SISTEMA as readonly string[]).includes(rol)) {
+        throw { status: 400, message: "El rol indicado no es válido." };
+      }
+      if (usuarioId === actorId) {
+        throw { status: 400, message: "No puedes cambiar tu propio rol." };
+      }
+      cambios.rol = rol;
+    }
+
+    if (Object.keys(cambios).length === 0) {
+      throw { status: 400, message: "No hay cambios para aplicar." };
+    }
+
+    const { data: actualizado, error } = await supabase
+      .from("usuarios")
+      .update(cambios)
+      .eq("id", usuarioId)
+      .select("id, nombre, email, telefono, rol")
+      .single();
+
+    if (error || !actualizado) {
+      throw { status: 400, message: error?.message || "No se pudo actualizar el usuario." };
+    }
 
     return actualizado;
   },

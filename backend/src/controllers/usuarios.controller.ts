@@ -60,4 +60,35 @@ export const usuariosController = {
       return reply.status(error.status || 500).send({ error: error.message });
     }
   },
+
+  // Lista todos los usuarios del sistema (solo superadmin)
+  async listarUsuarios(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const usuarios = await usuariosService.listarUsuarios();
+      return reply.status(200).send(usuarios);
+    } catch (error: any) {
+      return reply.status(error.status || 500).send({ error: error.message });
+    }
+  },
+
+  // Edita correo (único) y/o rol de un usuario (solo superadmin)
+  async editarUsuario(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { id } = request.params as { id: string };
+      const { email, rol } = request.body as {
+        email?: string;
+        rol?: string;
+      };
+      const actualizado = await usuariosService.editarUsuario(
+        id,
+        request.usuario!.id,
+        { email, rol },
+      );
+      return reply.status(200).send(actualizado);
+    } catch (error: any) {
+      return reply
+        .status(error.status || 500)
+        .send({ error: error.message });
+    }
+  },
 };

@@ -34,15 +34,15 @@ npx tsc --noEmit      # typecheck obligatorio
 
 Componente → acción del store → `repositorios.<dominio>` (mock o API según `usarMocks()`) → fallback automático a mock si la API falla.
 
-- En modo demo (`VITE_USE_MOCKS=true`) no se necesita backend: login demo `admin@optiturno.com / password123`.
+- En modo demo (`VITE_USE_MOCKS=true`) no se necesita backend: login demo `admin@optiturno.com / password123` (comercio), `cliente@optiturno.com / password123` (cliente demo), `empleado@optiturno.com / password123` (profesional).
 - Al agregar un endpoint al backend: crear contraparte **mock Y API** en `data/repos/` (regla #3 del AGENTS raíz).
 - Los repos API que no tienen endpoint implementado hacen `throw new Error("...")` — el fallback del store los absorbe.
 
 ## Estado global (store)
 
 - `useStore((s) => s.x)` con `useSyncExternalStore`. NO agregar Redux/Zustand.
-- Estado: `sesion`, `servicios`, `turnos`, `logs`, `equipo`, `misTurnos`, `ausencias`, `misTurnosCargando`, `error`, `cargando`, `inicializado`.
-- Acciones: `login`, `registrar`, `logout`, `cargarMisTurnos`, `cancelarTurnoCliente`, `actualizarPerfil`, `guardarServicio`, `eliminarServicio`, `reservarTurno`, `cancelarTurno`, `guardarDisponibilidad`, `cargarAusencias`, `crearAusencia`, `eliminarAusencia`, `cargarHorarioEmpleado`, `guardarHorarioEmpleado`, `agregarLog`.
+- Estado: `sesion`, `servicios`, `turnos`, `logs`, `equipo`, `misTurnos`, `ausencias`, `usuarios`, `misTurnosCargando`, `error`, `cargando`, `inicializado`.
+- Acciones: `login`, `registrar`, `logout`, `cargarMisTurnos`, `cancelarTurnoCliente`, `actualizarPerfil`, `guardarServicio`, `eliminarServicio`, `reservarTurno`, `cancelarTurno`, `guardarDisponibilidad`, `cargarAusencias`, `crearAusencia`, `eliminarAusencia`, `cargarHorarioEmpleado`, `guardarHorarioEmpleado`, `cargarUsuarios`, `editarUsuario`, `agregarLog`.
 - `logout()` NO resetea los caches de los repos mock (pendiente de fix): no asumir limpieza.
 
 ## Sesión (regla #1 del AGENTS raíz)
@@ -59,6 +59,7 @@ Componente → acción del store → `repositorios.<dominio>` (mock o API según
   - `Mis Turnos` → `MisTurnosView` (listar + cancelar con confirm)
   - `Mi Perfil` → `MiPerfilView` (nombre + WhatsApp vía `/usuarios/me`)
 - **admin_negocio/superadmin** → panel admin en `App.tsx` con tabs: dashboard, calendar, catalog, availability, profile + footer con nombre de cuenta.
+- **superadmin** → tab adicional **Usuarios** (`AdminUsers`): lista usuarios, cambia correo (único) y rol; el propio rol está bloqueado. El mock de registros agrega la cuenta nueva vía `agregarUsuarioMock` para que aparezca en la lista.
 - **empleado** → mismo panel pero SOLO tabs dashboard, calendar, availability ("Modo: Mi Semana" + sección "Mis Ausencias y Vacaciones"); sin Catálogo/Equipo/Editar Comercio.
 - Alertas ausencias: cuando el backend o el mock rechazan una reserva por ausencia, el mensaje genérico es "El profesional no está disponible en esa fecha." / "...en ese horario.".
 - `window.abrirVistaCliente` (patrón legacy, pendiente de migrar a Context): `AdminProfile` lo usa para saltar a la vista cliente.

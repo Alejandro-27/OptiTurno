@@ -6,7 +6,7 @@ import type {
   DayAvailability,
   Profesional,
 } from "../types";
-import type { MisTurnoDTO, SesionDTO, UsuarioSesionDTO, AusenciaDTO, CrearAusenciaDTO } from "../api/dto";
+import type { MisTurnoDTO, SesionDTO, UsuarioSesionDTO, AusenciaDTO, CrearAusenciaDTO, UsuarioAdminDTO, EditarUsuarioInputDTO } from "../api/dto";
 import {
   serviciosRepositorioMock,
   turnosRepositorioMock,
@@ -34,6 +34,7 @@ export interface AppState {
   misTurnos: MisTurnoDTO[];
   misTurnosCargando: boolean;
   ausencias: AusenciaDTO[];
+  usuarios: UsuarioAdminDTO[];
 }
 
 const estadoInicial: AppState = {
@@ -50,6 +51,7 @@ const estadoInicial: AppState = {
   misTurnos: [],
   misTurnosCargando: false,
   ausencias: [],
+  usuarios: [],
 };
 
 let estado: AppState = estadoInicial;
@@ -542,4 +544,23 @@ export async function guardarHorarioEmpleado(
     schedule,
   );
   setEstado((e) => ({ ...e, equipo: guardado }));
+}
+
+// Gestión de usuarios (panel superadmin)
+export async function cargarUsuarios(): Promise<UsuarioAdminDTO[]> {
+  const usuarios = await repositorios.usuarios.listarUsuarios();
+  setEstado((e) => ({ ...e, usuarios }));
+  return usuarios;
+}
+
+export async function editarUsuario(
+  id: string,
+  datos: EditarUsuarioInputDTO,
+): Promise<UsuarioAdminDTO> {
+  const actualizado = await repositorios.usuarios.editarUsuario(id, datos);
+  setEstado((e) => ({
+    ...e,
+    usuarios: e.usuarios.map((u) => (u.id === id ? actualizado : u)),
+  }));
+  return actualizado;
 }

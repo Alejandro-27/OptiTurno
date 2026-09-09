@@ -69,7 +69,9 @@ pnpm build:frontend   # build del frontend (usado por Vercel)
 ## Convenciones de datos
 
 - Roles: `cliente | admin_negocio | superadmin | empleado` (tabla `usuarios`). `empleado` = profesional registrado con su cuenta; en el panel solo gestiona su propio horario y ausencias.
-- Ausencias profesionales: tabla `profesional_ausencias` (día completo = `hora_inicio NULL`; parcial = rango `hora_inicio`/`hora_fin`). El backend y el mock excluyen esas franjas de la disponibilidad y bloquean reservas (409).
+- Austus: tabla `profesional_ausencias` (día completo = `hora_inicio NULL`; parcial = rango `hora_inicio`/`hora_fin`). El backend y el mock excluyen esas franjas de la disponibilidad y bloquean reservas (409).
+- Gestión de usuarios (superadmin): `GET /api/usuarios` y `PATCH /api/usuarios/:id` cambian email (único; 409 si está tomado; sincroniza Supabase Auth con `email_confirm: true`) y rol. Un superadmin no puede degradarse a sí mismo (400).
+- Cuentas demo del frontend (mock): comercio `admin@optiturno.com`, cliente `cliente@optiturno.com`, empleado `empleado@optiturno.com` — todas con `password123`.
 - Estados de turno: `pendiente_pago | confirmado | cancelado | completado`.
 - El `cliente_id` de una reserva sale del JWT, nunca del body del request.
 - Índice GIST `no_solapar_turnos` en `turnos` evita doble reserva (error 23P01 → 409).

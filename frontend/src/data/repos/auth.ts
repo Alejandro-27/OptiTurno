@@ -5,6 +5,7 @@ import type {
 } from "../../api/dto";
 import { setSessionToken, setSesionPersistida, getSesionPersistida } from "../session";
 import { loginUsuario, registrarUsuario, obtenerPerfil as obtenerPerfilApi, actualizarPerfil as actualizarPerfilApi } from "../../api/usuarios.api";
+import { agregarUsuarioMock } from "./usuarios";
 
 export interface RegistrarCuentaInput {
   email: string;
@@ -49,6 +50,19 @@ const USUARIO_EMPLEADO_DTO = {
   email: USUARIO_EMPLEADO.email,
   nombre: "Carlos Méndez",
   rol: "empleado",
+  telefono: null,
+};
+
+const USUARIO_CLIENTE = {
+  email: "cliente@optiturno.com",
+  password: "password123",
+};
+
+const USUARIO_CLIENTE_DTO = {
+  id: "usr-1104",
+  email: USUARIO_CLIENTE.email,
+  nombre: "Cliente Demo",
+  rol: "cliente",
   telefono: null,
 };
 
@@ -103,8 +117,19 @@ export const authRepositorioMock: AuthRepositorio = {
       setSesionPersistida(sesion);
       return sesion;
     }
+    if (
+      normalizado === USUARIO_CLIENTE.email &&
+      password === USUARIO_CLIENTE.password
+    ) {
+      const sesion: SesionDTO = {
+        token: "TOKEN_SIMULADO_CLIENTE",
+        usuario: { ...USUARIO_CLIENTE_DTO },
+      };
+      setSesionPersistida(sesion);
+      return sesion;
+    }
     throw new Error(
-      "Credenciales inválidas. Usa admin@optiturno.com / password123, empleado@optiturno.com / password123 o regístrate.",
+      "Credenciales inválidas. Usa admin@optiturno.com / password123, empleado@optiturno.com / password123, cliente@optiturno.com / password123 o regístrate.",
     );
   },
   async registrar(datos) {
@@ -120,6 +145,14 @@ export const authRepositorioMock: AuthRepositorio = {
       nombre: datos.nombre,
       telefono: datos.telefono,
       rol: datos.rol || "cliente",
+    });
+    // La nueva cuenta también aparece en el panel de gestión de usuarios (demo)
+    agregarUsuarioMock({
+      id,
+      nombre: datos.nombre,
+      email: normalizado,
+      rol: datos.rol || "cliente",
+      telefono: datos.telefono || null,
     });
     // El registro entra automáticamente (login implícito)
     return this.login(normalizado, datos.password);

@@ -6,6 +6,7 @@ import {
   Clock,
   UserCheck,
   Users,
+  UserCog,
   LogOut,
   User,
   Info,
@@ -20,6 +21,7 @@ import AdminCatalog from "./components/AdminCatalog";
 import AdminAvailability from "./components/AdminAvailability";
 import AdminProfile from "./components/AdminProfile";
 import AdminTeam from "./components/AdminTeam";
+import AdminUsers from "./components/AdminUsers";
 import ClientShell from "./components/ClientShell";
 import AccessAuth from "./components/AccessAuth";
 import ThemeToggle from "./components/ThemeToggle"; // <-- IMPORTANTE: Componente importado
@@ -41,6 +43,7 @@ export default function App() {
   const errorDatos = useStore((s) => s.error);
   const esCliente = sesion?.usuario.rol === "cliente";
   const esEmpleado = sesion?.usuario.rol === "empleado";
+  const esSuperadmin = sesion?.usuario.rol === "superadmin";
 
   // Carga inicial: repositorios (mock o API) + comunicación hacia el PWA
   useEffect(() => {
@@ -135,6 +138,20 @@ export default function App() {
           >
             <Users size={16} />
             Equipo
+          </button>
+        )}
+
+        {esSuperadmin && (
+          <button
+            onClick={() => irATab("usuarios")}
+            className={`flex items-center gap-3 w-full px-4 py-3 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${
+              adminTab === "usuarios"
+                ? "bg-indigo-600/10 text-indigo-600 dark:text-indigo-400 border-l-4 border-indigo-500 shadow-sm shadow-indigo-600/5"
+                : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-900/50 hover:text-slate-900 dark:hover:text-slate-100"
+            }`}
+          >
+            <UserCog size={16} />
+            Usuarios
           </button>
         )}
 
@@ -349,6 +366,7 @@ export default function App() {
                 {adminTab === "calendar" && "Calendario Maestro"}
                 {adminTab === "catalog" && "Configuración de Catálogo"}
                 {adminTab === "team" && "Equipo de Profesionales"}
+                {adminTab === "usuarios" && "Gestión de Usuarios"}
                 {adminTab === "availability" && "Semanas Horarias Laborales"}
                 {adminTab === "profile" && "Perfil Onboarding del Comercio"}
               </h2>
@@ -364,6 +382,7 @@ export default function App() {
           {adminTab === "calendar" && <AdminCalendar />}
           {!esEmpleado && adminTab === "catalog" && <AdminCatalog />}
           {!esEmpleado && adminTab === "team" && <AdminTeam />}
+          {esSuperadmin && adminTab === "usuarios" && <AdminUsers />}
           {adminTab === "availability" && <AdminAvailability />}
           {!esEmpleado && adminTab === "profile" && <AdminProfile />}
         </main>

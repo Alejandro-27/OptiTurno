@@ -1,6 +1,9 @@
 import { FastifyInstance } from "fastify";
 import { usuariosController } from "../controllers/usuarios.controller";
-import { verificarAutenticacion } from "../middlewares/auth.middleware";
+import {
+  verificarAutenticacion,
+  permitirRoles,
+} from "../middlewares/auth.middleware";
 
 export default async function usuariosRoutes(fastify: FastifyInstance) {
   // Registro: crea el usuario en Supabase Auth + perfil espejo en 'usuarios'
@@ -21,5 +24,23 @@ export default async function usuariosRoutes(fastify: FastifyInstance) {
     "/me",
     { preHandler: [verificarAutenticacion] },
     usuariosController.actualizarMe,
+  );
+
+  // Lista todos los usuarios del sistema (solo superadmin)
+  fastify.get(
+    "/",
+    {
+      preHandler: [verificarAutenticacion, permitirRoles(["superadmin"])],
+    },
+    usuariosController.listarUsuarios,
+  );
+
+  // Edita correo (único) y/o rol de un usuario (solo superadmin)
+  fastify.patch(
+    "/:id",
+    {
+      preHandler: [verificarAutenticacion, permitirRoles(["superadmin"])],
+    },
+    usuariosController.editarUsuario,
   );
 }

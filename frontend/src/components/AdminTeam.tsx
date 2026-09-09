@@ -260,15 +260,15 @@ export default function AdminTeam() {
         </div>
       </div>
 
-      {/* Drawer: crear / editar profesional */}
+      {/* Modal centrado: crear / editar profesional */}
       {isDrawerOpen && (
         <div
-          className="fixed inset-0 z-50 bg-slate-950/60 backdrop-blur-sm flex justify-end animate-fade-in"
+          className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
           onClick={(e) => {
             if (e.target === e.currentTarget) setIsDrawerOpen(false);
           }}
         >
-          <div className="bg-white dark:bg-[#0b1120] border-l border-slate-200 dark:border-slate-800 w-full max-w-md h-full overflow-y-auto custom-scrollbar shadow-2xl animate-slide-left flex flex-col">
+          <div className="bg-white dark:bg-[#0b1120] border border-slate-200 dark:border-slate-800 w-full max-w-md max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl rounded-2xl animate-scale-up flex flex-col">
             <div className="p-6">
               <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800/80">
                 <div className="flex items-center gap-2">
@@ -351,7 +351,7 @@ export default function AdminTeam() {
               </form>
             </div>
 
-            <div className="mt-auto bg-slate-50 dark:bg-slate-950/60 p-4 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-3">
+            <div className="mt-auto bg-slate-50 dark:bg-slate-950/60 p-4 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-3 rounded-b-2xl">
               {operationError && (
                 <div className="flex items-center gap-2 text-[11px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2">
                   <ShieldAlert size={14} />

@@ -74,6 +74,8 @@ Si falta `SUPABASE_ANON_KEY`, el login devuelve "El login no esta disponible" �
 | `GET/POST /api/ausencias`, `DELETE /api/ausencias/:id` | admin_negocio/superadmin/empleado | Ausencias del profesional del usuario logueado |
 | `GET /api/profesionales/:id/horarios` | Pública (GET) | Semana laboral de un profesional |
 | `PUT /api/profesionales/:id/horarios` | admin_negocio/superadmin/empleado | Reemplaza la semana; `empleado` solo la propia |
+| `GET /api/usuarios` | superadmin | Lista todos los usuarios (rol en `usuarios`) |
+| `PATCH /api/usuarios/:id` | superadmin | Cambia email (único, sincroniza Auth con `email_confirm: true`) y/o rol; un superadmin NO puede cambiar su propio rol (400) |
 | `POST /api/turnos/reservar` | JWT (cliente) | Body: `profesional_id, servicio_id, fecha, hora_inicio` |
 | `GET /api/turnos/mios` | JWT (cliente) | Historial del cliente |
 | `PATCH /api/turnos/:id/cancelar` | JWT (cliente) | Valida propiedad |

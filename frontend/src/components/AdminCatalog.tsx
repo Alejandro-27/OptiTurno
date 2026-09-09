@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   Sparkles,
   Plus,
@@ -20,6 +20,7 @@ import { guardarServicio, eliminarServicio, useStore } from "../store";
 
 export default function AdminCatalog() {
   const servicios = useStore((s) => s.servicios);
+  const formRef = useRef<HTMLFormElement>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [activeFilter, setActiveFilter] = useState<
     "all" | "activo" | "pausado"
@@ -274,11 +275,16 @@ export default function AdminCatalog() {
         </div>
       </div>
 
-      {/* Right Drawer Panel (Slides neatly when isDrawerOpen is true) */}
+      {/* Modal centrado: crear / editar servicio */}
       {isDrawerOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden bg-slate-950/60 backdrop-blur-sm flex justify-end animate-fade-in">
-          <div className="bg-white dark:bg-[#0b1120] border-l border-slate-200 dark:border-slate-800 w-full max-w-md h-full flex flex-col justify-between shadow-2xl animate-slide-left p-6">
-            <div className="space-y-6">
+        <div
+          className="fixed inset-0 z-50 overflow-y-auto bg-slate-950/60 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setIsDrawerOpen(false);
+          }}
+        >
+          <div className="bg-white dark:bg-[#0b1120] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-md flex flex-col justify-between overflow-hidden animate-scale-up">
+            <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar">
               <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800/80">
                 <div className="flex items-center gap-2">
                   <Sparkles
@@ -300,7 +306,7 @@ export default function AdminCatalog() {
               </div>
 
               {/* Form schema */}
-              <form onSubmit={handleSubmit} className="space-y-4">
+              <form ref={formRef} onSubmit={handleSubmit} className="space-y-4">
                 <div className="space-y-1.5">
                   <label className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
                     Nombre del Servicio
@@ -402,15 +408,10 @@ export default function AdminCatalog() {
                   </div>
                 </div>
 
-                <button
-                  type="submit"
-                  className="hidden"
-                  id="drawer-submit-btn"
-                ></button>
-              </form>
+                </form>
             </div>
 
-            <div className="bg-slate-50 dark:bg-slate-950/60 p-4 -mx-6 -mb-6 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-3">
+            <div className="bg-slate-50 dark:bg-slate-950/60 p-4 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-3 rounded-b-2xl">
               {operationError && (
                 <div className="flex items-center gap-2 text-[11px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2">
                   <ShieldAlert size={14} />
@@ -427,10 +428,7 @@ export default function AdminCatalog() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => {
-                    const btn = document.getElementById("drawer-submit-btn");
-                    if (btn) btn.click();
-                  }}
+                  onClick={() => formRef.current?.requestSubmit()}
                   className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-indigo-600/15"
                 >
                   Guardar

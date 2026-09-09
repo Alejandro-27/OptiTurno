@@ -1,8 +1,10 @@
 import { apiClient } from "./api.client";
 import type {
+  EditarUsuarioInputDTO,
   LoginUsuarioInput,
   RegistrarUsuarioInput,
   SesionDTO,
+  UsuarioAdminDTO,
   UsuarioSesionDTO,
 } from "./dto";
 
@@ -37,5 +39,23 @@ export const actualizarPerfil = async (datos: {
   telefono?: string;
 }): Promise<UsuarioSesionDTO> => {
   const { data } = await apiClient.put<UsuarioSesionDTO>("/usuarios/me", datos);
+  return data;
+};
+
+// Lista todos los usuarios del sistema (solo superadmin)
+export const listarUsuarios = async (): Promise<UsuarioAdminDTO[]> => {
+  const { data } = await apiClient.get<UsuarioAdminDTO[]>("/usuarios");
+  return data;
+};
+
+// Edita el correo (único) y/o el rol de un usuario (solo superadmin)
+export const editarUsuario = async (
+  id: string,
+  datos: EditarUsuarioInputDTO,
+): Promise<UsuarioAdminDTO> => {
+  const { data } = await apiClient.patch<UsuarioAdminDTO>(
+    `/usuarios/${id}`,
+    datos,
+  );
   return data;
 };

@@ -131,6 +131,20 @@ export interface UsuarioSesionDTO {
   telefono?: string | null;
 }
 
+// Usuario para el panel de gestión (superadmin)
+export interface UsuarioAdminDTO {
+  id: string;
+  nombre: string;
+  email: string;
+  rol: string;
+  telefono?: string | null;
+}
+
+export interface EditarUsuarioInputDTO {
+  email?: string;
+  rol?: string;
+}
+
 export interface SesionDTO {
   token: string;
   usuario: UsuarioSesionDTO;
