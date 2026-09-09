@@ -1,6 +1,7 @@
 import type { BookingEvent } from "../../types";
 import { initialBookings } from "../../data/index";
 import type { DisponibilidadDTO, MisTurnoDTO } from "../../api/dto";
+import { obtenerAusenciasMock } from "./ausencias";
 import {
   obtenerDisponibilidad,
   reservarTurno,
@@ -89,19 +90,49 @@ export const turnosRepositorioMock: TurnosRepositorio = {
   async cancelarTurno(id) {
     cacheTurnos = (cacheTurnos || semillaTurnos()).filter((b) => b.id !== id);
   },
-  async obtenerDisponibilidad(profesionalId) {
+  async obtenerDisponibilidad(profesionalId, fecha) {
+    const horaCorta = (hora: string) => hora.slice(0, 5);
     const fin = (hora: string) => {
       const d = new Date(`1970-01-01T${hora}:00`);
       d.setMinutes(d.getMinutes() + 30);
       return d.toTimeString().slice(0, 5);
     };
+
+    const fechaConsulta =
+      fecha || new Date().toISOString().slice(0, 10);
+
+    // Ausencias en memoria del profesional para la fecha consultada
+    const ausencias = obtenerAusenciasMock().filter(
+      (a) =>
+        a.fecha === fechaConsulta &&
+        a.profesional_id === profesionalId,
+    );
+
+    // Día completo: sin disponibilidad alguna
+    if (ausencias.some((a) => !a.hora_inicio)) {
+      return {
+        fecha: fechaConsulta,
+        jornadaLaboral: { inicio: "09:00", fin: "18:00" },
+        bloquesOcupados: [],
+      };
+    }
+
+    // Franjas parciales: se suman a los bloques ocupados
+    const franjasAusentes = ausencias
+      .filter((a) => a.hora_inicio && a.hora_fin)
+      .map((a) => ({
+        hora_inicio: horaCorta(a.hora_inicio!),
+        hora_fin: horaCorta(a.hora_fin!),
+      }));
+
     return {
-      fecha: new Date().toISOString().slice(0, 10),
+      fecha: fechaConsulta,
       jornadaLaboral: { inicio: "09:00", fin: "18:00" },
       bloquesOcupados: [
         { hora_inicio: "10:00", hora_fin: fin("10:00") },
         { hora_inicio: "12:00", hora_fin: fin("12:00") },
         { hora_inicio: "14:00", hora_fin: fin("14:00") },
+        ...franjasAusentes,
       ],
     };
   },

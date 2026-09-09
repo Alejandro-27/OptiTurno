@@ -7,6 +7,7 @@ import profesionalesRoutes from './routes/profesionales.routes';
 import usuariosRoutes from './routes/usuarios.routes';
 import { actividadRoutes } from './routes/actividad.routes';
 import { disponibilidadRoutes } from './routes/disponibilidad.routes';
+import { ausenciasRoutes } from './routes/ausencias.routes';
 
 dotenv.config();
 
@@ -35,6 +36,7 @@ const start = async () => {
     await fastify.register(profesionalesRoutes, { prefix: '/api/profesionales' }); // Registrar profesionales
     await fastify.register(actividadRoutes, { prefix: '/api/actividad' }); // Actividad reciente de la sucursal (panel admin)
     await fastify.register(disponibilidadRoutes, { prefix: '/api/disponibilidad-semanal' }); // Disponibilidad semanal (panel admin)
+    await fastify.register(ausenciasRoutes, { prefix: '/api/ausencias' }); // Ausencias de profesionales (panel empleado)
 
     // Health Check global
     fastify.get("/api/ping", async () => {

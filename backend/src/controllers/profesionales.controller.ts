@@ -1,5 +1,19 @@
 import { FastifyRequest, FastifyReply } from "fastify";
-import { profesionalesService } from "../services/profesionales.service";
+import {
+  profesionalesService,
+  consultarPropietarioService,
+  obtenerHorarioSemanalService,
+  guardarHorarioSemanalService,
+} from "../services/profesionales.service";
+
+interface DiaHorario {
+  day: string;
+  enabled: boolean;
+  openTime: string;
+  closeTime: string;
+  restStart: string;
+  restEnd: string;
+}
 
 export const profesionalesController = {
   async crear(request: FastifyRequest, reply: FastifyReply) {
@@ -46,6 +60,48 @@ export const profesionalesController = {
       return reply
         .status(error?.status || 400)
         .send({ error: error?.message || "No se pudo eliminar el profesional." });
+    }
+  },
+
+  // GET /profesionales/:id/horarios — semana laboral de un profesional
+  async obtenerHorarioSemanal(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { id } = request.params as { id: string };
+      const horario = await obtenerHorarioSemanalService(id);
+      return reply.send(horario);
+    } catch (error: any) {
+      return reply
+        .status(error?.status || 400)
+        .send({ error: error?.message || "No se pudo obtener el horario." });
+    }
+  },
+
+  // PUT /profesionales/:id/horarios — reemplaza la semana laboral del profesional.
+  // Un empleado solo puede modificar su propio horario.
+  async guardarHorarioSemanal(request: FastifyRequest, reply: FastifyReply) {
+    try {
+      const { id } = request.params as { id: string };
+      const schedule = request.body as DiaHorario[];
+
+      if (!Array.isArray(schedule) || schedule.length === 0) {
+        return reply.status(400).send({ error: "La programación semanal está vacía." });
+      }
+
+      if (request.usuario!.rol === "empleado") {
+        const propietario = await consultarPropietarioService(id);
+        if (propietario !== request.usuario!.id) {
+          return reply.status(403).send({
+            error: "No puedes modificar el horario de otro profesional.",
+          });
+        }
+      }
+
+      const guardado = await guardarHorarioSemanalService(id, schedule);
+      return reply.send(guardado);
+    } catch (error: any) {
+      return reply
+        .status(error?.status || 400)
+        .send({ error: error?.message || "No se pudo guardar el horario." });
     }
   },
 };

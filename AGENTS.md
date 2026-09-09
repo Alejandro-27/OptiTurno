@@ -68,7 +68,8 @@ pnpm build:frontend   # build del frontend (usado por Vercel)
 
 ## Convenciones de datos
 
-- Roles: `cliente | admin_negocio | superadmin` (tabla `usuarios`).
+- Roles: `cliente | admin_negocio | superadmin | empleado` (tabla `usuarios`). `empleado` = profesional registrado con su cuenta; en el panel solo gestiona su propio horario y ausencias.
+- Ausencias profesionales: tabla `profesional_ausencias` (día completo = `hora_inicio NULL`; parcial = rango `hora_inicio`/`hora_fin`). El backend y el mock excluyen esas franjas de la disponibilidad y bloquean reservas (409).
 - Estados de turno: `pendiente_pago | confirmado | cancelado | completado`.
 - El `cliente_id` de una reserva sale del JWT, nunca del body del request.
 - Índice GIST `no_solapar_turnos` en `turnos` evita doble reserva (error 23P01 → 409).

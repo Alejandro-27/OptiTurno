@@ -7,7 +7,7 @@ import {
   UserCheck,
   Users,
   LogOut,
-  Database,
+  User,
   Info,
   Menu,
   X,
@@ -40,6 +40,7 @@ export default function App() {
   const sesion = useStore((s) => s.sesion);
   const errorDatos = useStore((s) => s.error);
   const esCliente = sesion?.usuario.rol === "cliente";
+  const esEmpleado = sesion?.usuario.rol === "empleado";
 
   // Carga inicial: repositorios (mock o API) + comunicación hacia el PWA
   useEffect(() => {
@@ -109,29 +110,33 @@ export default function App() {
           Calendario Maestro
         </button>
 
-        <button
-          onClick={() => irATab("catalog")}
-          className={`flex items-center gap-3 w-full px-4 py-3 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${
-            adminTab === "catalog"
-              ? "bg-indigo-600/10 text-indigo-600 dark:text-indigo-400 border-l-4 border-indigo-500 shadow-sm shadow-indigo-600/5"
-              : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-900/50 hover:text-slate-900 dark:hover:text-slate-100"
-          }`}
-        >
-          <BookOpen size={16} />
-          Catálogo de Servicios
-        </button>
+        {!esEmpleado && (
+          <button
+            onClick={() => irATab("catalog")}
+            className={`flex items-center gap-3 w-full px-4 py-3 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${
+              adminTab === "catalog"
+                ? "bg-indigo-600/10 text-indigo-600 dark:text-indigo-400 border-l-4 border-indigo-500 shadow-sm shadow-indigo-600/5"
+                : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-900/50 hover:text-slate-900 dark:hover:text-slate-100"
+            }`}
+          >
+            <BookOpen size={16} />
+            Catálogo de Servicios
+          </button>
+        )}
 
-        <button
-          onClick={() => irATab("team")}
-          className={`flex items-center gap-3 w-full px-4 py-3 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${
-            adminTab === "team"
-              ? "bg-indigo-600/10 text-indigo-600 dark:text-indigo-400 border-l-4 border-indigo-500 shadow-sm shadow-indigo-600/5"
-              : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-900/50 hover:text-slate-900 dark:hover:text-slate-100"
-          }`}
-        >
-          <Users size={16} />
-          Equipo
-        </button>
+        {!esEmpleado && (
+          <button
+            onClick={() => irATab("team")}
+            className={`flex items-center gap-3 w-full px-4 py-3 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${
+              adminTab === "team"
+                ? "bg-indigo-600/10 text-indigo-600 dark:text-indigo-400 border-l-4 border-indigo-500 shadow-sm shadow-indigo-600/5"
+                : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-900/50 hover:text-slate-900 dark:hover:text-slate-100"
+            }`}
+          >
+            <Users size={16} />
+            Equipo
+          </button>
+        )}
 
         <button
           onClick={() => irATab("availability")}
@@ -145,27 +150,33 @@ export default function App() {
           Disponibilidad
         </button>
 
-        <button
-          onClick={() => irATab("profile")}
-          className={`flex items-center gap-3 w-full px-4 py-3 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${
-            adminTab === "profile"
-              ? "bg-indigo-600/10 text-indigo-600 dark:text-indigo-400 border-l-4 border-indigo-500"
-              : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-900/50 hover:text-slate-900 dark:hover:text-slate-100"
-          }`}
-        >
-          <UserCheck size={16} />
-          Registro de Comercio
-        </button>
+        {!esEmpleado && (
+          <button
+            onClick={() => irATab("profile")}
+            className={`flex items-center gap-3 w-full px-4 py-3 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${
+              adminTab === "profile"
+                ? "bg-indigo-600/10 text-indigo-600 dark:text-indigo-400 border-l-4 border-indigo-500"
+                : "text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-900/50 hover:text-slate-900 dark:hover:text-slate-100"
+            }`}
+          >
+            <UserCheck size={16} />
+            Editar Comercio
+          </button>
+        )}
       </nav>
 
       <div className="border-t border-slate-200 dark:border-slate-900 pt-5 space-y-2">
-        <div className="p-3.5 bg-slate-200/50 dark:bg-slate-950 rounded-xl border border-slate-300/60 dark:border-slate-900 text-left">
+        <div className="p-3.5 bg-slate-200/50 dark:bg-slate-950 rounded-xl border border-slate-300/60 dark:border-slate-900 text-left min-w-0">
           <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">
-            Base de Datos
+            {esEmpleado
+              ? "Empleado"
+              : sesion.usuario.rol === "superadmin"
+                ? "Super Admin"
+                : "Comercio"}
           </span>
-          <span className="text-xs font-bold flex items-center gap-1.5 text-indigo-600 dark:text-indigo-300 mt-1">
-            <Database size={12} />
-            PostgreSQL: ONLINE
+          <span className="text-xs font-bold flex items-center gap-1.5 text-indigo-600 dark:text-indigo-300 mt-1 truncate">
+            <User size={12} className="flex-shrink-0" />
+            {sesion.usuario.nombre}
           </span>
         </div>
 
@@ -351,10 +362,10 @@ export default function App() {
             <AdminDashboard onNavigate={(tab) => setAdminTab(tab)} />
           )}
           {adminTab === "calendar" && <AdminCalendar />}
-          {adminTab === "catalog" && <AdminCatalog />}
-          {adminTab === "team" && <AdminTeam />}
+          {!esEmpleado && adminTab === "catalog" && <AdminCatalog />}
+          {!esEmpleado && adminTab === "team" && <AdminTeam />}
           {adminTab === "availability" && <AdminAvailability />}
-          {adminTab === "profile" && <AdminProfile />}
+          {!esEmpleado && adminTab === "profile" && <AdminProfile />}
         </main>
       </div>
     </div>

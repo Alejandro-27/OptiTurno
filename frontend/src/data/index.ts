@@ -21,6 +21,10 @@ import {
   sucursalesRepositorioMock,
   sucursalesRepositorioApi,
 } from "./repos/sucursales";
+import {
+  ausenciasRepositorioMock,
+  ausenciasRepositorioApi,
+} from "./repos/ausencias";
 
 export const repositorios = usarMocks()
   ? {
@@ -31,6 +35,7 @@ export const repositorios = usarMocks()
       auth: authRepositorioMock,
       profesionales: profesionalesRepositorioMock,
       sucursales: sucursalesRepositorioMock,
+      ausencias: ausenciasRepositorioMock,
     }
   : {
       servicios: serviciosRepositorioApi,
@@ -40,6 +45,7 @@ export const repositorios = usarMocks()
       auth: authRepositorioApi,
       profesionales: profesionalesRepositorioApi,
       sucursales: sucursalesRepositorioApi,
+      ausencias: ausenciasRepositorioApi,
     };
 
 export {
@@ -49,6 +55,7 @@ export {
   disponibilidadRepositorioMock,
   profesionalesRepositorioMock,
   sucursalesRepositorioMock,
+  ausenciasRepositorioMock,
 };
 export * from "../data";
 export * from "./session";

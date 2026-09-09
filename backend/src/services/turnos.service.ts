@@ -14,6 +14,12 @@ interface ConsultarDisponibilidadInput {
   fecha: string;
 }
 
+// Arma un Date consistente a partir de una fecha y una hora con o sin segundos
+const aFechaHora = (fecha: string, hora: string): Date => {
+  const segundos = hora.split(":").length === 3 ? hora : `${hora}:00`;
+  return new Date(`${fecha}T${segundos}Z`);
+};
+
 export const crearTurnoService = async (datos: CrearTurnoInput) => {
   const { cliente_id, profesional_id, servicio_id, fecha, hora_inicio } = datos;
 
@@ -33,6 +39,34 @@ export const crearTurnoService = async (datos: CrearTurnoInput) => {
   const fechaBase = new Date(2026, 0, 1, horas, minutos, segundos || 0);
   fechaBase.setMinutes(fechaBase.getMinutes() + servicio.duracion_minutos);
   const hora_fin = fechaBase.toTimeString().split(" ")[0];
+
+  // El profesional no puede recibir reservas en días/horas con ausencia
+  const { data: ausencias, error: errorAusencias } = await supabase
+    .from("profesional_ausencias")
+    .select("hora_inicio, hora_fin")
+    .eq("profesional_id", profesional_id)
+    .eq("fecha", fecha);
+
+  if (errorAusencias) throw errorAusencias;
+
+  const inicioReserva = aFechaHora(fecha, hora_inicio);
+  const finReserva = aFechaHora(fecha, hora_fin);
+
+  const bloqueado = (ausencias || []).some((a) => {
+    // Ausencia de día completo
+    if (!a.hora_inicio || !a.hora_fin) return true;
+    // Ausencia parcial: se solapa con el rango solicitado
+    const ausInicio = aFechaHora(fecha, a.hora_inicio);
+    const ausFin = aFechaHora(fecha, a.hora_fin);
+    return inicioReserva < ausFin && finReserva > ausInicio;
+  });
+
+  if (bloqueado) {
+    throw {
+      status: 409,
+      message: "El profesional no está disponible en ese horario.",
+    };
+  }
 
   // Insertar el turno en la base de datos
   const { data: nuevoTurno, error: errorTurno } = await supabase
@@ -122,6 +156,34 @@ export const consultarDisponibilidadService = async (
     };
   }
 
+  // Ausencia de día completo: el profesional no atiende esa fecha
+  const { data: ausenciaDiaCompleto, error: errorAusencia } = await supabase
+    .from("profesional_ausencias")
+    .select("id")
+    .eq("profesional_id", profesional_id)
+    .eq("fecha", fecha)
+    .is("hora_inicio", null)
+    .maybeSingle();
+
+  if (errorAusencia) throw errorAusencia;
+
+  if (ausenciaDiaCompleto) {
+    return {
+      message: "El profesional no está disponible en esta fecha.",
+      horariosDisponibles: [],
+    };
+  }
+
+  // Franjas de ausencia parcial dentro del día (bloques a mostrar como ocupados)
+  const { data: ausenciasParciales, error: errorAusParcial } = await supabase
+    .from("profesional_ausencias")
+    .select("hora_inicio, hora_fin")
+    .eq("profesional_id", profesional_id)
+    .eq("fecha", fecha)
+    .not("hora_inicio", "is", null);
+
+  if (errorAusParcial) throw errorAusParcial;
+
   // Traer los turnos que YA están ocupados (confirmados o pendientes de pago) para ese día
 
   const { data: turnosOcupados, error: errorTurnos } = await supabase
@@ -142,7 +204,7 @@ export const consultarDisponibilidadService = async (
       inicio: horarioLaboral.hora_inicio,
       fin: horarioLaboral.hora_fin,
     },
-    bloquesOcupados: turnosOcupados || [],
+    bloquesOcupados: [...(turnosOcupados || []), ...(ausenciasParciales || [])],
   };
 };
 

@@ -55,7 +55,7 @@ Si falta `SUPABASE_ANON_KEY`, el login devuelve "El login no esta disponible" �
 ## Patrones obligatorios
 
 1. **Auth**: rutas protegidas con `preHandler: [verificarAutenticacion, permitirRoles([...])]`. Rutas públicas: solo las de catálogo/disponibilidad/registro/login. Los endpoints de escritura (`/api/negocios/*`, `/api/profesionales/`, `/api/seed`) requieren `admin_negocio`/`superadmin`.
-2. **Roles**: `cliente`, `admin_negocio`, `superadmin`. En registro público, el rol se valida contra una whitelist (`cliente | admin_negocio`) en el service — `superadmin` NUNCA se acepta del body.
+2. **Roles**: `cliente`, `admin_negocio`, `superadmin`, `empleado` (profesional vinculado a una sucursal). En registro público el rol se valida contra una whitelist (`cliente | admin_negocio`) en el service — `superadmin`/`empleado` NUNCA se aceptan del body. Un `empleado` solo gestiona su propio horario (`PUT /api/profesionales/:id/horarios` con check de propiedad) y sus ausencias.
 3. **El `cliente_id` de una reserva sale de `request.usuario!.id`** (JWT), nunca del body.
 4. **Errores**: responder mensajes genéricos en español; `err.message` solo a logs. Formato de error: `{ error: string }`.
 5. **Códigos**: conflicto de horario (GIST 23P01 / `no_solapar_turnos`) → 409; turno de otro usuario → 403; no existe → 404; ya cancelado → 409.
@@ -71,6 +71,9 @@ Si falta `SUPABASE_ANON_KEY`, el login devuelve "El login no esta disponible" �
 | `GET/PUT /api/usuarios/me` | JWT | Perfil propio |
 | `GET /api/sucursales/:id/servicios` y `/profesionales` | Públicas | Catálogo |
 | `GET /api/turnos/disponibilidad` | Pública | Query `{ profesional_id, fecha }` |
+| `GET/POST /api/ausencias`, `DELETE /api/ausencias/:id` | admin_negocio/superadmin/empleado | Ausencias del profesional del usuario logueado |
+| `GET /api/profesionales/:id/horarios` | Pública (GET) | Semana laboral de un profesional |
+| `PUT /api/profesionales/:id/horarios` | admin_negocio/superadmin/empleado | Reemplaza la semana; `empleado` solo la propia |
 | `POST /api/turnos/reservar` | JWT (cliente) | Body: `profesional_id, servicio_id, fecha, hora_inicio` |
 | `GET /api/turnos/mios` | JWT (cliente) | Historial del cliente |
 | `PATCH /api/turnos/:id/cancelar` | JWT (cliente) | Valida propiedad |
@@ -79,7 +82,7 @@ Si falta `SUPABASE_ANON_KEY`, el login devuelve "El login no esta disponible" �
 
 ## Queries y datos
 
-- Tablas: `usuarios`, `negocios`, `sucursales`, `servicios`, `profesionales`, `turnos`, `horarios_laborales`.
+- Tablas: `usuarios`, `negocios`, `sucursales`, `servicios`, `profesionales`, `turnos`, `horarios_laborales`, `profesional_ausencias`.
 - Los joins de `turnos` suelen incluir `servicios (nombre, precio)` y `profesionales (especialidad) → usuarios (nombre)`.
 - El seeder de `negocios.service.ts` es la fuente de datos demo (UUIDs fijos 11111111-…/22222222-…).
 - Cuidado con el typo histórico `descripción` (con tilde) en un SELECT de servicios — verificar contra el esquema real.

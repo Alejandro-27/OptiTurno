@@ -1,12 +1,15 @@
-import type { Profesional } from "../../types";
+import type { Profesional, DayAvailability } from "../../types";
 import { obtenerProfesionales } from "../../api/negocios.api";
 import {
   crearProfesional as crearProfesionalApi,
   editarProfesional as editarProfesionalApi,
   eliminarProfesional as eliminarProfesionalApi,
+  obtenerHorarioSemanal as obtenerHorarioSemanalApi,
+  guardarHorarioSemanal as guardarHorarioSemanalApi,
   type CrearProfesionalInput,
   type EditarProfesionalInput,
 } from "../../api/profesionales.api";
+import { defaultAvailability } from "../../data/index";
 import { profesionalDtoToUI } from "../mappers";
 
 export interface DatosCrearProfesional {
@@ -33,6 +36,11 @@ export interface ProfesionalesRepositorio {
     datos: DatosEditarProfesional,
   ): Promise<Profesional>;
   eliminarProfesional(id: string): Promise<void>;
+  obtenerHorarioSemanal(id: string): Promise<DayAvailability[]>;
+  guardarHorarioSemanal(
+    id: string,
+    schedule: DayAvailability[],
+  ): Promise<DayAvailability[]>;
 }
 
 const profesionalesMock: Profesional[] = [
@@ -90,7 +98,24 @@ export const profesionalesRepositorioMock: ProfesionalesRepositorio = {
     if (indice === -1) throw new Error("El profesional no existe.");
     profesionalesMock.splice(indice, 1);
   },
+  async obtenerHorarioSemanal(id) {
+    const indice = profesionalesMock.findIndex((p) => p.id === id);
+    if (indice === -1) throw new Error("El profesional no existe.");
+    if (!horariosMock.has(id)) {
+      horariosMock.set(id, defaultAvailability.map((d) => ({ ...d })));
+    }
+    return horariosMock.get(id)!.map((d) => ({ ...d }));
+  },
+  async guardarHorarioSemanal(id, schedule) {
+    const indice = profesionalesMock.findIndex((p) => p.id === id);
+    if (indice === -1) throw new Error("El profesional no existe.");
+    horariosMock.set(id, schedule.map((d) => ({ ...d })));
+    return horariosMock.get(id)!.map((d) => ({ ...d }));
+  },
 };
+
+// Horarios semanales por profesional en memoria (modo demo)
+const horariosMock = new Map<string, DayAvailability[]>();
 
 export const profesionalesRepositorioApi: ProfesionalesRepositorio = {
   async listarProfesionales(sucursalId) {
@@ -127,5 +152,11 @@ export const profesionalesRepositorioApi: ProfesionalesRepositorio = {
   },
   async eliminarProfesional(id) {
     await eliminarProfesionalApi(id);
+  },
+  async obtenerHorarioSemanal(id) {
+    return obtenerHorarioSemanalApi(id);
+  },
+  async guardarHorarioSemanal(id, schedule) {
+    return guardarHorarioSemanalApi(id, schedule);
   },
 };

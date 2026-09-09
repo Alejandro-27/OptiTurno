@@ -41,8 +41,8 @@ Componente → acción del store → `repositorios.<dominio>` (mock o API según
 ## Estado global (store)
 
 - `useStore((s) => s.x)` con `useSyncExternalStore`. NO agregar Redux/Zustand.
-- Estado: `sesion`, `servicios`, `turnos`, `logs`, `equipo`, `misTurnos`, `misTurnosCargando`, `error`, `cargando`, `inicializado`.
-- Acciones: `login`, `registrar`, `logout`, `cargarMisTurnos`, `cancelarTurnoCliente`, `actualizarPerfil`, `guardarServicio`, `eliminarServicio`, `reservarTurno`, `cancelarTurno`, `guardarDisponibilidad`, `agregarLog`.
+- Estado: `sesion`, `servicios`, `turnos`, `logs`, `equipo`, `misTurnos`, `ausencias`, `misTurnosCargando`, `error`, `cargando`, `inicializado`.
+- Acciones: `login`, `registrar`, `logout`, `cargarMisTurnos`, `cancelarTurnoCliente`, `actualizarPerfil`, `guardarServicio`, `eliminarServicio`, `reservarTurno`, `cancelarTurno`, `guardarDisponibilidad`, `cargarAusencias`, `crearAusencia`, `eliminarAusencia`, `cargarHorarioEmpleado`, `guardarHorarioEmpleado`, `agregarLog`.
 - `logout()` NO resetea los caches de los repos mock (pendiente de fix): no asumir limpieza.
 
 ## Sesión (regla #1 del AGENTS raíz)
@@ -58,7 +58,9 @@ Componente → acción del store → `repositorios.<dominio>` (mock o API según
   - `Reservar Cita` → `ClientPwa` (flujo 4 pasos: catálogo → fecha/hora → datos → confirmación)
   - `Mis Turnos` → `MisTurnosView` (listar + cancelar con confirm)
   - `Mi Perfil` → `MiPerfilView` (nombre + WhatsApp vía `/usuarios/me`)
-- **admin_negocio/superadmin** → panel admin en `App.tsx` con tabs: dashboard, calendar, catalog, availability, profile.
+- **admin_negocio/superadmin** → panel admin en `App.tsx` con tabs: dashboard, calendar, catalog, availability, profile + footer con nombre de cuenta.
+- **empleado** → mismo panel pero SOLO tabs dashboard, calendar, availability ("Modo: Mi Semana" + sección "Mis Ausencias y Vacaciones"); sin Catálogo/Equipo/Editar Comercio.
+- Alertas ausencias: cuando el backend o el mock rechazan una reserva por ausencia, el mensaje genérico es "El profesional no está disponible en esa fecha." / "...en ese horario.".
 - `window.abrirVistaCliente` (patrón legacy, pendiente de migrar a Context): `AdminProfile` lo usa para saltar a la vista cliente.
 
 ## Convenciones de UI

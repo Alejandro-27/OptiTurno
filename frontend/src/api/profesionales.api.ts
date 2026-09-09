@@ -1,5 +1,6 @@
 import { apiClient } from "./api.client";
 import type { ProfesionalDTO } from "./dto";
+import type { DayAvailability } from "../types";
 
 export interface CrearProfesionalInput {
   sucursal_id: string;
@@ -41,6 +42,28 @@ export const eliminarProfesional = async (
 ): Promise<{ id: string; eliminado: boolean }> => {
   const { data } = await apiClient.delete<{ id: string; eliminado: boolean }>(
     `/profesionales/${id}`,
+  );
+  return data;
+};
+
+// Semana laboral de un profesional puntual (GET /profesionales/:id/horarios)
+export const obtenerHorarioSemanal = async (
+  id: string,
+): Promise<DayAvailability[]> => {
+  const { data } = await apiClient.get<DayAvailability[]>(
+    `/profesionales/${id}/horarios`,
+  );
+  return data;
+};
+
+// Reemplaza la semana laboral de un profesional (PUT /profesionales/:id/horarios)
+export const guardarHorarioSemanal = async (
+  id: string,
+  schedule: DayAvailability[],
+): Promise<DayAvailability[]> => {
+  const { data } = await apiClient.put<DayAvailability[]>(
+    `/profesionales/${id}/horarios`,
+    schedule,
   );
   return data;
 };

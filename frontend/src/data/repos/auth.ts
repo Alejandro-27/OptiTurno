@@ -39,6 +39,19 @@ const USUARIO_DEMO_DTO = {
   telefono: null,
 };
 
+const USUARIO_EMPLEADO = {
+  email: "empleado@optiturno.com",
+  password: "password123",
+};
+
+const USUARIO_EMPLEADO_DTO = {
+  id: "usr-1102",
+  email: USUARIO_EMPLEADO.email,
+  nombre: "Carlos Méndez",
+  rol: "empleado",
+  telefono: null,
+};
+
 // Cuentas registradas en memoria durante la sesión del navegador (solo modo demo)
 const cuentasRegistradas: Array<{
   email: string;
@@ -63,6 +76,17 @@ export const authRepositorioMock: AuthRepositorio = {
       setSesionPersistida(sesion);
       return sesion;
     }
+    if (
+      normalizado === USUARIO_EMPLEADO.email &&
+      password === USUARIO_EMPLEADO.password
+    ) {
+      const sesion: SesionDTO = {
+        token: "TOKEN_SIMULADO_EMPLEADO",
+        usuario: { ...USUARIO_EMPLEADO_DTO },
+      };
+      setSesionPersistida(sesion);
+      return sesion;
+    }
     const cuenta = cuentasRegistradas.find(
       (c) => c.email === normalizado && c.password === password,
     );
@@ -80,7 +104,7 @@ export const authRepositorioMock: AuthRepositorio = {
       return sesion;
     }
     throw new Error(
-      "Credenciales inválidas. Usa admin@optiturno.com / password123 o regístrate.",
+      "Credenciales inválidas. Usa admin@optiturno.com / password123, empleado@optiturno.com / password123 o regístrate.",
     );
   },
   async registrar(datos) {

@@ -9,6 +9,108 @@ const HORARIOS_DEFECTO = [
   { dia_semana: 5, hora_inicio: "08:00:00", hora_fin: "18:00:00" },
 ];
 
+// Días de la semana en el orden de la UI, con su índice en la BD
+const DIAS_SEMANA: Array<{ label: string; numero: number }> = [
+  { label: "Lunes", numero: 1 },
+  { label: "Martes", numero: 2 },
+  { label: "Miércoles", numero: 3 },
+  { label: "Jueves", numero: 4 },
+  { label: "Viernes", numero: 5 },
+  { label: "Sábado", numero: 6 },
+  { label: "Domingo", numero: 0 },
+];
+
+const HORARIO_DEFECTO = {
+  openTime: "09:00",
+  closeTime: "18:00",
+  restStart: "13:00",
+  restEnd: "14:00",
+};
+
+const horaCorta = (hora: string): string => hora.slice(0, 5);
+
+export const consultarPropietarioService = async (profesionalId: string) => {
+  const { data, error } = await supabase
+    .from("profesionales")
+    .select("usuario_id")
+    .eq("id", profesionalId)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data?.usuario_id || null;
+};
+
+// Semana laboral de un profesional puntual (panel del empleado)
+export const obtenerHorarioSemanalService = async (profesionalId: string) => {
+  const { data: horarios, error } = await supabase
+    .from("horarios_laborales")
+    .select("dia_semana, hora_inicio, hora_fin")
+    .eq("profesional_id", profesionalId);
+
+  if (error) throw error;
+
+  const filaVacia = (label: string) => ({
+    day: label,
+    enabled: false,
+    ...HORARIO_DEFECTO,
+  });
+
+  return DIAS_SEMANA.map((d) => {
+    const horario = (horarios || []).find((h) => h.dia_semana === d.numero);
+    if (!horario) return filaVacia(d.label);
+    return {
+      day: d.label,
+      enabled: true,
+      ...HORARIO_DEFECTO,
+      openTime: horaCorta(horario.hora_inicio),
+      closeTime: horaCorta(horario.hora_fin),
+    };
+  });
+};
+
+// Reemplaza la semana laboral completa de un profesional puntual
+export const guardarHorarioSemanalService = async (
+  profesionalId: string,
+  schedule: Array<{
+    day: string;
+    enabled: boolean;
+    openTime: string;
+    closeTime: string;
+    restStart: string;
+    restEnd: string;
+  }>,
+) => {
+  const propietario = await consultarPropietarioService(profesionalId);
+  if (!propietario) {
+    throw { status: 404, message: "Profesional no encontrado." };
+  }
+
+  for (const dia of DIAS_SEMANA) {
+    const registro = schedule.find((s) => s.day === dia.label);
+    const habilitado = registro?.enabled === true;
+
+    await supabase
+      .from("horarios_laborales")
+      .delete()
+      .eq("profesional_id", profesionalId)
+      .eq("dia_semana", dia.numero);
+
+    if (habilitado && registro) {
+      const { error } = await supabase.from("horarios_laborales").insert([
+        {
+          profesional_id: profesionalId,
+          dia_semana: dia.numero,
+          hora_inicio: `${registro.openTime}:00`,
+          hora_fin: `${registro.closeTime}:00`,
+        },
+      ]);
+      if (error) throw error;
+    }
+  }
+
+  return obtenerHorarioSemanalService(profesionalId);
+};
+
 export const profesionalesService = {
   async crear(datos: {
     sucursal_id: string;
@@ -60,7 +162,7 @@ export const profesionalesService = {
           nombre,
           email,
           telefono: telefono || null,
-          rol: "cliente",
+          rol: "empleado",
         },
       ])
       .select()
@@ -206,7 +308,7 @@ export const profesionalesService = {
     }
 
     // 2. Limpiar el perfil espejo 'usuarios' (mejor esfuerzo)
-    await supabase.from("usuarios").delete().eq("id", profesional.usuario_id).eq("rol", "cliente");
+    await supabase.from("usuarios").delete().eq("id", profesional.usuario_id).eq("rol", "empleado");
 
     return { id, eliminado: true };
   },

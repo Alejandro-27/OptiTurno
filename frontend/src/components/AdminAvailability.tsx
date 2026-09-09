@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Calendar,
   Clock,
@@ -15,16 +15,35 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import { DayAvailability } from "../types";
-import { guardarDisponibilidad, useStore } from "../store";
+import {
+  guardarDisponibilidad,
+  guardarHorarioEmpleado,
+  cargarHorarioEmpleado,
+  useStore,
+} from "../store";
+import AdminAusencias from "./AdminAusencias";
 
 export default function AdminAvailability() {
   const schedule = useStore((s) => s.equipo);
+  const sesion = useStore((s) => s.sesion);
+  const esEmpleado = sesion?.usuario.rol === "empleado";
   const [isLoading, setIsLoading] = useState(false);
   const [showToast, setShowToast] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
 
+  // El empleado edita su propia semana laboral; los dueños la sucursal completa
+  const guardar = (nuevo: DayAvailability[]) =>
+    esEmpleado ? guardarHorarioEmpleado(nuevo) : guardarDisponibilidad(nuevo);
+
+  useEffect(() => {
+    if (esEmpleado) {
+      cargarHorarioEmpleado().catch(() => undefined);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const handleToggleDay = (day: string) => {
-    guardarDisponibilidad(
+    guardar(
       schedule.map((item) =>
         item.day === day ? { ...item, enabled: !item.enabled } : item,
       ),
@@ -40,7 +59,7 @@ export default function AdminAvailability() {
     field: keyof DayAvailability,
     value: string,
   ) => {
-    guardarDisponibilidad(
+    guardar(
       schedule.map((item) =>
         item.day === day ? { ...item, [field]: value } : item,
       ),
@@ -55,7 +74,7 @@ export default function AdminAvailability() {
     setIsLoading(true);
     setErrorText(null);
     try {
-      await guardarDisponibilidad(schedule);
+      await guardar(schedule);
       setShowToast(true);
       setTimeout(() => setShowToast(false), 4000);
     } catch (err) {
@@ -137,7 +156,7 @@ export default function AdminAvailability() {
             Horarios Operacionales por Día
           </span>
           <span className="text-[10px] text-slate-500 dark:text-slate-400 font-mono">
-            Modo: Semana Estándar
+            {esEmpleado ? "Modo: Mi Semana" : "Modo: Semana Estándar"}
           </span>
         </div>
 
@@ -269,6 +288,9 @@ export default function AdminAvailability() {
           {isLoading ? "Sincronizando..." : "Guardar Configuración de Horas"}
         </button>
       </div>
+
+      {/* Ausencias y vacaciones: se reflejan en el cliente al instante */}
+      {esEmpleado && <AdminAusencias />}
     </div>
   );
 }

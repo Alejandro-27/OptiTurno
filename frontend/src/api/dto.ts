@@ -76,6 +76,26 @@ export interface DisponibilidadDTO {
   bloquesOcupados: BloqueOcupadoDTO[];
 }
 
+// Ausencia de un profesional (día completo si hora_inicio/fin son null)
+export interface AusenciaDTO {
+  id: string;
+  profesional_id: string;
+  fecha: string;
+  hora_inicio: string | null;
+  hora_fin: string | null;
+  motivo: string;
+  created_at: string;
+}
+
+// Payload para registrar una ausencia (fecha_hasta habilita vacaciones por rango)
+export interface CrearAusenciaDTO {
+  fecha: string;
+  fecha_hasta?: string;
+  hora_inicio?: string | null;
+  hora_fin?: string | null;
+  motivo?: string;
+}
+
 export interface ReservarTurnoInputDTO {
   cliente_id: string;
   profesional_id: string;

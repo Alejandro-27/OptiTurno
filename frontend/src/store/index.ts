@@ -6,13 +6,14 @@ import type {
   DayAvailability,
   Profesional,
 } from "../types";
-import type { MisTurnoDTO, SesionDTO, UsuarioSesionDTO } from "../api/dto";
+import type { MisTurnoDTO, SesionDTO, UsuarioSesionDTO, AusenciaDTO, CrearAusenciaDTO } from "../api/dto";
 import {
   serviciosRepositorioMock,
   turnosRepositorioMock,
   actividadRepositorioMock,
   disponibilidadRepositorioMock,
   profesionalesRepositorioMock,
+  ausenciasRepositorioMock,
 } from "../data/index";
 import type { ReservarTurnoInput, ReservarTurnoResultado } from "../data/repos/turnos";
 import type { DatosCrearProfesional, DatosEditarProfesional } from "../data/repos/profesionales";
@@ -32,6 +33,7 @@ export interface AppState {
   sesion: SesionDTO | null;
   misTurnos: MisTurnoDTO[];
   misTurnosCargando: boolean;
+  ausencias: AusenciaDTO[];
 }
 
 const estadoInicial: AppState = {
@@ -47,6 +49,7 @@ const estadoInicial: AppState = {
   sesion: null,
   misTurnos: [],
   misTurnosCargando: false,
+  ausencias: [],
 };
 
 let estado: AppState = estadoInicial;
@@ -103,6 +106,17 @@ const sinCarga = (): { datos: never[]; conFallback: boolean } => ({
   conFallback: false,
 });
 
+// Profesional de la sucursal vinculado al usuario autenticado (si es empleado)
+const resolverProfesionalPropio = (
+  profesionales: Profesional[],
+  sesion: SesionDTO | null,
+): Profesional | null => {
+  if (!sesion || sesion.usuario.rol !== "empleado") return null;
+  return (
+    profesionales.find((p) => p.usuarioId === sesion.usuario.id) || null
+  );
+};
+
 export async function iniciarApp(): Promise<void> {
   if (estado.inicializado) return;
   setEstado((e) => ({ ...e, cargando: true }));
@@ -151,15 +165,27 @@ export async function iniciarApp(): Promise<void> {
       )
     : sinCarga();
 
+  const propioEmpleado = resolverProfesionalPropio(profesionales.datos, sesion);
+
   const equipo = esAdmin
     ? await cargarConFallback(
-        () => repositorios.disponibilidad.listarDisponibilidad(),
+        () =>
+          propioEmpleado
+            ? repositorios.profesionales.obtenerHorarioSemanal(propioEmpleado.id)
+            : repositorios.disponibilidad.listarDisponibilidad(),
         () => disponibilidadRepositorioMock.listarDisponibilidad(),
       )
     : sinCarga();
 
+  const ausencias = esAdmin
+    ? await cargarConFallback(
+        () => repositorios.ausencias.listarAusencias(),
+        () => ausenciasRepositorioMock.listarAusencias(),
+      )
+    : sinCarga();
+
   const conFallback = esAdmin
-    ? [servicios, profesionales, turnos, actividad, equipo].some(
+    ? [servicios, profesionales, turnos, actividad, equipo, ausencias].some(
         (r) => r.conFallback,
       )
     : false;
@@ -175,6 +201,7 @@ export async function iniciarApp(): Promise<void> {
     logs: actividad.datos,
     equipo: equipo.datos,
     sesion,
+    ausencias: ausencias.datos,
     error: conFallback
       ? "La API del backend no respondió. Mostrando datos de demostración."
       : null,
@@ -220,9 +247,11 @@ export async function refrescarDatosAdmin(): Promise<void> {
   let turnos = getEstado().turnos;
   let logs = getEstado().logs;
   let equipo = getEstado().equipo;
+  let ausencias = getEstado().ausencias;
 
   if (esAdmin) {
-    const [rTurnos, rAct, rDisp] = await Promise.all([
+    const propio = resolverProfesionalPropio(profesionales, sesion);
+    const [rTurnos, rAct, rDisp, rAus] = await Promise.all([
       cargarConFallback(
         () => repositorios.turnos.listarTurnos(),
         () => turnosRepositorioMock.listarTurnos(),
@@ -232,13 +261,21 @@ export async function refrescarDatosAdmin(): Promise<void> {
         () => actividadRepositorioMock.listarActividad(),
       ),
       cargarConFallback(
-        () => repositorios.disponibilidad.listarDisponibilidad(),
+        () =>
+          propio
+            ? repositorios.profesionales.obtenerHorarioSemanal(propio.id)
+            : repositorios.disponibilidad.listarDisponibilidad(),
         () => disponibilidadRepositorioMock.listarDisponibilidad(),
+      ),
+      cargarConFallback(
+        () => repositorios.ausencias.listarAusencias(),
+        () => ausenciasRepositorioMock.listarAusencias(),
       ),
     ]);
     turnos = rTurnos.datos;
     logs = rAct.datos;
     equipo = rDisp.datos;
+    ausencias = rAus.datos;
   }
 
   setEstado((e) => ({
@@ -249,6 +286,7 @@ export async function refrescarDatosAdmin(): Promise<void> {
     turnos,
     logs,
     equipo,
+    ausencias,
   }));
 }
 
@@ -446,4 +484,62 @@ export async function eliminarProfesional(id: string): Promise<void> {
     ...e,
     profesionales: e.profesionales.filter((p) => p.id !== id),
   }));
+}
+
+// Ausencias: consulta, alta y baja (panel empleado)
+export async function cargarAusencias(): Promise<AusenciaDTO[]> {
+  const ausencias = await repositorios.ausencias.listarAusencias();
+  setEstado((e) => ({ ...e, ausencias }));
+  return ausencias;
+}
+
+export async function crearAusencia(
+  datos: CrearAusenciaDTO,
+): Promise<AusenciaDTO[]> {
+  const creadas = await repositorios.ausencias.crearAusencias(datos);
+  setEstado((e) => ({
+    ...e,
+    ausencias: [...e.ausencias, ...creadas].sort((a, b) =>
+      a.fecha.localeCompare(b.fecha),
+    ),
+  }));
+  return creadas;
+}
+
+export async function eliminarAusencia(id: string): Promise<void> {
+  await repositorios.ausencias.eliminarAusencia(id);
+  setEstado((e) => ({
+    ...e,
+    ausencias: e.ausencias.filter((a) => a.id !== id),
+  }));
+}
+
+// Semana laboral del empleado autenticado (su propio horario)
+export async function cargarHorarioEmpleado(): Promise<void> {
+  const estadoActual = getEstado();
+  const propio = resolverProfesionalPropio(
+    estadoActual.profesionales,
+    estadoActual.sesion,
+  );
+  if (!propio) return;
+  const horario = await repositorios.profesionales.obtenerHorarioSemanal(
+    propio.id,
+  );
+  setEstado((e) => ({ ...e, equipo: horario }));
+}
+
+export async function guardarHorarioEmpleado(
+  schedule: DayAvailability[],
+): Promise<void> {
+  const estadoActual = getEstado();
+  const propio = resolverProfesionalPropio(
+    estadoActual.profesionales,
+    estadoActual.sesion,
+  );
+  if (!propio) throw new Error("No se encontró tu perfil de profesional.");
+  const guardado = await repositorios.profesionales.guardarHorarioSemanal(
+    propio.id,
+    schedule,
+  );
+  setEstado((e) => ({ ...e, equipo: guardado }));
 }

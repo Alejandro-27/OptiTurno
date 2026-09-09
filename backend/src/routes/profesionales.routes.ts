@@ -23,4 +23,19 @@ export default async function profesionalesRoutes(fastify: FastifyInstance) {
     { preHandler: [verificarAutenticacion, permitirRoles(["admin_negocio", "superadmin"])] },
     profesionalesController.eliminar,
   );
+
+  // Semana laboral de un profesional puntual (público, el panel empleado la usa)
+  fastify.get("/:id/horarios", profesionalesController.obtenerHorarioSemanal);
+
+  // Reemplaza la semana laboral de un profesional (empleado: solo la propia)
+  fastify.put(
+    "/:id/horarios",
+    {
+      preHandler: [
+        verificarAutenticacion,
+        permitirRoles(["admin_negocio", "superadmin", "empleado"]),
+      ],
+    },
+    profesionalesController.guardarHorarioSemanal,
+  );
 }
