@@ -8,6 +8,8 @@ import {
   CalendarCheck,
 } from "lucide-react";
 import { cancelarTurnoCliente, cargarMisTurnos, useStore } from "../store";
+import type { MisTurnoDTO } from "../api/dto";
+import ConfirmarCancelacionModal from "./ConfirmarCancelacionModal";
 
 const ESTADOS: Record<string, { etiqueta: string; clase: string }> = {
   pendiente_pago: {
@@ -41,6 +43,9 @@ export default function MisTurnosView() {
   const cargando = useStore((s) => s.misTurnosCargando);
   const [error, setError] = useState<string | null>(null);
   const [cancelando, setCancelando] = useState<string | null>(null);
+  const [turnoConfirmar, setTurnoConfirmar] = useState<MisTurnoDTO | null>(
+    null,
+  );
 
   const cargar = () => {
     setError(null);
@@ -53,18 +58,24 @@ export default function MisTurnosView() {
     cargar();
   }, []);
 
-  const cancelarTurno = async (id: string) => {
-    if (!window.confirm("¿Seguro que deseas cancelar este turno?")) return;
-    setCancelando(id);
+  const solicitarCancelacion = (turno: MisTurnoDTO) => {
+    setError(null);
+    setTurnoConfirmar(turno);
+  };
+
+  const confirmarCancelacion = async () => {
+    if (!turnoConfirmar) return;
+    setCancelando(turnoConfirmar.id);
     setError(null);
     try {
-      await cancelarTurnoCliente(id);
+      await cancelarTurnoCliente(turnoConfirmar.id);
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "No se pudo cancelar el turno.",
       );
     } finally {
       setCancelando(null);
+      setTurnoConfirmar(null);
     }
   };
 
@@ -150,7 +161,7 @@ export default function MisTurnosView() {
                 {!cancelado && (
                   <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80">
                     <button
-                      onClick={() => cancelarTurno(turno.id)}
+                      onClick={() => solicitarCancelacion(turno)}
                       disabled={cancelando === turno.id}
                       className="text-[10px] font-bold uppercase tracking-wider text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-500/10 rounded-lg px-2.5 py-1.5 transition-all disabled:opacity-50 flex items-center gap-1.5"
                     >
@@ -166,6 +177,15 @@ export default function MisTurnosView() {
           })}
         </div>
       )}
+
+      {/* Modal de confirmación animado: cancelar turno */}
+      <ConfirmarCancelacionModal
+        turno={turnoConfirmar}
+        cancelando={cancelando !== null}
+        error={error}
+        onClose={() => setTurnoConfirmar(null)}
+        onConfirmar={confirmarCancelacion}
+      />
     </div>
   );
 }
