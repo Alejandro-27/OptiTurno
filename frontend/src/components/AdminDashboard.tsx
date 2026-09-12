@@ -136,7 +136,7 @@ export default function AdminDashboard({
       {/* KPI Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {/* KPI 1: Ingresos mensuales */}
-        <div className="bg-white dark:bg-[#070b17] border border-slate-200 dark:border-slate-800 p-6 rounded-xl hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-sm dark:shadow-xl relative overflow-hidden group">
+        <div className="bg-white dark:bg-slate-900 border border-border-subtle dark:border-slate-800 p-6 rounded-xl hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-sm dark:shadow-xl relative overflow-hidden group">
           <div className="flex justify-between items-start">
             <span className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
               Ingresos mensuales
@@ -159,7 +159,7 @@ export default function AdminDashboard({
         </div>
 
         {/* KPI 2: Reservas activas */}
-        <div className="bg-white dark:bg-[#070b17] border border-slate-200 dark:border-slate-800 p-6 rounded-xl hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-sm dark:shadow-xl relative overflow-hidden group">
+        <div className="bg-white dark:bg-slate-900 border border-border-subtle dark:border-slate-800 p-6 rounded-xl hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-sm dark:shadow-xl relative overflow-hidden group">
           <div className="flex justify-between items-start">
             <span className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
               Reservas activas
@@ -193,7 +193,7 @@ export default function AdminDashboard({
         </div>
 
         {/* KPI 3: Tasa de inasistencia */}
-        <div className="bg-white dark:bg-[#070b17] border border-slate-200 dark:border-slate-800 p-6 rounded-xl hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-sm dark:shadow-xl relative overflow-hidden group">
+        <div className="bg-white dark:bg-slate-900 border border-border-subtle dark:border-slate-800 p-6 rounded-xl hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-sm dark:shadow-xl relative overflow-hidden group">
           <div className="flex justify-between items-start">
             <span className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
               Tasa de inasistencia
@@ -219,7 +219,7 @@ export default function AdminDashboard({
         </div>
 
         {/* KPI 4: Nuevos clientes */}
-        <div className="bg-white dark:bg-[#070b17] border border-slate-200 dark:border-slate-800 p-6 rounded-xl hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-sm dark:shadow-xl relative overflow-hidden group">
+        <div className="bg-white dark:bg-slate-900 border border-border-subtle dark:border-slate-800 p-6 rounded-xl hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-sm dark:shadow-xl relative overflow-hidden group">
           <div className="flex justify-between items-start">
             <span className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
               Nuevos clientes
@@ -250,7 +250,7 @@ export default function AdminDashboard({
       {/* Main Charts & Stream */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Picos semanales */}
-        <div className="lg:col-span-2 bg-white dark:bg-[#070b17] border border-slate-200 dark:border-slate-800 rounded-xl p-6 flex flex-col justify-between shadow-sm dark:shadow-xl transition-colors duration-200">
+        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-border-subtle dark:border-slate-800 rounded-xl p-6 flex flex-col justify-between shadow-sm dark:shadow-xl transition-colors duration-200">
           <div className="flex justify-between items-center">
             <div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
@@ -299,8 +299,8 @@ export default function AdminDashboard({
                   y1="0"
                   y2="1"
                 >
-                  <stop offset="0%" stopColor="#6366f1" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
+                  <stop offset="0%" stopColor="#4f46e5" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#4f46e5" stopOpacity="0" />
                 </linearGradient>
                 <linearGradient
                   id="gradient-line-accent"
@@ -309,14 +309,14 @@ export default function AdminDashboard({
                   y1="0"
                   y2="0"
                 >
-                  <stop offset="0%" stopColor="#6366f1" />
+                  <stop offset="0%" stopColor="#4f46e5" />
                   <stop offset="50%" stopColor="#10b981" />
-                  <stop offset="100%" stopColor="#6366f1" />
+                  <stop offset="100%" stopColor="#4f46e5" />
                 </linearGradient>
               </defs>
               {/* Grid Lines */}
               <line
-                className="stroke-slate-200 dark:stroke-slate-800"
+                className="stroke-border-subtle"
                 strokeDasharray="4"
                 x1="0"
                 x2="800"
@@ -324,7 +324,7 @@ export default function AdminDashboard({
                 y2="50"
               />
               <line
-                className="stroke-slate-200 dark:stroke-slate-800"
+                className="stroke-border-subtle"
                 strokeDasharray="4"
                 x1="0"
                 x2="800"
@@ -332,7 +332,7 @@ export default function AdminDashboard({
                 y2="100"
               />
               <line
-                className="stroke-slate-200 dark:stroke-slate-800"
+                className="stroke-border-subtle"
                 strokeDasharray="4"
                 x1="0"
                 x2="800"
@@ -395,8 +395,8 @@ export default function AdminDashboard({
         </div>
 
         {/* Real-time Web Socket events stream log */}
-        <div className="bg-white dark:bg-[#070b17] border border-slate-200 dark:border-slate-800 rounded-xl flex flex-col justify-between shadow-sm dark:shadow-xl overflow-hidden transition-colors duration-200">
-          <div className="p-4 bg-slate-50 dark:bg-slate-900/60 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
+        <div className="bg-white dark:bg-slate-900 border border-border-subtle dark:border-slate-800 rounded-xl flex flex-col justify-between shadow-sm dark:shadow-xl overflow-hidden transition-colors duration-200">
+          <div className="p-4 bg-slate-50 dark:bg-slate-900/60 border-b border-border-subtle dark:border-slate-800 flex justify-between items-center">
             <h3 className="text-xs uppercase tracking-wider font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
               <span
                 className={`w-2.5 h-2.5 rounded-full bg-emerald-500 ${animateHeartbeat ? "scale-125" : ""} transition-all duration-300 animate-pulse`}
@@ -443,7 +443,7 @@ export default function AdminDashboard({
                     <Mail size={14} className="text-slate-400" />
                   )}
                 </div>
-                <div className="flex-1 border-l border-slate-200 dark:border-slate-800 pl-3">
+                <div className="flex-1 border-l border-border-subtle dark:border-slate-800 pl-3">
                   <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
                     {log.timeSpan}
                   </p>
@@ -458,7 +458,7 @@ export default function AdminDashboard({
             ))}
           </div>
 
-          <div className="p-3 bg-slate-50 dark:bg-slate-900/40 text-center border-t border-slate-200 dark:border-slate-800/50">
+          <div className="p-3 bg-slate-50 dark:bg-slate-900/40 text-center border-t border-border-subtle dark:border-slate-800/50">
             <button
               onClick={() => onNavigate("calendar")}
               className="text-[10px] uppercase tracking-wider font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center justify-center gap-1 mx-auto"
@@ -473,7 +473,7 @@ export default function AdminDashboard({
       {/* Dynamic Bento */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* Rendimiento por Categoría */}
-        <div className="bg-white dark:bg-[#070b17] border border-slate-200 dark:border-slate-800 p-6 rounded-xl md:col-span-2 space-y-4 shadow-sm dark:shadow-xl transition-colors duration-200">
+        <div className="bg-white dark:bg-slate-900 border border-border-subtle dark:border-slate-800 p-6 rounded-xl md:col-span-2 space-y-4 shadow-sm dark:shadow-xl transition-colors duration-200">
           <div className="flex justify-between items-center">
             <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">
               Rendimiento por Categoría de Agendamiento
@@ -529,7 +529,7 @@ export default function AdminDashboard({
         </div>
 
         {/* Predictive AI Banner */}
-        <div className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-800 bg-gradient-to-br from-indigo-50/80 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-950 shadow-sm dark:shadow-xl min-h-[160px] flex flex-col justify-end p-6 group cursor-pointer hover:border-indigo-500 transition-all duration-200">
+        <div className="relative rounded-xl overflow-hidden border border-border-subtle dark:border-slate-800 bg-gradient-to-br from-indigo-50/80 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-950 shadow-sm dark:shadow-xl min-h-[160px] flex flex-col justify-end p-6 group cursor-pointer hover:border-indigo-500 transition-all duration-200">
           {/* Atmospheric background neon colors */}
           <div className="absolute -top-12 -right-12 w-32 h-32 bg-indigo-500/10 dark:bg-indigo-500/20 rounded-full blur-2xl group-hover:bg-indigo-500/20 dark:group-hover:bg-indigo-500/30 transition-all duration-500"></div>
 

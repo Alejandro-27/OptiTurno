@@ -136,7 +136,7 @@ export default function AdminTeam() {
           </div>
         )}
 
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm dark:shadow-none transition-colors duration-200">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-white dark:bg-slate-900/40 border border-border-subtle dark:border-slate-800 rounded-xl shadow-sm dark:shadow-none transition-colors duration-200">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-indigo-500/10 rounded-xl text-indigo-600 dark:text-indigo-400">
               <Users size={18} />
@@ -162,7 +162,7 @@ export default function AdminTeam() {
           </button>
         </div>
 
-        <div className="bg-white dark:bg-[#0b1120] border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm dark:shadow-xl transition-colors duration-200">
+        <div className="bg-white dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-xl overflow-hidden shadow-sm dark:shadow-xl transition-colors duration-200">
           <div className="p-4 border-b border-slate-100 dark:border-slate-800/80">
             <div className="relative max-w-md">
               <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
@@ -173,7 +173,7 @@ export default function AdminTeam() {
                 placeholder="Buscar por nombre, especialidad o email..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2 text-xs font-medium text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg pl-10 pr-4 py-2 text-xs font-medium text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
               />
             </div>
           </div>
@@ -181,7 +181,7 @@ export default function AdminTeam() {
           <div className="overflow-x-auto custom-scrollbar">
             <table className="w-full text-left border-collapse min-w-[640px]">
               <thead>
-                <tr className="bg-slate-50 dark:bg-slate-950/80 text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider border-b border-slate-200 dark:border-slate-800/80">
+                <tr className="bg-slate-50 dark:bg-slate-950/80 text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider border-b border-border-subtle dark:border-slate-800/80">
                   <th className="p-4 w-1/3">Profesional</th>
                   <th className="p-4 hidden md:table-cell">Especialidad</th>
                   <th className="p-4 hidden lg:table-cell">Email</th>
@@ -215,7 +215,7 @@ export default function AdminTeam() {
                       </div>
                     </td>
                     <td className="p-4 hidden md:table-cell">
-                      <span className="text-[11px] bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300 font-medium">
+                      <span className="text-[11px] bg-slate-100 dark:bg-slate-900 border border-border-subtle dark:border-slate-800 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300 font-medium">
                         {p.especialidad}
                       </span>
                     </td>
@@ -268,7 +268,7 @@ export default function AdminTeam() {
             if (e.target === e.currentTarget) setIsDrawerOpen(false);
           }}
         >
-          <div className="bg-white dark:bg-[#0b1120] border border-slate-200 dark:border-slate-800 w-full max-w-md max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl rounded-2xl animate-scale-up flex flex-col">
+          <div className="bg-white dark:bg-slate-950 border border-border-subtle dark:border-slate-800 w-full max-w-md max-h-[90vh] overflow-y-auto custom-scrollbar shadow-2xl rounded-2xl animate-scale-up flex flex-col">
             <div className="p-6">
               <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800/80">
                 <div className="flex items-center gap-2">
@@ -299,7 +299,7 @@ export default function AdminTeam() {
                     placeholder="Ej. Carlos Andrés Pérez"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
                   />
                 </div>
 
@@ -317,7 +317,7 @@ export default function AdminTeam() {
                     placeholder="carlos@barberia.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   />
                 </div>
 
@@ -331,7 +331,7 @@ export default function AdminTeam() {
                     placeholder="Ej. 310 123 4567"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
                   />
                 </div>
 
@@ -345,13 +345,13 @@ export default function AdminTeam() {
                     placeholder="Ej. Barbería y Estilismo"
                     value={specialty}
                     onChange={(e) => setSpecialty(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
                   />
                 </div>
               </form>
             </div>
 
-            <div className="mt-auto bg-slate-50 dark:bg-slate-950/60 p-4 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-3 rounded-b-2xl">
+            <div className="mt-auto bg-slate-50 dark:bg-slate-950/60 p-4 border-t border-border-subtle dark:border-slate-800 flex flex-col gap-3 rounded-b-2xl">
               {operationError && (
                 <div className="flex items-center gap-2 text-[11px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2">
                   <ShieldAlert size={14} />
@@ -388,7 +388,7 @@ export default function AdminTeam() {
             if (e.target === e.currentTarget) setPendingDelete(null);
           }}
         >
-          <div className="bg-white dark:bg-[#0b1120] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4 animate-scale-up">
+          <div className="bg-white dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-sm p-6 space-y-4 animate-scale-up">
             <div className="flex items-center gap-3">
               <div className="p-2.5 bg-rose-500/10 rounded-xl text-rose-600 dark:text-rose-400">
                 <AlertTriangle size={18} />

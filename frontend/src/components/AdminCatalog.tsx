@@ -124,7 +124,7 @@ export default function AdminCatalog() {
       {/* List Container */}
       <div className="flex-1 space-y-6 overflow-y-auto pr-2 custom-scrollbar">
         {/* Search and Filters bar */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm dark:shadow-none transition-colors duration-200">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-white dark:bg-slate-900/40 border border-border-subtle dark:border-slate-800 rounded-xl shadow-sm dark:shadow-none transition-colors duration-200">
           <div className="relative flex-1 max-w-md">
             <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
               <Search size={16} />
@@ -134,12 +134,12 @@ export default function AdminCatalog() {
               placeholder="Buscar por servicio o categoría..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2 text-xs font-medium text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg pl-10 pr-4 py-2 text-xs font-medium text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
             />
           </div>
 
           <div className="flex items-center gap-3 self-end md:self-auto">
-            <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-lg border border-slate-200 dark:border-slate-800">
+            <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-lg border border-border-subtle dark:border-slate-800">
               <button
                 onClick={() => setActiveFilter("all")}
                 className={`px-3 py-1 text-[11px] font-bold rounded transition-colors ${activeFilter === "all" ? "bg-white dark:bg-indigo-600/15 text-indigo-600 dark:text-indigo-400 shadow-sm dark:shadow-none" : "text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200"}`}
@@ -171,11 +171,11 @@ export default function AdminCatalog() {
         </div>
 
         {/* Catalog Table */}
-        <div className="bg-white dark:bg-[#0b1120] border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm dark:shadow-xl transition-colors duration-200">
+        <div className="bg-white dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-xl overflow-hidden shadow-sm dark:shadow-xl transition-colors duration-200">
           <div className="overflow-x-auto custom-scrollbar">
             <table className="w-full text-left border-collapse min-w-[640px]">
               <thead>
-                <tr className="bg-slate-50 dark:bg-slate-950/80 text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider border-b border-slate-200 dark:border-slate-800/80">
+                <tr className="bg-slate-50 dark:bg-slate-950/80 text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider border-b border-border-subtle dark:border-slate-800/80">
                   <th className="p-4 w-1/3">Nombre del Servicio</th>
                   <th className="p-4 hidden md:table-cell">Categoría</th>
                   <th className="p-4 hidden lg:table-cell">Duración</th>
@@ -206,7 +206,7 @@ export default function AdminCatalog() {
                       </div>
                     </td>
                     <td className="p-4 hidden md:table-cell">
-                      <span className="text-xs bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-2 py-0.5 rounded text-slate-600 dark:text-slate-350 font-medium">
+                      <span className="text-xs bg-slate-100 dark:bg-slate-900 border border-border-subtle dark:border-slate-800 px-2 py-0.5 rounded text-slate-600 dark:text-slate-350 font-medium">
                         {svc.category}
                       </span>
                     </td>
@@ -283,7 +283,7 @@ export default function AdminCatalog() {
             if (e.target === e.currentTarget) setIsDrawerOpen(false);
           }}
         >
-          <div className="bg-white dark:bg-[#0b1120] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-md flex flex-col justify-between overflow-hidden animate-scale-up">
+          <div className="bg-white dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-md flex flex-col justify-between overflow-hidden animate-scale-up">
             <div className="p-6 space-y-6 overflow-y-auto custom-scrollbar">
               <div className="flex justify-between items-center pb-4 border-b border-slate-100 dark:border-slate-800/80">
                 <div className="flex items-center gap-2">
@@ -317,7 +317,7 @@ export default function AdminCatalog() {
                     placeholder="Ej. Corte de Cabello Signature"
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
                   />
                 </div>
 
@@ -328,7 +328,7 @@ export default function AdminCatalog() {
                   <select
                     value={formCategory}
                     onChange={(e) => setFormCategory(e.target.value)}
-                    className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer"
+                    className="w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer"
                   >
                     <option value="Estética Masculina">
                       Estética Masculina
@@ -355,7 +355,7 @@ export default function AdminCatalog() {
                       max={360}
                       value={formDuration}
                       onChange={(e) => setFormDuration(Number(e.target.value))}
-                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold font-mono text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold font-mono text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors"
                     />
                   </div>
 
@@ -373,7 +373,7 @@ export default function AdminCatalog() {
                       min={0}
                       value={formPrice}
                       onChange={(e) => setFormPrice(Number(e.target.value))}
-                      className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold font-mono text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors"
+                      className="w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold font-mono text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors"
                     />
                   </div>
                 </div>
@@ -389,7 +389,7 @@ export default function AdminCatalog() {
                       className={`flex-1 py-2 text-center rounded-lg text-xs font-bold transition-all border ${
                         formStatus === "Activo"
                           ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500"
-                          : "bg-slate-50 dark:bg-slate-950/80 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800"
+                          : "bg-slate-50 dark:bg-slate-950/80 text-slate-500 dark:text-slate-400 border-border-subtle dark:border-slate-800"
                       }`}
                     >
                       Activo
@@ -400,7 +400,7 @@ export default function AdminCatalog() {
                       className={`flex-1 py-2 text-center rounded-lg text-xs font-bold transition-all border ${
                         formStatus === "Pausado"
                           ? "bg-rose-50 dark:bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500"
-                          : "bg-slate-50 dark:bg-slate-950/80 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800"
+                          : "bg-slate-50 dark:bg-slate-950/80 text-slate-500 dark:text-slate-400 border-border-subtle dark:border-slate-800"
                       }`}
                     >
                       Pausado
@@ -411,7 +411,7 @@ export default function AdminCatalog() {
                 </form>
             </div>
 
-            <div className="bg-slate-50 dark:bg-slate-950/60 p-4 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-3 rounded-b-2xl">
+            <div className="bg-slate-50 dark:bg-slate-950/60 p-4 border-t border-border-subtle dark:border-slate-800 flex flex-col gap-3 rounded-b-2xl">
               {operationError && (
                 <div className="flex items-center gap-2 text-[11px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2">
                   <ShieldAlert size={14} />

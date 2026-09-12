@@ -92,7 +92,7 @@ export default function AdminProfile() {
       )}
 
       {/* Progress Wizard Header */}
-      <div className="bg-white dark:bg-[#0b1120] border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm dark:shadow-xl transition-colors duration-200">
+      <div className="bg-white dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-xl p-6 shadow-sm dark:shadow-xl transition-colors duration-200">
         <div className="flex justify-between items-center max-w-xl mx-auto mb-4">
           <div className="flex flex-col items-center">
             <div
@@ -163,7 +163,7 @@ export default function AdminProfile() {
             e.preventDefault();
             setActiveStep(2);
           }}
-          className="bg-white dark:bg-[#0b1120] border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm dark:shadow-xl space-y-6 transition-colors duration-200"
+          className="bg-white dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-xl p-6 shadow-sm dark:shadow-xl space-y-6 transition-colors duration-200"
         >
           <div className="flex items-center gap-1.5 border-b border-slate-100 dark:border-slate-800 pb-3">
             <Building2
@@ -185,7 +185,7 @@ export default function AdminProfile() {
                 required
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 transition-all"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 transition-all"
               />
             </div>
 
@@ -198,7 +198,7 @@ export default function AdminProfile() {
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
                 placeholder="Elige una o escribe la tuya..."
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all cursor-text"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-all cursor-text"
               />
               <datalist id="categorias-comerciales">
                 <option value="Estética & Barberías" />
@@ -223,7 +223,7 @@ export default function AdminProfile() {
                   type="text"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 pl-10 pr-3 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 transition-all"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg py-2.5 pl-10 pr-3 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 transition-all"
                 />
               </div>
             </div>
@@ -240,7 +240,7 @@ export default function AdminProfile() {
                   type="text"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 pl-10 pr-3 text-xs font-semibold font-mono text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 transition-all"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg py-2.5 pl-10 pr-3 text-xs font-semibold font-mono text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 transition-all"
                 />
               </div>
             </div>
@@ -265,7 +265,7 @@ export default function AdminProfile() {
                       e.target.value.toLowerCase().replace(/[^a-z0-9]/g, ""),
                     )
                   }
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 pl-10 pr-24 text-xs font-semibold font-mono text-indigo-600 dark:text-indigo-400 focus:outline-none focus:border-indigo-500 transition-all"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg py-2.5 pl-10 pr-24 text-xs font-semibold font-mono text-indigo-600 dark:text-indigo-400 focus:outline-none focus:border-indigo-500 transition-all"
                 />
                 <span className="absolute inset-y-0 right-0 pr-3 flex items-center text-[10px] text-slate-400 dark:text-slate-500 font-bold font-mono">
                   .optiturno.com
@@ -281,7 +281,7 @@ export default function AdminProfile() {
                 rows={3}
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 transition-all resize-none leading-relaxed"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 transition-all resize-none leading-relaxed"
               />
             </div>
           </div>
@@ -304,7 +304,7 @@ export default function AdminProfile() {
       {activeStep === 2 && (
         <form
           onSubmit={handleSubmit}
-          className="bg-white dark:bg-[#0b1120] border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm dark:shadow-xl space-y-6 transition-colors duration-200"
+          className="bg-white dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-xl p-6 shadow-sm dark:shadow-xl space-y-6 transition-colors duration-200"
         >
           <div className="flex items-center gap-1.5 border-b border-slate-100 dark:border-slate-800 pb-3">
             <Palette
@@ -333,7 +333,7 @@ export default function AdminProfile() {
                       className={`p-3 rounded-xl flex items-center gap-2 border-2 transition-all cursor-pointer ${
                         isSelected
                           ? `${color.border} ${color.activeBg} shadow-sm`
-                          : "border-slate-200 dark:border-slate-800 bg-transparent hover:border-slate-300 dark:hover:border-slate-700"
+                          : "border-border-subtle dark:border-slate-800 bg-transparent hover:border-slate-300 dark:hover:border-slate-700"
                       }`}
                     >
                       <div
@@ -360,7 +360,7 @@ export default function AdminProfile() {
                 Logotipo oficial (Banner)
               </label>
               <div className="flex gap-4">
-                <div className="w-20 h-20 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl flex items-center justify-center text-4xl">
+                <div className="w-20 h-20 bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-xl flex items-center justify-center text-4xl">
                   💈
                 </div>
                 <div className="flex-1 flex flex-col justify-center">
@@ -376,7 +376,7 @@ export default function AdminProfile() {
             </div>
 
             {/* Terms checking banner */}
-            <div className="p-4 bg-slate-50 dark:bg-slate-950/80 border border-slate-200 dark:border-slate-800 rounded-xl flex gap-3">
+            <div className="p-4 bg-slate-50 dark:bg-slate-950/80 border border-border-subtle dark:border-slate-800 rounded-xl flex gap-3">
               <ShieldCheck
                 size={20}
                 className="text-emerald-600 dark:text-emerald-400 flex-shrink-0 mt-0.5"
@@ -417,7 +417,7 @@ export default function AdminProfile() {
       )}
 
       {activeStep === 3 && (
-        <div className="bg-white dark:bg-[#0b1120] border border-slate-200 dark:border-slate-800 rounded-xl p-8 shadow-sm dark:shadow-xl text-center space-y-6 animate-scale-up transition-colors duration-200">
+        <div className="bg-white dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-xl p-8 shadow-sm dark:shadow-xl text-center space-y-6 animate-scale-up transition-colors duration-200">
           <div className="w-16 h-16 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto shadow-[0_0_15px_rgba(16,185,129,0.2)]">
             <UserCheck size={32} />
           </div>
@@ -433,7 +433,7 @@ export default function AdminProfile() {
             </p>
           </div>
 
-          <div className="bg-slate-50 dark:bg-slate-950/80 p-4 rounded-xl max-w-sm mx-auto border border-slate-200 dark:border-slate-800/80">
+          <div className="bg-slate-50 dark:bg-slate-950/80 p-4 rounded-xl max-w-sm mx-auto border border-border-subtle dark:border-slate-800/80">
             <span className="text-[10px] text-slate-500 dark:text-slate-400 uppercase tracking-widest font-bold block">
               Tu Enlace PWA Cliente:
             </span>

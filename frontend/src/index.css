@@ -1,24 +1,97 @@
-@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=Manrope:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap");
 @import "tailwindcss";
 
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * Sistema de diseño OptiTurno — ver design.md
+ * Electric Indigo & Slate: indigo = marca/acción · slate = neutros profesionales · purple = gradientes
+ * La paleta vive en las variables semánticas de :root/.dark y se mapea a utilidades Tailwind
+ * vía @theme (--color-*). Cualquier utils indigo-/slate-/purple- usa las rampas por defecto de Tailwind.
+ */
 @theme {
-    --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+    --font-sans: "Manrope", ui-sans-serif, system-ui, sans-serif;
+    --font-display: "Fraunces", ui-serif, Georgia, serif;
     --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+    /* Tokens semánticos → variables CSS de :root/.dark (ver más abajo) */
+    --color-app: var(--bg-app);
+    --color-surface: var(--bg-surface);
+    --color-brand: var(--primary);
+    --color-primary: var(--primary);
+    --color-primary-hover: var(--primary-hover);
+    --color-border-subtle: var(--border-subtle);
+    --color-text-primary: var(--text-primary);
+    --color-text-muted: var(--text-muted);
+    --color-success-bg: var(--badge-success-bg);
+    --color-success-text: var(--badge-success-text);
+}
+
+/* ============================================================
+   Paleta — Electric Indigo & Slate (definición literal)
+   ============================================================ */
+:root {
+    --bg-app: #f8fafc;
+    --bg-surface: #ffffff;
+    --border-subtle: #e2e8f0;
+    --primary: #4f46e5;
+    --primary-hover: #4338ca;
+    --text-primary: #0f172a;
+    --text-muted: #64748b;
+    --badge-success-bg: #ecfdf5;
+    --badge-success-text: #047857;
+}
+
+.dark {
+    --bg-app: #090d16;
+    --bg-surface: #111827;
+    --border-subtle: #1f2937;
+    --primary: #6366f1;
+    --primary-hover: #818cf8;
+    --text-primary: #f9fafb;
+    --text-muted: #9ca3af;
+    --badge-success-bg: #064e3b;
+    --badge-success-text: #34d399;
+
+    /* Alinear las rampas por defecto con los tokens del spec en dark */
+    --color-slate-50: #f9fafb;
+    --color-slate-400: #9ca3af;
+    --color-slate-800: #1f2937;
+    --color-slate-900: #111827;
+    --color-slate-950: #090d16;
+    --color-indigo-600: #6366f1;
+    --color-indigo-700: #818cf8;
 }
 
 /* Reglas por defecto para el fondo/texto global según el tema */
 html.dark {
     color-scheme: dark;
-    background-color: #020617;
-    color: #f8fafc;
+    background-color: var(--bg-app);
+    color: var(--text-primary);
 }
 
 html {
     color-scheme: light;
-    background-color: #f8fafc;
-    color: #0f172a;
+    background-color: var(--bg-app);
+    color: var(--text-primary);
+}
+
+body {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+}
+
+/* Accesibilidad: foco visible (teclado) sin remover outline */
+:where(button, a, input, select, textarea, [tabindex]):focus-visible {
+    outline: 2px solid var(--primary);
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
+::selection {
+    background-color: rgba(79, 70, 229, 0.22);
+    color: inherit;
 }
 
 /* Custom Scrollbar */
@@ -27,14 +100,14 @@ html {
     height: 5px;
 }
 .custom-scrollbar::-webkit-scrollbar-track {
-    background: rgba(15, 23, 42, 0.4);
+    background: rgba(15, 23, 42, 0.12);
 }
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: rgba(99, 102, 241, 0.3);
+    background: rgba(79, 70, 229, 0.35);
     border-radius: 9999px;
 }
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: rgba(99, 102, 241, 0.6);
+    background: rgba(79, 70, 229, 0.6);
 }
 
 /* Animations */
@@ -122,4 +195,75 @@ html {
 
 .animate-shake {
     animation: shake 0.45s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .animate-fade-in,
+    .animate-slide-in,
+    .animate-slide-left,
+    .animate-scale-up,
+    .animate-spin-slow,
+    .animate-shake {
+        animation: none !important;
+    }
+}
+
+/* ============================================================
+   Componentes del sistema de diseño — ver design.md §5
+   @layer components => las utilidades de Tailwind siempre ganan
+   ============================================================ */
+@layer components {
+    .label-overline {
+        @apply text-[9px] font-bold uppercase tracking-[0.18em] text-text-muted;
+    }
+
+    .btn {
+        @apply inline-flex cursor-pointer select-none items-center justify-center gap-1.5 whitespace-nowrap rounded-xl text-[11px] font-extrabold uppercase tracking-wider transition-all duration-200 active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50;
+    }
+    .btn-primary {
+        @apply bg-primary text-white shadow-lg shadow-indigo-600/25 hover:bg-primary-hover;
+    }
+    .btn-secondary {
+        @apply border border-slate-300 bg-transparent text-slate-700 hover:bg-slate-100 dark:border-slate-700 dark:text-slate-300 dark:hover:bg-slate-800;
+    }
+    .btn-ghost {
+        @apply text-slate-600 hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800/70 dark:hover:text-slate-100;
+    }
+    .btn-danger {
+        @apply bg-red-600 text-white shadow-md shadow-red-600/15 hover:bg-red-700;
+    }
+
+    .card {
+        @apply rounded-2xl border border-border-subtle bg-surface shadow-sm;
+    }
+
+    .badge {
+        @apply inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[9px] font-extrabold uppercase tracking-wider;
+    }
+    .badge-success {
+        @apply border-success-text/25 bg-success-bg text-success-text;
+    }
+    .badge-warning {
+        @apply border-amber-500/25 bg-amber-500/10 text-amber-600 dark:text-amber-400;
+    }
+    .badge-danger {
+        @apply border-red-500/25 bg-red-500/10 text-red-600 dark:text-red-400;
+    }
+    .badge-neutral {
+        @apply border-slate-500/25 bg-slate-500/10 text-slate-600 dark:text-slate-400;
+    }
+
+    .chip {
+        @apply cursor-pointer rounded-xl border border-emerald-500/30 bg-surface px-1 py-2 text-center text-[11px] font-bold text-emerald-700 transition-all duration-150 hover:border-emerald-500/60 dark:bg-slate-900 dark:text-emerald-400;
+    }
+    .chip-selected {
+        @apply scale-105 border-emerald-600 bg-emerald-600 text-white shadow-lg shadow-emerald-600/25;
+    }
+    .chip-disabled {
+        @apply cursor-not-allowed border-slate-300/40 bg-slate-200/50 text-slate-400 line-through dark:border-slate-800/40 dark:bg-slate-900/40 dark:text-slate-600;
+    }
+
+    .input {
+        @apply w-full rounded-xl border border-border-subtle bg-surface py-2.5 pl-10 pr-3 text-xs font-semibold text-text-primary placeholder-text-muted transition-all focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15;
+    }
 }

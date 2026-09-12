@@ -1,23 +1,25 @@
 import React, { useEffect, useState } from "react";
 import {
-  Check,
   AlertTriangle,
   ArrowLeft,
   ArrowRight,
   MapPin,
-  Clock,
   Star,
-  UserRound,
 } from "lucide-react";
 import { initialServices } from "../data";
 import { repositorios, turnosRepositorioMock } from "../data/index";
-import { Service, Profesional } from "../types";
+import type { Service, Profesional } from "../types";
 import {
   reservarTurno,
   listarProfesionales,
   useStore,
 } from "../store";
 import type { DisponibilidadDTO } from "../api/dto";
+import BookingSteps from "./booking/BookingSteps";
+import ServiceCard from "./booking/ServiceCard";
+import ProfesionalPicker from "./booking/ProfesionalPicker";
+import SlotScheduler from "./booking/SlotScheduler";
+import TicketResumen from "./booking/TicketResumen";
 
 const SACAR_HORA_24H = (hora12: string): string => {
   const [hora, minutos] = hora12.replace(/\s*(AM|PM)/i, "").split(":").map(Number);
@@ -26,22 +28,12 @@ const SACAR_HORA_24H = (hora12: string): string => {
   return `${String(hora24).padStart(2, "0")}:${String(minutos).padStart(2, "0")}`;
 };
 
-const A_HORA12 = (hora24: string): string => {
-  const [h, m] = hora24.split(":").map(Number);
-  const esPM = h >= 12;
-  const hora12 = ((h % 12) || 12).toString().padStart(2, "0");
-  return `${hora12}:${String(m).padStart(2, "0")} ${esPM ? "PM" : "AM"}`;
-};
-
+const DIAS_LARGO = [
+  "Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado",
+];
 const MESES_CORTO = [
   "Ene", "Feb", "Mar", "Abr", "May", "Jun",
   "Jul", "Ago", "Sep", "Oct", "Nov", "Dic",
-];
-
-const DIAS_CORTO = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
-
-const DIAS_LARGO = [
-  "Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado",
 ];
 
 // Genera una etiqueta legible tipo "Jueves, Oct 24" y la fecha ISO de hoy + offset
@@ -51,52 +43,6 @@ const fechaDesdeOffset = (offset: number): { etiqueta: string; iso: string } => 
   const iso = d.toISOString().slice(0, 10);
   const etiqueta = `${DIAS_LARGO[d.getDay()]}, ${MESES_CORTO[d.getMonth()]} ${d.getDate()}`;
   return { etiqueta, iso };
-};
-
-const ORDEN_DIAS_ISO = () => {
-  const hoy = new Date();
-  return Array.from({ length: 14 }, (_, i) => {
-    const d = new Date(hoy);
-    d.setDate(hoy.getDate() + i);
-    return d.toISOString().slice(0, 10);
-  });
-};
-
-// Construye los slots de 30 min dentro de la jornada laboral, descartando bloqueos
-const construirSlots = (
-  disp: DisponibilidadDTO | null,
-): { disponible: string[]; ocupado: string[] } => {
-  if (!disp || !disp.jornadaLaboral) return { disponible: [], ocupado: [] };
-  const { inicio, fin } = disp.jornadaLaboral;
-  const ocupados = (disp.bloquesOcupados || []).map((b) => ({
-    inicio: b.hora_inicio.slice(0, 5),
-    fin: b.hora_fin.slice(0, 5),
-  }));
-
-  const slots: string[] = [];
-  const [hi, mi] = inicio.split(":").map(Number);
-  const [hf, mf] = fin.split(":").map(Number);
-  const inicioMin = hi * 60 + mi;
-  const finMin = hf * 60 + mf;
-  let t = inicioMin;
-  while (t + 30 <= finMin) {
-    const h = String(Math.floor(t / 60)).padStart(2, "0");
-    const m = String(t % 60).padStart(2, "0");
-    slots.push(`${h}:${m}`);
-    t += 30;
-  }
-
-  const disponible = slots.filter((s) => {
-    const finSlot = new Date(`1970-01-01T${s}:00`);
-    finSlot.setMinutes(finSlot.getMinutes() + 30);
-    const finS = finSlot.toTimeString().slice(0, 5);
-    return !ocupados.some(
-      (o) => !(finS <= o.inicio || s >= o.fin),
-    );
-  });
-
-  const ocupado = slots.filter((s) => !disponible.includes(s));
-  return { disponible, ocupado };
 };
 
 export default function ClientPwa() {
@@ -120,7 +66,6 @@ export default function ClientPwa() {
 
   // Fechas de los próximos 14 días
   const fechas = Array.from({ length: 14 }, (_, i) => fechaDesdeOffset(i));
-  const diasISO = ORDEN_DIAS_ISO();
 
   // Cargar profesionales al elegir servicio (sucursal del servicio)
   useEffect(() => {
@@ -222,37 +167,68 @@ export default function ClientPwa() {
     setStep((prev) => Math.max(1, prev - 1) as 1 | 2 | 3 | 5);
   };
 
-  const { disponible, ocupado } = construirSlots(disponibilidad);
+  const infoServicio = (
+    <div className="space-y-1 text-left">
+      <span className="label-overline block">
+        {selectedService.category}
+      </span>
+      <h3 className="text-sm font-display font-semibold text-slate-900 dark:text-slate-50">
+        {selectedService.name}
+      </h3>
+      {step === 3 && selectedProfesional && (
+        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+          Con{" "}
+          <span className="font-bold text-slate-700 dark:text-slate-200">
+            {selectedProfesional.nombre}
+          </span>{" "}
+          — elige día y hora.
+        </p>
+      )}
+      {step === 2 && (
+        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+          Elige el profesional que atenderá tu cita.
+        </p>
+      )}
+    </div>
+  );
 
   return (
-    <div className="w-full mx-auto select-none">
-      <div className="w-full bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col rounded-2xl transition-colors duration-200">
-        <div className="flex-grow flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 overflow-y-auto custom-scrollbar relative select-none transition-colors">
+    <div className="mx-auto w-full select-none">
+      <div className="flex w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-xl dark:border-slate-800 dark:bg-slate-900">
+        <div className="relative flex flex-grow flex-col overflow-y-auto bg-slate-50 custom-scrollbar dark:bg-slate-950">
           {/* Header Bar */}
-          <div className="p-4 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800/80 flex justify-between items-center sticky top-0 z-40 transition-colors">
-            {step > 1 ? (
+          <div className="sticky top-0 z-40 flex items-center justify-between border-b border-slate-200 bg-white p-4 transition-colors dark:border-slate-800/80 dark:bg-slate-900">
+            {step > 1 && step < 5 ? (
               <button
                 onClick={pasoAnterior}
-                className="p-1 px-1.5 bg-slate-100 dark:bg-slate-800 rounded-lg text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
+                className="flex items-center gap-1.5 rounded-lg bg-slate-100 px-2 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600 transition-colors hover:text-slate-900 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-slate-100"
               >
-                <ArrowLeft size={16} />
+                <ArrowLeft size={15} />
+                Volver
               </button>
             ) : (
               <div className="flex items-center gap-2">
-                <span className="m-0 text-sm font-bold text-slate-900 dark:text-slate-50">
-                  💈 OptiTurno Pro Studio
+                <span className="font-display text-sm font-semibold text-slate-900 dark:text-slate-50">
+                  Studio OptiTurno
                 </span>
               </div>
             )}
-            <div className="flex items-center gap-1.5">
-              <span className="text-[9px] uppercase font-bold tracking-widest text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-500/15 px-2 py-0.5 rounded-full border border-indigo-200 dark:border-indigo-500/20">
-                Reservar Cita
-              </span>
-            </div>
+            <span className="rounded-full border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-[9px] font-bold uppercase tracking-widest text-indigo-600 dark:border-indigo-500/20 dark:bg-indigo-500/15 dark:text-indigo-400">
+              Reservar Cita
+            </span>
+          </div>
+
+          {/* Progreso */}
+          <div className="px-4 pt-4">
+            {step === 5 ? (
+              <BookingSteps paso={3} completado />
+            ) : (
+              <BookingSteps paso={step} />
+            )}
           </div>
 
           {error && (
-            <div className="mx-4 mt-3 flex items-start gap-2 bg-red-500/10 border border-red-500/30 p-3 rounded-lg text-red-600 dark:text-red-400">
+            <div className="mx-4 mt-3 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-red-600 dark:text-red-400">
               <AlertTriangle size={14} className="mt-0.5 flex-shrink-0" />
               <p className="text-[11px] font-semibold leading-relaxed">{error}</p>
             </div>
@@ -260,64 +236,38 @@ export default function ClientPwa() {
 
           {/* STEP 1: SERVICES CATALOG */}
           {step === 1 && (
-            <div className="p-4 space-y-6 flex-grow flex flex-col select-none">
-              <div className="relative rounded-2xl overflow-hidden bg-gradient-to-r from-indigo-500 to-purple-600 dark:from-slate-900 dark:to-slate-950 h-28 flex flex-col justify-end p-4 border border-indigo-400/20 dark:border-slate-800 shadow-sm transition-colors">
+            <div className="flex flex-grow flex-col space-y-6 p-4">
+              <div className="relative flex h-28 flex-col justify-end overflow-hidden rounded-2xl border border-indigo-400/20 bg-gradient-to-r from-indigo-600 to-purple-600 p-4 shadow-sm dark:border-slate-800 dark:from-purple-900 dark:to-slate-950">
                 <div className="relative z-20 space-y-1">
-                  <div className="flex gap-1 items-center">
-                    <Star size={11} className="text-amber-300 fill-amber-300" />
-                    <Star size={11} className="text-amber-300 fill-amber-300" />
-                    <Star size={11} className="text-amber-300 fill-amber-300" />
-                    <Star size={11} className="text-amber-300 fill-amber-300" />
-                    <Star size={11} className="text-amber-300 fill-amber-300" />
-                    <span className="text-[9px] text-white/90 font-bold pl-1">
+                  <div className="flex items-center">
+                    {[0, 1, 2, 3, 4].map((i) => (
+                      <Star key={i} size={11} className="fill-amber-400 text-amber-400" />
+                    ))}
+                    <span className="pl-1 text-[9px] font-bold text-white/90">
                       5.0 (250 reseñas)
                     </span>
                   </div>
-                  <h3 className="text-sm font-bold text-white leading-none">
+                  <h3 className="font-display text-sm font-semibold leading-none text-white">
                     Cortes & Estilo Masculino
                   </h3>
-                  <p className="text-[10px] text-indigo-100 dark:text-slate-300 flex items-center gap-1">
+                  <p className="flex items-center gap-1 text-[10px] text-indigo-100 dark:text-slate-300">
                     <MapPin size={10} /> Sede Bogotá Centro
                   </p>
                 </div>
               </div>
 
               <div className="space-y-4">
-                <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
+                <span className="label-overline block">
                   Servicios Disponibles
                 </span>
-
                 <div className="space-y-3">
                   {(servicios.length > 0 ? servicios : initialServices).map(
                     (svc) => (
-                      <div
+                      <ServiceCard
                         key={svc.id}
-                        className="bg-white dark:bg-slate-900/60 p-3.5 rounded-2xl border border-slate-200 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 transition-all flex justify-between items-center shadow-sm"
-                      >
-                        <div className="space-y-1 text-left flex-1 pr-3">
-                          <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wide bg-indigo-50 dark:bg-indigo-500/10 px-1.5 py-0.5 rounded border border-indigo-100 dark:border-indigo-500/10 inline-block">
-                            {svc.category}
-                          </span>
-                          <h4 className="text-xs font-bold text-slate-900 dark:text-slate-50 leading-snug">
-                            {svc.name}
-                          </h4>
-                          <div className="flex items-center gap-3 text-[10px] text-slate-500 dark:text-slate-400">
-                            <span className="flex items-center gap-0.5">
-                              <Clock size={10} /> {svc.duration} min
-                            </span>
-                            <span className="font-bold font-mono text-slate-800 dark:text-slate-200">
-                              ${svc.price.toLocaleString("es-CO")} COP
-                            </span>
-                          </div>
-                        </div>
-
-                        <button
-                          onClick={() => handleElegirServicio(svc)}
-                          className="py-1.5 px-3 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all shadow-md shadow-indigo-600/20 active:scale-95"
-                        >
-                          Agendar
-                        </button>
-                      </div>
+                        svc={svc}
+                        onSelect={handleElegirServicio}
+                      />
                     ),
                   )}
                 </div>
@@ -327,71 +277,19 @@ export default function ClientPwa() {
 
           {/* STEP 2: SELECT PROFESSIONAL */}
           {step === 2 && (
-            <div className="p-4 space-y-6 flex-grow flex flex-col select-none text-left">
-              <div className="space-y-1">
-                <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
-                  {selectedService.category}
-                </span>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-50">
-                  {selectedService.name}
-                </h3>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Elige el profesional que atenderá tu cita.
-                </p>
-              </div>
-
-              {profesionalesCargando ? (
-                <div className="flex items-center justify-center py-8">
-                  <span className="w-5 h-5 border-2 border-indigo-600 border-t-transparent rounded-full animate-spin"></span>
-                </div>
-              ) : profesionales.length === 0 ? (
-                <div className="text-[11px] text-slate-500 dark:text-slate-400 text-center py-8">
-                  No hay profesionales disponibles para este servicio.
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {profesionales.map((prof) => (
-                    <div
-                      key={prof.id}
-                      onClick={() => setSelectedProfesional(prof)}
-                      className={`bg-white dark:bg-slate-900/60 p-3.5 rounded-2xl border transition-all flex items-center gap-3 cursor-pointer shadow-sm ${
-                        selectedProfesional?.id === prof.id
-                          ? "border-indigo-500 bg-indigo-50/60 dark:bg-indigo-500/10 shadow-[0_0_0_1px_rgba(99,102,241,0.4)]"
-                          : "border-slate-200 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700"
-                      }`}
-                    >
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white flex-shrink-0">
-                        <UserRound size={18} />
-                      </div>
-                      <div className="space-y-0.5 flex-1">
-                        <h4 className="text-xs font-bold text-slate-900 dark:text-slate-50">
-                          {prof.nombre}
-                        </h4>
-                        <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                          {prof.especialidad}
-                        </p>
-                      </div>
-                      <div
-                        className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                          selectedProfesional?.id === prof.id
-                            ? "bg-indigo-600 border-indigo-600"
-                            : "border-slate-300 dark:border-slate-600"
-                        }`}
-                      >
-                        {selectedProfesional?.id === prof.id && (
-                          <Check size={12} className="text-white" />
-                        )}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <div className="flex justify-end pt-4 border-t border-slate-200 dark:border-slate-800/80 mt-auto">
+            <div className="flex flex-grow flex-col space-y-6 p-4 text-left">
+              {infoServicio}
+              <ProfesionalPicker
+                profesionales={profesionales}
+                cargando={profesionalesCargando}
+                seleccionado={selectedProfesional}
+                onSelect={setSelectedProfesional}
+              />
+              <div className="mt-auto flex justify-end border-t border-slate-200 pt-4 dark:border-slate-800/80">
                 <button
                   disabled={!selectedProfesional}
                   onClick={() => setStep(3)}
-                  className="py-2 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-indigo-600/10 flex items-center gap-1 active:scale-95"
+                  className="btn btn-primary py-2 px-4"
                 >
                   Continuar
                   <ArrowRight size={12} />
@@ -402,126 +300,34 @@ export default function ClientPwa() {
 
           {/* STEP 3: SELECT DATE AND HOUR SLOT */}
           {step === 3 && (
-            <div className="p-4 space-y-6 flex-grow flex flex-col select-none text-left">
-              <div className="space-y-1">
-                <span className="text-[9px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-widest">
-                  {selectedService.category}
-                </span>
-                <h3 className="text-sm font-bold text-slate-900 dark:text-slate-50">
-                  {selectedService.name}
-                </h3>
-                {selectedProfesional && (
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    Con <span className="font-bold text-slate-700 dark:text-slate-200">{selectedProfesional.nombre}</span> — elige día y hora.
-                  </p>
-                )}
-              </div>
-
-              <div className="space-y-2">
-                <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
-                  Fecha de Reserva
-                </span>
-                <div className="flex gap-2 overflow-x-auto pb-1 custom-scrollbar">
-                  {fechas.map((f, idx) => {
-                    const d = diasISO[idx];
-                    const dateObj = new Date(d + "T00:00:00");
-                    return (
-                      <div
-                        key={d}
-                        onClick={() => {
-                          setSelectedDate(f.etiqueta);
-                          setSelectedDateISO(d);
-                        }}
-                        className={`flex-shrink-0 w-12 py-2 rounded-xl text-center cursor-pointer transition-all border ${
-                          selectedDateISO === d
-                            ? "bg-indigo-50 dark:bg-indigo-600/20 border-indigo-500 text-indigo-600 dark:text-indigo-400 font-bold"
-                            : "bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700"
-                        }`}
-                      >
-                        <span className="block text-[10px] font-bold">
-                          {DIAS_CORTO[dateObj.getDay()]}
-                        </span>
-                        <span className="block text-sm font-extrabold mt-0.5">
-                          {dateObj.getDate()}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <span className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
-                  Horas Disponibles
-                </span>
-
-                {disponibilidadCargando ? (
-                  <div className="flex items-center justify-center py-8">
-                    <span className="w-5 h-5 border-2 border-emerald-600 border-t-transparent rounded-full animate-spin"></span>
-                  </div>
-                ) : selectedDateISO === "" ? (
-                  <p className="text-[11px] text-slate-400 dark:text-slate-500 text-center py-6">
-                    Selecciona una fecha para ver las horas disponibles.
-                  </p>
-                ) : (
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {disponible.map((hr) => {
-                      const fmt = A_HORA12(hr);
-                      return (
-                        <div
-                          key={hr}
-                          onClick={() => setSelectedHour(fmt)}
-                          className={`py-2 text-center rounded-xl cursor-pointer text-[11px] font-bold transition-all border ${
-                            selectedHour === fmt
-                              ? "bg-emerald-500/20 border-emerald-500 text-emerald-700 dark:text-emerald-400 shadow-[0_0_8px_rgba(16,185,129,0.3)] scale-105"
-                              : "bg-white dark:bg-slate-900 border-emerald-500/30 dark:border-emerald-500/20 text-emerald-700 dark:text-emerald-400 hover:border-emerald-500/60"
-                          }`}
-                        >
-                          {fmt}
-                        </div>
-                      );
-                    })}
-                    {disponible.length === 0 && (
-                      <p className="col-span-full text-[11px] text-slate-400 dark:text-slate-500 text-center py-4">
-                        Sin horarios disponibles en esta fecha.
-                      </p>
-                    )}
-                  </div>
-                )}
-
-                {ocupado.length > 0 && (
-                  <div className="space-y-2">
-                    <span className="text-[9px] uppercase font-bold text-slate-400 dark:text-slate-600 tracking-wider">
-                      Horas ocupadas
-                    </span>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {ocupado.map((hr) => (
-                        <div
-                          key={hr}
-                          className="py-2 text-center rounded-xl bg-slate-200/50 dark:bg-slate-900/40 border border-slate-300/40 dark:border-slate-800/40 line-through text-[11px] font-medium text-slate-400 dark:text-slate-600 cursor-not-allowed select-none"
-                        >
-                          {A_HORA12(hr)}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex justify-between items-center pt-4 border-t border-slate-200 dark:border-slate-800/80 mt-auto">
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-bold tracking-wider">
+            <div className="flex flex-grow flex-col space-y-6 p-4 text-left">
+              {infoServicio}
+              <SlotScheduler
+                disponibilidad={disponibilidad}
+                cargando={disponibilidadCargando}
+                fechas={fechas}
+                fechaSeleccionadaISO={selectedDateISO}
+                horaSeleccionada={selectedHour}
+                onSelectFecha={(iso, etiqueta) => {
+                  setSelectedDate(etiqueta);
+                  setSelectedDateISO(iso);
+                }}
+                onSelectHora={setSelectedHour}
+              />
+              <div className="mt-auto flex items-center justify-between border-t border-slate-200 pt-4 dark:border-slate-800/80">
+                <div className="label-overline">
                   <span className="block">Total</span>
-                  <span className="font-mono text-slate-900 dark:text-slate-100">
+                  <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
                     ${selectedService.price.toLocaleString("es-CO")}
                   </span>
                 </div>
                 <button
                   onClick={handleElegirHora}
                   disabled={isSubmitting || !selectedHour}
-                  className="py-2 px-4 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-indigo-600/10 flex items-center gap-1 active:scale-95"
+                  className="btn btn-primary py-2 px-4"
                 >
                   {isSubmitting ? (
-                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
                   ) : (
                     <>
                       Continuar
@@ -535,97 +341,17 @@ export default function ClientPwa() {
 
           {/* STEP 5: SUCCESS CONFIRMATION */}
           {step === 5 && (
-            <div className="p-6 space-y-6 flex-grow flex flex-col justify-center text-center animate-scale-up select-none">
-              <div className="w-16 h-16 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-full flex items-center justify-center mx-auto shadow-[0_0_15px_rgba(16,185,129,0.2)]">
-                <Check size={32} />
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-lg font-bold text-slate-900 dark:text-slate-50">
-                  ¡Cita Confirmada con Éxito!
-                </h3>
-                <p className="text-xs text-slate-600 dark:text-slate-400 max-w-xs mx-auto leading-relaxed">
-                  Tu espacio quedó reservado. Te
-                  notificaremos a tu número de WhatsApp registrado.
-                </p>
-              </div>
-
-              <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl text-left space-y-3.5 relative overflow-hidden shadow-sm">
-                <div className="absolute top-0 right-0 w-16 h-16 bg-emerald-500/5 rounded-full blur-xl"></div>
-
-                <div>
-                  <span className="text-[9px] text-indigo-600 dark:text-indigo-400 font-bold uppercase tracking-wider">
-                    Resumen del Ticket
-                  </span>
-                  <p className="text-xs font-bold text-slate-800 dark:text-slate-100">
-                    {selectedService.name}
-                  </p>
-                </div>
-
-                <div className="grid grid-cols-2 gap-2 text-[10px] border-t border-slate-100 dark:border-slate-800/80 pt-2">
-                  <div>
-                    <span className="text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold block">
-                      Profesional:
-                    </span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200 block mt-0.5">
-                      {selectedProfesional?.nombre || "—"}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold block">
-                      Franja:
-                    </span>
-                    <span className="font-bold text-emerald-600 dark:text-emerald-400 block mt-0.5">
-                      {selectedHour}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold block">
-                      Día asignado:
-                    </span>
-                    <span className="font-bold text-slate-800 dark:text-slate-200 block mt-0.5">
-                      {selectedDate}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-slate-500 dark:text-slate-400 uppercase tracking-widest font-semibold block">
-                      Valor:
-                    </span>
-                    <span className="font-bold text-indigo-600 dark:text-indigo-400 block mt-0.5">
-                      ${selectedService.price.toLocaleString("es-CO")}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-2 pt-2">
-                <button
-                  onClick={() =>
-                    alert("¡Agregado a Google Calendar con éxito!")
-                  }
-                  className="w-full py-2.5 bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-colors shadow-sm"
-                >
-                  📅 Agregar a Google Calendar
-                </button>
-                <button
-                  onClick={() =>
-                    alert(`¡Enviando ticket digital!`)
-                  }
-                  className="w-full py-2.5 bg-indigo-50 dark:bg-indigo-600/10 hover:bg-indigo-100 dark:hover:bg-indigo-600/20 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-500/20 rounded-xl text-[10px] font-bold uppercase tracking-wider transition-all"
-                >
-                  ✉️ Enviar Ticket por WhatsApp
-                </button>
-              </div>
-
-              <div className="pt-4 border-t border-slate-200 dark:border-slate-900 border-dashed mt-auto">
-                <button
-                  onClick={resetFlow}
-                  className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-bold"
-                >
-                  Agendar Otro Turno
-                </button>
-              </div>
-            </div>
+            <TicketResumen
+              servicio={selectedService}
+              profesional={selectedProfesional}
+              hora={selectedHour}
+              fecha={selectedDate}
+              onGoogle={() =>
+                alert("¡Agregado a Google Calendar con éxito!")
+              }
+              onWhatsApp={() => alert("¡Enviando ticket digital!")}
+              onAgendarOtro={resetFlow}
+            />
           )}
         </div>
       </div>

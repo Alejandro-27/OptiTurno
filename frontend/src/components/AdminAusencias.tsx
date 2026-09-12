@@ -84,7 +84,7 @@ export default function AdminAusencias() {
   };
 
   return (
-    <div className="bg-white dark:bg-[#0b1120] border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm dark:shadow-xl space-y-5 transition-colors duration-200">
+    <div className="bg-white dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-xl p-6 shadow-sm dark:shadow-xl space-y-5 transition-colors duration-200">
       <div className="flex items-start gap-4">
         <div className="p-2 bg-rose-500/10 rounded-xl text-rose-600 dark:text-rose-400 mt-1">
           <CalendarOff size={18} />
@@ -124,7 +124,7 @@ export default function AdminAusencias() {
               type="date"
               value={fecha}
               onChange={(e) => setFecha(e.target.value)}
-              className="mt-1 w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1.5 text-xs font-mono font-semibold text-slate-800 dark:text-slate-300 focus:outline-none focus:border-rose-500 transition-colors"
+              className="mt-1 w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded px-2.5 py-1.5 text-xs font-mono font-semibold text-slate-800 dark:text-slate-300 focus:outline-none focus:border-rose-500 transition-colors"
             />
           </label>
           <label className="block">
@@ -135,7 +135,7 @@ export default function AdminAusencias() {
               type="date"
               value={fechaHasta}
               onChange={(e) => setFechaHasta(e.target.value)}
-              className="mt-1 w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1.5 text-xs font-mono font-semibold text-slate-800 dark:text-slate-300 focus:outline-none focus:border-rose-500 transition-colors"
+              className="mt-1 w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded px-2.5 py-1.5 text-xs font-mono font-semibold text-slate-800 dark:text-slate-300 focus:outline-none focus:border-rose-500 transition-colors"
             />
           </label>
         </div>
@@ -147,7 +147,7 @@ export default function AdminAusencias() {
             className={`flex items-center gap-2 text-[11px] font-bold px-3 py-1.5 rounded-lg border transition-colors ${
               todoElDia
                 ? "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30"
-                : "bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-800"
+                : "bg-slate-100 dark:bg-slate-900 text-slate-500 dark:text-slate-400 border-border-subtle dark:border-slate-800"
             }`}
           >
             <span
@@ -162,7 +162,7 @@ export default function AdminAusencias() {
               disabled={todoElDia}
               value={horaInicio}
               onChange={(e) => setHoraInicio(e.target.value)}
-              className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs font-mono font-semibold text-slate-800 dark:text-slate-300 focus:outline-none focus:border-rose-500 disabled:opacity-50 transition-colors"
+              className="bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded px-2.5 py-1 text-xs font-mono font-semibold text-slate-800 dark:text-slate-300 focus:outline-none focus:border-rose-500 disabled:opacity-50 transition-colors"
             />
             <span className="text-xs text-slate-400 font-bold">-</span>
             <input
@@ -170,14 +170,14 @@ export default function AdminAusencias() {
               disabled={todoElDia}
               value={horaFin}
               onChange={(e) => setHoraFin(e.target.value)}
-              className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1 text-xs font-mono font-semibold text-slate-800 dark:text-slate-300 focus:outline-none focus:border-rose-500 disabled:opacity-50 transition-colors"
+              className="bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded px-2.5 py-1 text-xs font-mono font-semibold text-slate-800 dark:text-slate-300 focus:outline-none focus:border-rose-500 disabled:opacity-50 transition-colors"
             />
           </div>
 
           <select
             value={motivo}
             onChange={(e) => setMotivo(e.target.value)}
-            className="bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded px-2.5 py-1.5 text-xs font-semibold text-slate-800 dark:text-slate-300 focus:outline-none focus:border-rose-500 transition-colors"
+            className="bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded px-2.5 py-1.5 text-xs font-semibold text-slate-800 dark:text-slate-300 focus:outline-none focus:border-rose-500 transition-colors"
           >
             <option>Ausencia personal</option>
             <option>Vacaciones</option>
@@ -201,7 +201,7 @@ export default function AdminAusencias() {
         </button>
       </form>
 
-      <div className="border-t border-slate-200 dark:border-slate-800 pt-4 space-y-2">
+      <div className="border-t border-border-subtle dark:border-slate-800 pt-4 space-y-2">
         <div className="flex items-center justify-between">
           <span className="text-[10px] uppercase tracking-wider font-bold text-slate-500 dark:text-slate-400">
             {ordenadas.length === 0
@@ -213,7 +213,7 @@ export default function AdminAusencias() {
         {ordenadas.map((aus: AusenciaDTO) => (
           <div
             key={aus.id}
-            className="flex items-center justify-between gap-3 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg px-3 py-2.5"
+            className="flex items-center justify-between gap-3 bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg px-3 py-2.5"
           >
             <div className="min-w-0">
               <p className="text-xs font-bold text-slate-800 dark:text-slate-200">

@@ -39,20 +39,17 @@ export default function MiPerfilView() {
     }
   };
 
-  const inputClase =
-    "w-full bg-white dark:bg-slate-950 border border-slate-300 dark:border-slate-800 rounded-lg py-2.5 pl-10 pr-3 text-xs font-semibold text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors";
-
   return (
     <div className="max-w-md space-y-4">
       {exito && (
-        <div className="bg-emerald-500/10 border border-emerald-500/30 p-3 rounded-lg flex items-center gap-2 text-emerald-600 dark:text-emerald-400 text-[11px] animate-fade-in">
+        <div className="animate-fade-in flex items-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-[11px] text-emerald-600 dark:text-emerald-400">
           <CheckCircle2 size={14} className="flex-shrink-0" />
           <p className="font-semibold">Perfil actualizado correctamente.</p>
         </div>
       )}
 
       {errorText && (
-        <div className="bg-red-500/10 border border-red-500/30 p-3 rounded-lg flex items-center gap-2 text-red-600 dark:text-red-400 text-[11px]">
+        <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-[11px] text-red-600 dark:text-red-400">
           <AlertCircle size={14} className="flex-shrink-0" />
           <p className="font-semibold leading-snug">{errorText}</p>
         </div>
@@ -60,14 +57,12 @@ export default function MiPerfilView() {
 
       <form
         onSubmit={guardar}
-        className="bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 shadow-sm space-y-4"
+        className="card space-y-4 p-5 shadow-sm"
       >
         <div className="space-y-1.5">
-          <label className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
-            Nombre Completo
-          </label>
+          <label className="label-overline block">Nombre Completo</label>
           <div className="relative">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 dark:text-slate-500 pointer-events-none">
+            <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 dark:text-slate-500">
               <User size={13} />
             </span>
             <input
@@ -75,45 +70,38 @@ export default function MiPerfilView() {
               required
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
-              className={inputClase}
+              className="input"
             />
           </div>
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
-            Número WhatsApp
-          </label>
+          <label className="label-overline block">Número WhatsApp</label>
           <div className="relative">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 dark:text-slate-500 pointer-events-none">
+            <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 dark:text-slate-500">
               <Phone size={13} />
             </span>
             <input
               type="text"
               value={telefono}
               onChange={(e) => setTelefono(e.target.value)}
-              className={inputClase}
+              className="input"
               placeholder="+57 300 000 0000"
             />
           </div>
         </div>
 
         <div className="space-y-1.5">
-          <label className="text-[9px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
-            Correo Electrónico
-          </label>
+          <label className="label-overline block">Correo Electrónico</label>
           <div className="relative">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 dark:text-slate-500 pointer-events-none">
+            <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 dark:text-slate-500">
               <Mail size={13} />
             </span>
             <input
               type="email"
               disabled
               value={sesion?.usuario.email || ""}
-              className={
-                inputClase +
-                " opacity-60 cursor-not-allowed"
-              }
+              className="input cursor-not-allowed opacity-60"
             />
           </div>
         </div>
@@ -121,7 +109,7 @@ export default function MiPerfilView() {
         <button
           type="submit"
           disabled={isLoading}
-          className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold uppercase tracking-wider transition-all shadow-lg shadow-indigo-600/20 flex items-center justify-center gap-1.5 active:scale-95 disabled:opacity-50 cursor-pointer"
+          className="btn btn-primary w-full py-2.5"
         >
           {isLoading ? (
             <Loader2 size={13} className="animate-spin" />

@@ -192,10 +192,10 @@ export default function AdminCalendar() {
       )}
 
       {/* Header controls for Calendar */}
-      <div className="flex justify-between items-center bg-white dark:bg-slate-900/40 p-4 border border-slate-200 dark:border-slate-800 rounded-xl flex-wrap gap-4 shadow-sm dark:shadow-none transition-colors duration-200">
+      <div className="flex justify-between items-center bg-white dark:bg-slate-900/40 p-4 border border-border-subtle dark:border-slate-800 rounded-xl flex-wrap gap-4 shadow-sm dark:shadow-none transition-colors duration-200">
         {/* Selector de Modos de Vista */}
         <div className="flex items-center gap-4 flex-wrap">
-          <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-full border border-slate-200 dark:border-slate-800">
+          <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-full border border-border-subtle dark:border-slate-800">
             <button
               onClick={() => setViewMode("diario")}
               className={`px-4 py-1 text-xs font-bold rounded-full transition-all ${
@@ -236,7 +236,7 @@ export default function AdminCalendar() {
               placeholder="Buscar cliente o servicio..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg focus:outline-none focus:border-indigo-500 w-full md:w-48 transition-all"
+              className="pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg focus:outline-none focus:border-indigo-500 w-full md:w-48 transition-all"
             />
           </div>
         </div>
@@ -250,7 +250,7 @@ export default function AdminCalendar() {
               setTempYear(currentDate.getFullYear());
               setShowDatePickerModal(true);
             }}
-            className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950/80 px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-800 hover:border-indigo-500 transition-all cursor-pointer group"
+            className="flex items-center gap-2 bg-slate-50 dark:bg-slate-950/80 px-4 py-2 rounded-lg border border-border-subtle dark:border-slate-800 hover:border-indigo-500 transition-all cursor-pointer group"
           >
             <CalendarIcon
               size={14}
@@ -264,13 +264,13 @@ export default function AdminCalendar() {
           <div className="flex gap-1">
             <button
               onClick={() => handleNavigateDate("prev")}
-              className="p-2 rounded bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
+              className="p-2 rounded bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
             >
               <ChevronLeft size={16} />
             </button>
             <button
               onClick={() => handleNavigateDate("next")}
-              className="p-2 rounded bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
+              className="p-2 rounded bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
             >
               <ChevronRight size={16} />
             </button>
@@ -280,15 +280,15 @@ export default function AdminCalendar() {
 
       {/* VISTA DIARIA */}
       {viewMode === "diario" && (
-        <div className="border border-slate-200 dark:border-slate-800/80 rounded-xl overflow-hidden bg-white dark:bg-slate-950/90 shadow-sm dark:shadow-2xl flex-grow overflow-x-auto custom-scrollbar transition-colors duration-200">
+        <div className="border border-border-subtle dark:border-slate-800/80 rounded-xl overflow-hidden bg-white dark:bg-slate-950/90 shadow-sm dark:shadow-2xl flex-grow overflow-x-auto custom-scrollbar transition-colors duration-200">
           <div className="min-w-[520px] md:min-w-[1000px] grid grid-cols-[70px_repeat(2,1fr)] md:grid-cols-[100px_repeat(5,1fr)]">
-            <div className="bg-slate-50 dark:bg-[#0b1120] h-14 border-b border-r border-slate-200 dark:border-slate-800/50 sticky top-0 z-30 flex items-center justify-center">
+            <div className="bg-slate-50 dark:bg-slate-950 h-14 border-b border-r border-border-subtle dark:border-slate-800/50 sticky top-0 z-30 flex items-center justify-center">
               <Clock size={16} className="text-slate-400 dark:text-slate-500" />
             </div>
             {columns.map((col, i) => (
               <div
                 key={col.id}
-                className={`bg-slate-50 dark:bg-[#0b1120] h-14 border-b border-r border-slate-200 dark:border-slate-800/50 sticky top-0 z-30 flex flex-col items-center justify-center p-2 text-center transition-all hover:bg-slate-100 dark:hover:bg-slate-900/60 ${
+                className={`bg-slate-50 dark:bg-slate-950 h-14 border-b border-r border-border-subtle dark:border-slate-800/50 sticky top-0 z-30 flex flex-col items-center justify-center p-2 text-center transition-all hover:bg-slate-100 dark:hover:bg-slate-900/60 ${
                   i >= 2 ? "hidden md:flex" : ""
                 }`}
               >
@@ -303,7 +303,7 @@ export default function AdminCalendar() {
 
             {hours.map((hour) => (
               <React.Fragment key={hour}>
-                <div className="h-24 border-b border-r border-slate-200 dark:border-slate-800/50 bg-slate-50/50 dark:bg-[#060814] flex items-start justify-end pr-3 pt-2 text-[10px] font-bold text-slate-400 dark:text-slate-500 font-mono">
+                <div className="h-24 border-b border-r border-border-subtle dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-950 flex items-start justify-end pr-3 pt-2 text-[10px] font-bold text-slate-400 dark:text-slate-500 font-mono">
                   {hour}
                 </div>
 
@@ -314,7 +314,7 @@ export default function AdminCalendar() {
                   return (
                     <div
                       key={`${hour}-${col.id}`}
-                      className={`h-24 border-b border-r border-slate-200/80 dark:border-slate-800/20 bg-white dark:bg-slate-950/30 p-2 relative group hover:bg-slate-50 dark:hover:bg-slate-900/10 transition-colors ${
+                      className={`h-24 border-b border-r border-border-subtle/80 dark:border-slate-800/20 bg-white dark:bg-slate-950/30 p-2 relative group hover:bg-slate-50 dark:hover:bg-slate-900/10 transition-colors ${
                         i >= 2 ? "hidden md:block" : ""
                       }`}
                     >
@@ -367,7 +367,7 @@ export default function AdminCalendar() {
 
       {/* VISTA SEMANAL */}
       {viewMode === "semanal" && (
-        <div className="border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-950/90 shadow-sm p-4 flex-grow">
+        <div className="border border-border-subtle dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-950/90 shadow-sm p-4 flex-grow">
           <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-7 gap-2">
             {getWeekDays().map((dayDate, idx) => {
               const isSelectedDay =
@@ -379,11 +379,11 @@ export default function AdminCalendar() {
                   className={`border rounded-xl p-3 min-h-[140px] sm:min-h-[350px] cursor-pointer transition-all flex flex-col justify-between ${
                     isSelectedDay
                       ? "border-indigo-500 bg-indigo-50/30 dark:bg-indigo-950/20 shadow-md"
-                      : "border-slate-200 dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30"
+                      : "border-border-subtle dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30"
                   }`}
                 >
                   <div>
-                    <div className="text-center pb-2 border-b border-slate-200 dark:border-slate-800">
+                    <div className="text-center pb-2 border-b border-border-subtle dark:border-slate-800">
                       <p className="text-[10px] uppercase tracking-wider text-slate-400 font-bold">
                         {dayDate.toLocaleDateString("es-ES", {
                           weekday: "short",
@@ -408,7 +408,7 @@ export default function AdminCalendar() {
                             e.stopPropagation();
                             setSelectedBooking(b);
                           }}
-                          className="p-2 rounded-lg text-left bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm text-[10px]"
+                          className="p-2 rounded-lg text-left bg-white dark:bg-slate-900 border border-border-subtle dark:border-slate-800 shadow-sm text-[10px]"
                         >
                           <p className="font-bold text-indigo-600 dark:text-indigo-400 truncate">
                             {b.clientName}
@@ -433,7 +433,7 @@ export default function AdminCalendar() {
 
       {/* VISTA MENSUAL */}
       {viewMode === "mensual" && (
-        <div className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/90 shadow-sm p-4 flex-1 min-h-[420px] overflow-y-auto custom-scrollbar">
+        <div className="border border-border-subtle dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/90 shadow-sm p-4 flex-1 min-h-[420px] overflow-y-auto custom-scrollbar">
           {/* Cabecera de días */}
           <div className="grid grid-cols-7 gap-2 text-center font-bold text-xs text-slate-400 uppercase tracking-wider mb-2 sticky top-0 bg-white dark:bg-slate-950 py-1 z-10">
             <div>Lun</div>
@@ -466,7 +466,7 @@ export default function AdminCalendar() {
                   className={`h-14 sm:h-16 p-1 border rounded-lg cursor-pointer transition-all flex flex-col justify-between ${
                     isSelectedDay
                       ? "border-indigo-500 bg-indigo-50/40 dark:bg-indigo-950/30 shadow-sm"
-                      : "border-slate-200/80 dark:border-slate-800/60 bg-white dark:bg-slate-900/30 hover:border-slate-300 dark:hover:border-slate-700"
+                      : "border-border-subtle/80 dark:border-slate-800/60 bg-white dark:bg-slate-900/30 hover:border-slate-300 dark:hover:border-slate-700"
                   }`}
                 >
                   <span
@@ -492,8 +492,8 @@ export default function AdminCalendar() {
       )}
 
       {/* Bottom stats layout */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-left shadow-sm dark:shadow-none select-none transition-colors duration-200">
-        <div className="bg-slate-50 dark:bg-slate-950/80 p-3 rounded-lg border border-slate-200/80 dark:border-slate-800/80 flex items-center gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-white dark:bg-slate-900 border border-border-subtle dark:border-slate-800 rounded-xl text-left shadow-sm dark:shadow-none select-none transition-colors duration-200">
+        <div className="bg-slate-50 dark:bg-slate-950/80 p-3 rounded-lg border border-border-subtle/80 dark:border-slate-800/80 flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
             <Check size={18} />
           </div>
@@ -507,7 +507,7 @@ export default function AdminCalendar() {
           </div>
         </div>
 
-        <div className="bg-slate-50 dark:bg-slate-950/80 p-3 rounded-lg border border-slate-200/80 dark:border-slate-800/80 flex items-center gap-3">
+        <div className="bg-slate-50 dark:bg-slate-950/80 p-3 rounded-lg border border-border-subtle/80 dark:border-slate-800/80 flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-600 dark:text-emerald-400">
             <DollarSign size={18} />
           </div>
@@ -521,7 +521,7 @@ export default function AdminCalendar() {
           </div>
         </div>
 
-        <div className="bg-slate-50 dark:bg-slate-950/80 p-3 rounded-lg border border-slate-200/80 dark:border-slate-800/80 flex items-center gap-3">
+        <div className="bg-slate-50 dark:bg-slate-950/80 p-3 rounded-lg border border-border-subtle/80 dark:border-slate-800/80 flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-amber-500/10 flex items-center justify-center text-amber-600 dark:text-amber-500">
             <Clock size={18} />
           </div>
@@ -535,7 +535,7 @@ export default function AdminCalendar() {
           </div>
         </div>
 
-        <div className="bg-slate-50 dark:bg-slate-950/80 p-3 rounded-lg border border-slate-200/80 dark:border-slate-800/80 flex items-center gap-3">
+        <div className="bg-slate-50 dark:bg-slate-950/80 p-3 rounded-lg border border-border-subtle/80 dark:border-slate-800/80 flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-red-500/10 flex items-center justify-center text-red-600 dark:text-red-400">
             <CalendarX size={18} />
           </div>
@@ -553,7 +553,7 @@ export default function AdminCalendar() {
       {/* MENÚ MODAL PARA SELECCIONAR FECHA ESPECÍFICA */}
       {showDatePickerModal && (
         <div className="fixed inset-0 z-[90] flex items-center justify-center bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-white dark:bg-[#0b1120] border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl p-6">
+          <div className="bg-white dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-2xl w-full max-w-sm overflow-hidden shadow-2xl p-6">
             <div className="flex justify-between items-center mb-4 border-b border-slate-100 dark:border-slate-900 pb-3">
               <h3 className="text-sm font-bold text-slate-900 dark:text-slate-100 flex items-center gap-2">
                 <CalendarIcon size={16} className="text-indigo-500" />
@@ -576,7 +576,7 @@ export default function AdminCalendar() {
                 <select
                   value={tempDay}
                   onChange={(e) => setTempDay(Number(e.target.value))}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2 text-xs font-semibold focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg p-2 text-xs font-semibold focus:outline-none focus:border-indigo-500"
                 >
                   {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
                     <option key={day} value={day}>
@@ -588,7 +588,7 @@ export default function AdminCalendar() {
 
               {/* VISTA MENSUAL */}
               {viewMode === "mensual" && (
-                <div className="border border-slate-200 dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/90 shadow-sm p-3 w-full">
+                <div className="border border-border-subtle dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/90 shadow-sm p-3 w-full">
                   {/* Días de la semana */}
                   <div className="grid grid-cols-7 gap-1.5 text-center font-bold text-xs text-slate-400 uppercase tracking-wider mb-2">
                     <div>Lun</div>
@@ -621,7 +621,7 @@ export default function AdminCalendar() {
                           className={`min-h-[52px] p-1.5 border rounded-lg cursor-pointer transition-all flex flex-col justify-between ${
                             isSelectedDay
                               ? "border-indigo-500 bg-indigo-50/40 dark:bg-indigo-950/30 shadow-sm"
-                              : "border-slate-200/80 dark:border-slate-800/60 bg-white dark:bg-slate-900/30 hover:border-slate-300 dark:hover:border-slate-700"
+                              : "border-border-subtle/80 dark:border-slate-800/60 bg-white dark:bg-slate-900/30 hover:border-slate-300 dark:hover:border-slate-700"
                           }`}
                         >
                           <span
@@ -654,7 +654,7 @@ export default function AdminCalendar() {
                 <select
                   value={tempYear}
                   onChange={(e) => setTempYear(Number(e.target.value))}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg p-2 text-xs font-semibold focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg p-2 text-xs font-semibold focus:outline-none focus:border-indigo-500"
                 >
                   {[2024, 2025, 2026, 2027, 2028].map((year) => (
                     <option key={year} value={year}>
@@ -668,7 +668,7 @@ export default function AdminCalendar() {
             <div className="flex gap-2 mt-6">
               <button
                 onClick={() => setShowDatePickerModal(false)}
-                className="flex-1 py-2 rounded-lg border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                className="flex-1 py-2 rounded-lg border border-border-subtle dark:border-slate-800 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
                 Cancelar
               </button>
@@ -686,7 +686,7 @@ export default function AdminCalendar() {
       {/* Booking Context Management Modal */}
       {selectedBooking && (
         <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-white dark:bg-[#0b1120] border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-scale-up">
+          <div className="bg-white dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-scale-up">
             <div className="p-6 border-b border-slate-100 dark:border-slate-900 flex justify-between items-center">
               <div>
                 <h3 className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
@@ -757,7 +757,7 @@ export default function AdminCalendar() {
               </button>
             </div>
 
-            <div className="p-4 bg-slate-50 dark:bg-slate-900 flex gap-3 border-t border-slate-200 dark:border-slate-800">
+            <div className="p-4 bg-slate-50 dark:bg-slate-900 flex gap-3 border-t border-border-subtle dark:border-slate-800">
               <button
                 onClick={() => setSelectedBooking(null)}
                 className="flex-1 py-2 px-4 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors"

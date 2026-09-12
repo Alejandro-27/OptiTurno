@@ -182,7 +182,7 @@ export default function App() {
         )}
       </nav>
 
-      <div className="border-t border-slate-200 dark:border-slate-900 pt-5 space-y-2">
+      <div className="border-t border-border-subtle pt-5 space-y-2">
         <div className="p-3.5 bg-slate-200/50 dark:bg-slate-950 rounded-xl border border-slate-300/60 dark:border-slate-900 text-left min-w-0">
           <span className="text-[9px] uppercase font-bold text-slate-500 tracking-wider">
             {esEmpleado
@@ -214,15 +214,15 @@ export default function App() {
 
   // Pantalla única de entrada: registro con elección Cliente | Comerciante
   const renderLanding = () => (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-800 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
-      <header className="bg-white dark:bg-[#070b19] border-b border-slate-200 dark:border-indigo-500/10 px-4 md:px-6 py-4 flex justify-between items-center gap-4 sticky top-0 z-50 transition-colors duration-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
+      <header className="bg-surface dark:bg-surface border-b border-border-subtle px-4 md:px-6 py-4 flex justify-between items-center gap-4 sticky top-0 z-50 transition-colors duration-200">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center font-extrabold text-white text-base shadow-lg shadow-indigo-600/25">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center font-extrabold text-white text-base shadow-lg shadow-indigo-600/25">
             OT
           </div>
           <div className="text-left">
             <div className="flex items-center gap-2">
-              <h1 className="text-base font-extrabold text-slate-900 dark:text-slate-50 tracking-tight leading-none">
+              <h1 className="text-base font-display font-semibold text-slate-900 dark:text-slate-50 tracking-tight leading-none">
                 OptiTurno
               </h1>
               <span className="text-[9px] uppercase font-bold text-indigo-500 dark:text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded border border-indigo-500/20">
@@ -240,10 +240,10 @@ export default function App() {
       <div className="flex-1 flex items-center justify-center p-4 lg:p-8">
         <div className="w-full max-w-md animate-scale-up">
           <div className="text-center space-y-2 mb-6">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center font-extrabold text-white text-xl shadow-lg shadow-indigo-600/25 mx-auto">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center font-extrabold text-white text-xl shadow-lg shadow-indigo-600/25 mx-auto">
               OT
             </div>
-            <h2 className="text-xl font-extrabold text-slate-900 dark:text-slate-50">
+            <h2 className="text-xl font-display font-semibold text-slate-900 dark:text-slate-50">
               Únete a OptiTurno
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 leading-relaxed">
@@ -274,8 +274,8 @@ export default function App() {
 
   // SESIÓN DE COMERCIO/ADMIN: panel de administración
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#020617] text-slate-800 dark:text-slate-100 flex flex-col font-sans selection:bg-indigo-500/30 selection:text-indigo-200 transition-colors duration-200">
-      <header className="bg-white dark:bg-[#070b19] border-b border-slate-200 dark:border-indigo-500/10 px-4 md:px-6 py-4 flex justify-between items-center gap-4 sticky top-0 z-50 transition-colors duration-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex flex-col font-sans selection:bg-indigo-500/30 selection:text-indigo-200 transition-colors duration-200">
+      <header className="bg-surface dark:bg-surface border-b border-border-subtle px-4 md:px-6 py-4 flex justify-between items-center gap-4 sticky top-0 z-50 transition-colors duration-200">
         <div className="flex items-center gap-3 min-w-0">
           <button
             onClick={() => setSidebarAbierto(true)}
@@ -285,12 +285,12 @@ export default function App() {
             <Menu size={18} />
           </button>
           <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-indigo-500 flex items-center justify-center font-extrabold text-white text-base shadow-lg shadow-indigo-600/25 flex-shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-600 to-purple-600 flex items-center justify-center font-extrabold text-white text-base shadow-lg shadow-indigo-600/25 flex-shrink-0">
               OT
             </div>
             <div className="text-left min-w-0">
               <div className="flex items-center gap-2">
-                <h1 className="text-base font-extrabold text-slate-900 dark:text-slate-50 tracking-tight leading-none truncate">
+                <h1 className="text-base font-display font-semibold text-slate-900 dark:text-slate-50 tracking-tight leading-none truncate">
                   OptiTurno
                 </h1>
                 <span className="text-[9px] uppercase font-bold text-indigo-500 dark:text-indigo-400 bg-indigo-500/10 px-1.5 py-0.5 rounded border border-indigo-500/20">
@@ -333,7 +333,7 @@ export default function App() {
 
       <div className="flex-grow flex flex-col md:flex-row">
         {/* Sidebar escritorio */}
-        <aside className="hidden md:flex w-[280px] bg-slate-100 dark:bg-[#070b17] border-r border-slate-200 dark:border-slate-900 flex-col justify-between p-6 space-y-8 flex-shrink-0 transition-colors duration-200">
+        <aside className="hidden md:flex w-[280px] bg-surface dark:bg-surface border-r border-border-subtle flex-col justify-between p-6 space-y-8 flex-shrink-0 transition-colors duration-200">
           {renderAdminSidebar()}
         </aside>
 
@@ -344,7 +344,7 @@ export default function App() {
               className="absolute inset-0 bg-black/50 backdrop-blur-sm"
               onClick={() => setSidebarAbierto(false)}
             />
-            <aside className="absolute inset-y-0 left-0 w-[280px] max-w-[85vw] bg-slate-100 dark:bg-[#070b17] border-r border-slate-200 dark:border-slate-900 flex flex-col justify-between p-6 space-y-8 flex-shrink-0 shadow-2xl overflow-y-auto animate-slide-in custom-scrollbar">
+            <aside className="absolute inset-y-0 left-0 w-[280px] max-w-[85vw] bg-surface dark:bg-surface border-r border-border-subtle flex flex-col justify-between p-6 space-y-8 flex-shrink-0 shadow-2xl overflow-y-auto animate-slide-in custom-scrollbar">
               <button
                 onClick={() => setSidebarAbierto(false)}
                 className="absolute top-4 right-4 p-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 transition-colors"
@@ -361,7 +361,7 @@ export default function App() {
         <main className="flex-grow p-4 md:p-6 lg:p-8 overflow-y-auto max-h-[calc(100dvh-64px)] md:max-h-[calc(100vh-73px)] custom-scrollbar">
           <div className="mb-6 flex justify-between items-center flex-wrap gap-2 text-left">
             <div>
-              <h2 className="text-xl md:text-2xl font-extrabold text-slate-900 dark:text-slate-50">
+              <h2 className="text-xl md:text-2xl font-display font-semibold text-slate-900 dark:text-slate-50">
                 {adminTab === "dashboard" && "Panel General de Control"}
                 {adminTab === "calendar" && "Calendario Maestro"}
                 {adminTab === "catalog" && "Configuración de Catálogo"}

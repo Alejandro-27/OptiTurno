@@ -14,19 +14,19 @@ import ConfirmarCancelacionModal from "./ConfirmarCancelacionModal";
 const ESTADOS: Record<string, { etiqueta: string; clase: string }> = {
   pendiente_pago: {
     etiqueta: "Pago pendiente",
-    clase: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/25",
+    clase: "badge badge-warning",
   },
   confirmado: {
     etiqueta: "Confirmado",
-    clase: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/25",
+    clase: "badge badge-success",
   },
   cancelado: {
     etiqueta: "Cancelado",
-    clase: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/25",
+    clase: "badge badge-danger",
   },
   completado: {
     etiqueta: "Completado",
-    clase: "bg-slate-500/10 text-slate-600 dark:text-slate-400 border-slate-500/25",
+    clase: "badge badge-neutral",
   },
 };
 
@@ -82,12 +82,12 @@ export default function MisTurnosView() {
   return (
     <div className="space-y-4">
       {error && (
-        <div className="bg-red-500/10 border border-red-500/30 p-3 rounded-lg flex items-center gap-2 text-red-600 dark:text-red-400 text-[11px]">
+        <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-[11px] text-red-600 dark:text-red-400">
           <AlertCircle size={14} className="flex-shrink-0" />
           <p className="font-semibold leading-snug">{error}</p>
           <button
             onClick={cargar}
-            className="ml-auto text-[10px] font-bold uppercase tracking-wider hover:underline"
+            className="label-overline ml-auto text-red-600 hover:underline dark:text-red-400"
           >
             Reintentar
           </button>
@@ -95,17 +95,19 @@ export default function MisTurnosView() {
       )}
 
       {cargando && misTurnos.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-slate-500 dark:text-slate-400 space-y-3">
-          <Loader2 size={28} className="animate-spin text-indigo-500" />
+        <div className="flex flex-col items-center justify-center space-y-3 py-16 text-slate-500 dark:text-slate-400">
+          <Loader2 size={28} className="animate-spin text-indigo-600" />
           <p className="text-xs font-semibold">Cargando tus turnos...</p>
         </div>
       ) : misTurnos.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-16 text-slate-500 dark:text-slate-400 space-y-3">
-          <CalendarX2 size={32} className="text-slate-400 dark:text-slate-600" />
-          <p className="text-sm font-bold text-slate-600 dark:text-slate-300">
+        <div className="flex flex-col items-center justify-center space-y-3 py-16 text-center text-slate-500 dark:text-slate-400">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-200/70 text-slate-400 dark:bg-slate-800/80 dark:text-slate-600">
+            <CalendarX2 size={30} />
+          </div>
+          <p className="font-display text-base font-semibold text-slate-800 dark:text-slate-200">
             Aún no tienes turnos reservados
           </p>
-          <p className="text-xs max-w-xs text-center leading-relaxed">
+          <p className="max-w-xs text-xs leading-relaxed">
             Ve a "Reservar Cita" y agenda tu primer turno en segundos.
           </p>
         </div>
@@ -119,25 +121,29 @@ export default function MisTurnosView() {
             return (
               <div
                 key={turno.id}
-                className={`bg-white dark:bg-slate-900/70 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-3 transition-opacity ${
+                className={`card space-y-3 p-4 transition-opacity ${
                   cancelado ? "opacity-60" : ""
                 }`}
               >
-                <div className="flex justify-between items-start gap-2">
-                  <div className="space-y-0.5">
-                    <h4 className="text-sm font-bold text-slate-900 dark:text-slate-50 flex items-center gap-1.5">
-                      <Scissors size={13} className="text-indigo-500" />
-                      {turno.servicios?.nombre || "Servicio"}
-                    </h4>
-                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                      {turno.profesionales?.usuarios.nombre || "Profesional"} ·{" "}
-                      {turno.profesionales?.especialidad || "Especialidad"}
-                    </p>
+                <div className="flex items-start justify-between gap-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600 dark:bg-indigo-600/15 dark:text-indigo-400">
+                      <Scissors size={16} />
+                    </div>
+                    <div className="space-y-0.5">
+                      <h4 className="text-sm font-bold text-slate-900 dark:text-slate-50">
+                        {turno.servicios?.nombre || "Servicio"}
+                      </h4>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        {turno.profesionales?.usuarios.nombre || "Profesional"} ·{" "}
+                        {turno.profesionales?.especialidad || "Especialidad"}
+                      </p>
+                    </div>
                   </div>
                   <span
-                    className={`text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full border flex-shrink-0 ${
+                    className={`${estado.clase} flex-shrink-0 ${
                       cancelado ? "line-through" : ""
-                    } ${estado.clase}`}
+                    }`}
                   >
                     {estado.etiqueta}
                   </span>
@@ -145,15 +151,15 @@ export default function MisTurnosView() {
 
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-slate-600 dark:text-slate-300">
                   <span className="flex items-center gap-1 font-semibold">
-                    <CalendarCheck size={12} className="text-emerald-500" />
+                    <CalendarCheck size={12} className="text-emerald-600" />
                     {formatearFecha(turno.fecha)}
                   </span>
-                  <span className="flex items-center gap-1 font-semibold font-mono">
-                    <Clock size={12} className="text-indigo-500" />
+                  <span className="flex items-center gap-1 font-mono font-semibold">
+                    <Clock size={12} className="text-indigo-600" />
                     {formatearHora(turno.hora_inicio)} -{" "}
                     {formatearHora(turno.hora_fin)}
                   </span>
-                  <span className="font-bold font-mono text-slate-800 dark:text-slate-200 ml-auto">
+                  <span className="ml-auto font-mono font-bold text-slate-800 dark:text-slate-200">
                     ${(turno.servicios?.precio || 0).toLocaleString("es-CO")} COP
                   </span>
                 </div>
@@ -163,7 +169,7 @@ export default function MisTurnosView() {
                     <button
                       onClick={() => solicitarCancelacion(turno)}
                       disabled={cancelando === turno.id}
-                      className="text-[10px] font-bold uppercase tracking-wider text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-500/10 rounded-lg px-2.5 py-1.5 transition-all disabled:opacity-50 flex items-center gap-1.5"
+                      className="btn btn-ghost gap-1.5 text-red-600 hover:bg-red-500/10 hover:text-red-700 px-2.5 py-1.5 dark:text-red-400 dark:hover:text-red-300"
                     >
                       {cancelando === turno.id && (
                         <Loader2 size={11} className="animate-spin" />

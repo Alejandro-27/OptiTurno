@@ -24,7 +24,7 @@ const ETIQUETA_ROL: Record<string, string> = {
 
 const COLOR_ROL: Record<string, string> = {
   cliente:
-    "bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800",
+    "bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-border-subtle dark:border-slate-800",
   admin_negocio:
     "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/20",
   superadmin:
@@ -108,7 +108,7 @@ export default function AdminUsers() {
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-white dark:bg-slate-900/40 border border-slate-200 dark:border-slate-800 rounded-xl shadow-sm dark:shadow-none transition-colors duration-200">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 bg-white dark:bg-slate-900/40 border border-border-subtle dark:border-slate-800 rounded-xl shadow-sm dark:shadow-none transition-colors duration-200">
         <div className="flex items-center gap-3">
           <div className="p-2.5 bg-amber-500/10 rounded-xl text-amber-600 dark:text-amber-400">
             <Users size={18} />
@@ -125,7 +125,7 @@ export default function AdminUsers() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-[#0b1120] border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm dark:shadow-xl transition-colors duration-200">
+      <div className="bg-white dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-xl overflow-hidden shadow-sm dark:shadow-xl transition-colors duration-200">
         <div className="p-4 border-b border-slate-100 dark:border-slate-800/80">
           <div className="relative max-w-md">
             <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
@@ -136,7 +136,7 @@ export default function AdminUsers() {
               placeholder="Buscar por nombre, correo o rol..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2 text-xs font-medium text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+              className="w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg pl-10 pr-4 py-2 text-xs font-medium text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
             />
           </div>
         </div>
@@ -144,7 +144,7 @@ export default function AdminUsers() {
         <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full text-left border-collapse min-w-[640px]">
             <thead>
-              <tr className="bg-slate-50 dark:bg-slate-950/80 text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider border-b border-slate-200 dark:border-slate-800/80">
+              <tr className="bg-slate-50 dark:bg-slate-950/80 text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider border-b border-border-subtle dark:border-slate-800/80">
                 <th className="p-4 w-1/3">Nombre</th>
                 <th className="p-4 hidden md:table-cell">Correo</th>
                 <th className="p-4 text-center">Rol</th>
@@ -221,7 +221,7 @@ export default function AdminUsers() {
             if (e.target === e.currentTarget) setEditing(null);
           }}
         >
-          <div className="bg-white dark:bg-[#0b1120] border border-slate-200 dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 animate-scale-up">
+          <div className="bg-white dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 animate-scale-up">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800/80">
               <div className="flex items-center gap-2">
                 <Edit3 size={16} className="text-indigo-600 dark:text-indigo-400" />
@@ -248,7 +248,7 @@ export default function AdminUsers() {
                   required
                   value={formEmail}
                   onChange={(e) => setFormEmail(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold font-mono text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold font-mono text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors"
                 />
               </div>
 
@@ -261,7 +261,7 @@ export default function AdminUsers() {
                   value={formRol}
                   disabled={esPropio}
                   onChange={(e) => setFormRol(e.target.value)}
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {ROLES.map((r) => (
                     <option key={r} value={r}>

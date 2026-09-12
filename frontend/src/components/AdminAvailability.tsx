@@ -123,7 +123,7 @@ export default function AdminAvailability() {
       )}
 
       {/* Header card with alert block */}
-      <div className="bg-white dark:bg-[#0b1120] border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm dark:shadow-xl space-y-4 transition-colors duration-200">
+      <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm dark:shadow-xl space-y-4 transition-colors duration-200">
         <div className="flex items-start gap-4">
           <div className="p-2 bg-indigo-50 dark:bg-indigo-500/10 rounded-xl text-indigo-600 dark:text-indigo-400 mt-1">
             <Sparkles size={18} className="animate-pulse" />
@@ -150,7 +150,7 @@ export default function AdminAvailability() {
       </div>
 
       {/* Working Matrix */}
-      <div className="bg-white dark:bg-[#0b1120] border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm dark:shadow-xl transition-colors duration-200">
+      <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden shadow-sm dark:shadow-xl transition-colors duration-200">
         <div className="p-4 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
           <span className="text-xs uppercase tracking-wider font-bold text-slate-700 dark:text-slate-300">
             Horarios Operacionales por Día
