@@ -10,6 +10,8 @@ src/
 ├── main.tsx                # Bootstrap + ThemeToggle inicial
 ├── index.css               # Tailwind 4 + animaciones CSS (slideIn, slideLeft, fadeIn, scaleUp)
 ├── types.ts                # Tipos UI (Service, BookingEvent, DayAvailability, ActivityLog)
+├── types/enums.ts          # Uniones Rol / EstadoTurno / EstadoServicio (+ ROLES_SISTEMA, ESTADOS_TURNO)
+├── contexts/               # Contextos (AbrirVistaClienteContext para navegación admin→cliente)
 ├── data.ts                 # Datos demo seed (servicios, turnos, logs, equipo)
 ├── components/             # Vistas y sub-componentes
 ├── api/                    # Capa HTTP: client axios + DTOs + llamadas por dominio
@@ -62,7 +64,7 @@ Componente → acción del store → `repositorios.<dominio>` (mock o API según
 - **superadmin** → tab adicional **Usuarios** (`AdminUsers`): lista usuarios, cambia correo (único) y rol; el propio rol está bloqueado. El mock de registros agrega la cuenta nueva vía `agregarUsuarioMock` para que aparezca en la lista.
 - **empleado** → mismo panel pero SOLO tabs dashboard, calendar, availability ("Modo: Mi Semana" + sección "Mis Ausencias y Vacaciones"); sin Catálogo/Equipo/Editar Comercio.
 - Alertas ausencias: cuando el backend o el mock rechazan una reserva por ausencia, el mensaje genérico es "El profesional no está disponible en esa fecha." / "...en ese horario.".
-- `window.abrirVistaCliente` (patrón legacy, pendiente de migrar a Context): `AdminProfile` lo usa para saltar a la vista cliente.
+- Navegación admin → cliente sin `window`: `AdminProfile` usa `AbrirVistaClienteContext` de `contexts/navegacion.ts` (provisto por `App.tsx`).
 
 ## Convenciones de UI
 
@@ -77,6 +79,6 @@ Componente → acción del store → `repositorios.<dominio>` (mock o API según
 ## Tipos y DTOs
 
 - `api/dto.ts`: `UsuarioSesionDTO`, `MisTurnoDTO`, `ServicioDTO`, `LoginUsuarioInput`, `RegistrarUsuarioInput`, `ReservarTurnoInputDTO`.
-- `rol` y `estado` son `string` (pendiente de union types) — validar contra los valores conocidos al comparar.
+- `rol` y `estado` están tipados con las uniones de `api/dto.ts` y `types/enums.ts` (`Rol`, `EstadoTurno`, `EstadoServicio`) — validar contra los valores conocidos al comparar.
 - `ReservarTurnoInput` (UI, incluye `cliente_nombre`/`servicio_nombre`) vs `ReservarTurnoInputDTO` (API) son distintos a propósito; mapear en el repo.
 - `BookingEvent` (types.ts) no tiene campo `fecha`: el calendario admin es de día único por diseño actual.

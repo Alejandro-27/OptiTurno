@@ -6,13 +6,18 @@ Contexto específico del backend (Fastify + Supabase). Léelo junto con el `AGEN
 
 ```
 src/
-├── app.ts                      # Fastify: CORS, registro de rutas, health check
+├── app.ts                      # Fastify: CORS, registro de rutas, health check, error handler global
 ├── config/database.ts          # Clientes Supabase: `supabase` (service role) y `supabaseAuth` (anon para login)
 ├── middlewares/auth.middleware.ts  # verificarAutenticacion (JWT) + permitirRoles([...])
 ├── routes/                     # Definición de rutas (turnos, usuarios, negocios, pagos, profesionales)
-├── controllers/                # Handlers: parseo de body/query, respuestas HTTP
-└── services/                   # Lógica de negocio: queries Supabase, validaciones
+├── controllers/                # Handlers: validación zod del body/query, respuestas HTTP (sin try/catch)
+├── services/                   # Lógica de negocio: queries Supabase, validaciones
+├── errors/AppError.ts          # Error controlado con status HTTP (AppError)
+├── plugins/errorHandler.ts     # Maneja AppError, `{status,message}` legacy, validación (400), 404/405 y 500 genérico
+└── schemas/                    # Esquemas zod por dominio (usuarios, turnos, ausencias, …) + validarCuerpo
 ```
+
+Los controllers no envuelven try/catch: todo error lanzado termina en `plugins/errorHandler.ts` (registrado en `app.ts`). Un error controlado se lanza como `AppError(status, mensaje)` o con el patrón legacy `{ status, message }`; los internos (`error.message`, `ZodError`) nunca llegan al cliente.
 
 ## Comandos
 
@@ -60,27 +65,27 @@ Si falta `SUPABASE_ANON_KEY`, el login devuelve "El login no esta disponible" �
 4. **Errores**: responder mensajes genéricos en español; `err.message` solo a logs. Formato de error: `{ error: string }`.
 5. **Códigos**: conflicto de horario (GIST 23P01 / `no_solapar_turnos`) → 409; turno de otro usuario → 403; no existe → 404; ya cancelado → 409.
 6. **Nunca** modifiques los `.js` de `src/` (compilación obsoleta gitignoreada). Trabaja solo en `.ts`.
-7. `request.body` llega como `unknown`: cast con interface local del controller (ej. `ReservarTurnoBody`). No usar `as any` a discreción.
+7. `request.body` llega como `unknown`: valida con zod (`backend/src/schemas/*.schemas.ts` + `validarCuerpo`) y usa el tipo resultante. `@typescript-eslint/no-explicit-any` es ERROR: nunca `as any`.
 
 ## Contratos de API clave
 
-| Ruta | Protección | Notas |
-|---|---|---|
-| `POST /api/usuarios/registrar` | Pública | Crea en Supabase Auth + perfil en `usuarios` |
-| `POST /api/usuarios/login` | Pública | Devuelve `{ token, usuario }` |
-| `GET/PUT /api/usuarios/me` | JWT | Perfil propio |
-| `GET /api/sucursales/:id/servicios` y `/profesionales` | Públicas | Catálogo |
-| `GET /api/turnos/disponibilidad` | Pública | Query `{ profesional_id, fecha }` |
-| `GET/POST /api/ausencias`, `DELETE /api/ausencias/:id` | admin_negocio/superadmin/empleado | Ausencias del profesional del usuario logueado |
-| `GET /api/profesionales/:id/horarios` | Pública (GET) | Semana laboral de un profesional |
-| `PUT /api/profesionales/:id/horarios` | admin_negocio/superadmin/empleado | Reemplaza la semana; `empleado` solo la propia |
-| `GET /api/usuarios` | superadmin | Lista todos los usuarios (rol en `usuarios`) |
-| `PATCH /api/usuarios/:id` | superadmin | Cambia email (único, sincroniza Auth con `email_confirm: true`) y/o rol; un superadmin NO puede cambiar su propio rol (400) |
-| `POST /api/turnos/reservar` | JWT (cliente) | Body: `profesional_id, servicio_id, fecha, hora_inicio` |
-| `GET /api/turnos/mios` | JWT (cliente) | Historial del cliente |
-| `PATCH /api/turnos/:id/cancelar` | JWT (cliente) | Valida propiedad |
-| `POST /api/turnos/limpiar-expirados` | admin_negocio/superadmin | |
-| `POST /api/seed` | superadmin | Datos demo |
+| Ruta                                                   | Protección                        | Notas                                                                                                                       |
+| ------------------------------------------------------ | --------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| `POST /api/usuarios/registrar`                         | Pública                           | Crea en Supabase Auth + perfil en `usuarios`                                                                                |
+| `POST /api/usuarios/login`                             | Pública                           | Devuelve `{ token, usuario }`                                                                                               |
+| `GET/PUT /api/usuarios/me`                             | JWT                               | Perfil propio                                                                                                               |
+| `GET /api/sucursales/:id/servicios` y `/profesionales` | Públicas                          | Catálogo                                                                                                                    |
+| `GET /api/turnos/disponibilidad`                       | Pública                           | Query `{ profesional_id, fecha }`                                                                                           |
+| `GET/POST /api/ausencias`, `DELETE /api/ausencias/:id` | admin_negocio/superadmin/empleado | Ausencias del profesional del usuario logueado                                                                              |
+| `GET /api/profesionales/:id/horarios`                  | Pública (GET)                     | Semana laboral de un profesional                                                                                            |
+| `PUT /api/profesionales/:id/horarios`                  | admin_negocio/superadmin/empleado | Reemplaza la semana; `empleado` solo la propia                                                                              |
+| `GET /api/usuarios`                                    | superadmin                        | Lista todos los usuarios (rol en `usuarios`)                                                                                |
+| `PATCH /api/usuarios/:id`                              | superadmin                        | Cambia email (único, sincroniza Auth con `email_confirm: true`) y/o rol; un superadmin NO puede cambiar su propio rol (400) |
+| `POST /api/turnos/reservar`                            | JWT (cliente)                     | Body: `profesional_id, servicio_id, fecha, hora_inicio`                                                                     |
+| `GET /api/turnos/mios`                                 | JWT (cliente)                     | Historial del cliente                                                                                                       |
+| `PATCH /api/turnos/:id/cancelar`                       | JWT (cliente)                     | Valida propiedad                                                                                                            |
+| `POST /api/turnos/limpiar-expirados`                   | admin_negocio/superadmin          |                                                                                                                             |
+| `POST /api/seed`                                       | superadmin                        | Datos demo                                                                                                                  |
 
 ## Queries y datos
 
