@@ -22,7 +22,7 @@
 
 DROP TABLE IF EXISTS tmp_contrasena_inicial;
 CREATE TEMP TABLE tmp_contrasena_inicial (valor text);
-INSERT INTO tmp_contrasena_inicial VALUES ('REEMPLAZAR_CONTRASENA_INICIAL');
+INSERT INTO tmp_contrasena_inicial VALUES ('GomezFlorez27!');
 
 -- ==============================
 -- 1. EXTENSIONES
@@ -206,7 +206,7 @@ SELECT
   now(), now(),
   '', '', '', '',
   false, false
-ON CONFLICT (email) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 INSERT INTO auth.users (
   instance_id, id, aud, role, email, encrypted_password,
@@ -229,7 +229,7 @@ SELECT
   now(), now(),
   '', '', '', '',
   false, false
-ON CONFLICT (email) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 INSERT INTO auth.users (
   instance_id, id, aud, role, email, encrypted_password,
@@ -252,24 +252,24 @@ SELECT
   now(), now(),
   '', '', '', '',
   false, false
-ON CONFLICT (email) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- Tabla espejo 'usuarios': id = UUID del auth.users (mismo id que el JWT).
 -- El backend resuelve el rol desde esta tabla.
 INSERT INTO usuarios (id, nombre, email, telefono, rol)
 SELECT id, 'Admin OptiTurno', email, '3001112222', 'admin_negocio'
 FROM auth.users WHERE email = 'admin@optiturno.com'
-ON CONFLICT (email) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 INSERT INTO usuarios (id, nombre, email, telefono, rol)
 SELECT id, 'Cliente OptiTurno', email, '3001113333', 'cliente'
 FROM auth.users WHERE email = 'cliente@optiturno.com'
-ON CONFLICT (email) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 INSERT INTO usuarios (id, nombre, email, telefono, rol)
 SELECT id, 'Empleado OptiTurno', email, '3001114444', 'empleado'
 FROM auth.users WHERE email = 'empleado@optiturno.com'
-ON CONFLICT (email) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- Quien ya sea profesional con rol 'cliente' pasa a 'empleado' (paridad con 00004).
 UPDATE usuarios
@@ -284,7 +284,7 @@ WHERE rol = 'cliente'
 -- 5.1 Negocio
 INSERT INTO negocios (id, nombre, slug)
 VALUES ('aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Barbería El Elegante', 'barberia-el-elegante')
-ON CONFLICT (slug) DO NOTHING;
+ON CONFLICT DO NOTHING;
 
 -- 5.2 Sucursal
 INSERT INTO sucursales (id, negocio_id, nombre, direccion, telefono)
