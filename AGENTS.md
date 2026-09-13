@@ -56,9 +56,9 @@ pnpm build:frontend   # build del frontend (usado por Vercel)
 ## Variables de entorno
 
 - **Backend** (`backend/.env`, no versionar): `PORT`, `NODE_ENV`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY` (la usa el cliente anónimo para login).
-- **Frontend** (`frontend/.env`): `VITE_API_URL` (default `http://localhost:5000/api`), `VITE_USE_MOCKS` (`true` = modo demo sin backend), `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
+- **Frontend** (`frontend/.env`): `VITE_API_URL` (default `http://localhost:5000/api`), `VITE_USE_MOCKS`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
 
-`MODO_DEMO` se muestra en la UI; el switch mock/API real ocurre en `frontend/src/data/index.ts` (`usarMocks()`).
+`MODO_DEMO` se muestra en la UI; el switch mock/API real ocurre en `frontend/src/data/index.ts` (`usarMocks()`). El modo demo solo se activa con `VITE_USE_MOCKS=true` explícito: si falta o es `false`, la app usa la API y nunca muestra textos de demostración. En Vercel las variables se configuran en Settings → Environment Variables (el repo no versiona `.env`).
 
 ## Reglas obligatorias para agentes
 

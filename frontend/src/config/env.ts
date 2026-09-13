@@ -7,9 +7,7 @@ export const env = {
 
 export function usarMocks(): boolean {
   const bandera = import.meta.env.VITE_USE_MOCKS;
-  if (bandera === "true" || bandera === "1") return true;
-  if (bandera === "false" || bandera === "0") return false;
-  return !import.meta.env.VITE_API_URL;
+  return bandera === "true" || bandera === "1";
 }
 
 export const MODO_DEMO = usarMocks();
