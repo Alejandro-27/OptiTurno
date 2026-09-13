@@ -1,5 +1,6 @@
 import React from "react";
 import type { DisponibilidadDTO } from "../../api/dto";
+import Skeleton from "../Skeleton";
 
 const DIAS_CORTO = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
@@ -103,8 +104,13 @@ export default function SlotScheduler({
         <span className="label-overline block">Horas Disponibles</span>
 
         {cargando ? (
-          <div className="flex items-center justify-center py-8">
-            <span className="h-5 w-5 animate-spin rounded-full border-2 border-emerald-600 border-t-transparent"></span>
+          <div
+            className="grid grid-cols-2 gap-2 sm:grid-cols-3"
+            aria-busy="true"
+          >
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-9 rounded-xl" />
+            ))}
           </div>
         ) : fechaSeleccionadaISO === "" ? (
           <p className="py-6 text-center text-[11px] text-slate-400 dark:text-slate-500">

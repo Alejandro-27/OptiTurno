@@ -8,7 +8,6 @@ import {
   Sun,
   Moon,
   Sparkles,
-  CheckCircle2,
 } from "lucide-react";
 import { DayAvailability } from "../types";
 import {
@@ -18,14 +17,15 @@ import {
   useStore,
 } from "../store";
 import AdminAusencias from "./AdminAusencias";
+import { useToast } from "../contexts/toast";
+import { mensajeDeError } from "../api/dto";
 
 export default function AdminAvailability() {
   const schedule = useStore((s) => s.equipo);
   const sesion = useStore((s) => s.sesion);
   const esEmpleado = sesion?.usuario.rol === "empleado";
   const [isLoading, setIsLoading] = useState(false);
-  const [showToast, setShowToast] = useState(false);
-  const [errorText, setErrorText] = useState<string | null>(null);
+  const { mostrarToast } = useToast();
 
   // El empleado edita su propia semana laboral; los dueños la sucursal completa
   const guardar = (nuevo: DayAvailability[]) =>
@@ -44,8 +44,9 @@ export default function AdminAvailability() {
         item.day === day ? { ...item, enabled: !item.enabled } : item,
       ),
     ).catch((err) => {
-      setErrorText(
-        err instanceof Error ? err.message : "No se pudo actualizar.",
+      mostrarToast(
+        mensajeDeError(err, "No se pudo actualizar la disponibilidad."),
+        "error",
       );
     });
   };
@@ -60,21 +61,23 @@ export default function AdminAvailability() {
         item.day === day ? { ...item, [field]: value } : item,
       ),
     ).catch((err) => {
-      setErrorText(
-        err instanceof Error ? err.message : "No se pudo actualizar.",
+      mostrarToast(
+        mensajeDeError(err, "No se pudo actualizar la disponibilidad."),
+        "error",
       );
     });
   };
 
   const handleSave = async () => {
     setIsLoading(true);
-    setErrorText(null);
     try {
       await guardar(schedule);
-      setShowToast(true);
-      setTimeout(() => setShowToast(false), 4000);
+      mostrarToast("Disponibilidad guardada correctamente.", "exito");
     } catch (err) {
-      setErrorText(err instanceof Error ? err.message : "No se pudo guardar.");
+      mostrarToast(
+        mensajeDeError(err, "No se pudo guardar la disponibilidad."),
+        "error",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -82,40 +85,6 @@ export default function AdminAvailability() {
 
   return (
     <div className="space-y-6 animate-fade-in text-slate-800 dark:text-slate-100 flex flex-col relative pb-12 transition-colors duration-200">
-      {/* Toast Banner */}
-      {showToast && (
-        <div className="fixed top-4 right-4 left-4 md:left-auto bg-white dark:bg-slate-900 border-2 border-emerald-500 rounded-xl p-4 shadow-2xl z-[100] animate-bounce flex items-center gap-3">
-          <div className="p-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg flex-shrink-0">
-            <CheckCircle2 size={20} />
-          </div>
-          <div>
-            <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
-              ¡Configuración Sincronizada!
-            </p>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-              La disponibilidad fue guardada en el backend de forma segura.
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Error Banner */}
-      {errorText && (
-        <div className="fixed top-4 right-4 left-4 md:left-auto bg-white dark:bg-slate-900 border-2 border-rose-500 rounded-xl p-4 shadow-2xl z-[100] animate-bounce flex items-center gap-3">
-          <div className="p-1 bg-rose-500/10 text-rose-600 dark:text-rose-400 rounded-lg flex-shrink-0">
-            <AlertTriangle size={20} />
-          </div>
-          <div>
-            <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
-              Error al guardar
-            </p>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-              {errorText}
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* Header card with alert block */}
       <div className="bg-white dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-xl p-6 shadow-sm dark:shadow-xl space-y-4 transition-colors duration-200">
         <div className="flex items-start gap-4">

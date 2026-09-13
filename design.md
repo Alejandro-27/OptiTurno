@@ -321,7 +321,7 @@ Paso 1 Catálogo → Paso 2 Profesional → Paso 3 Fecha y hora → Confirmació
 
 ### Guía para subagentes de IA
 
-1. Lee `design.md` y `AGENTS.md` antes de tocar código.
+1. Lee `design.md` y `AGENTS.md`, y aplica los **skills de diseño** de la sección 11 antes de tocar código.
 2. Usa siempre tokens, nunca hex hardcodeados en JSX.
 3. Reutiliza `.btn`, `.card`, `.badge-*`, `.chip*`, `.input`, `.label-overline`.
 4. Mantén la semántica de color: indigo=acción/marca, emerald=éxito/disponible, rojo=destructivo, ámbar=pendiente.
@@ -341,3 +341,22 @@ Paso 1 Catálogo → Paso 2 Profesional → Paso 3 Fecha y hora → Confirmació
 - [ ] Modales con `role="dialog"` y `aria-labelledby`.
 - [ ] Botones/íconos ≥ 40 px de objetivo; `focus-visible` intacto.
 - [ ] Mensajes de error genéricos (nunca `err.message` interno).
+
+---
+
+## 11. Skills de diseño (obligatorios para cambiar la UI)
+
+Antes de **crear, modificar o refactorizar cualquier vista de la PWA o del panel admin**, el agente carga y aplica estos tres skills (carpeta `.agents/skills/`):
+
+| Skill | Foco |
+|---|---|
+| **taste** | Criterio visual senior: contraste óptimo (AA/AAA), refinamiento de bordes, sombras sutiles y tipografía balanceada. Antídoto contra "AI slop". |
+| **impeccable-design** | Cero inconsistencias: paddings sobre 8px grid, grids alineados y los 5 estados por componente (hover, active, focus-visible, disabled). |
+| **emil-kowalski-ui-rules** | Pulimento extremo de interacción: transiciones físicas < 200ms, springs en press, animaciones de presencia con `animate-*` existentes y `prefers-reduced-motion`. |
+
+Reglas de activación:
+
+1. En la **pre-escritura** de cualquier vista: `taste` + `impeccable-design` definen el statement visual y la grilla.
+2. En **retoques interactivos** (hover, modales, chips, carga): se suma `emil-kowalski-ui-rules`.
+3. En la **revisión final** de un cambio de UI: aplicar los tres como checklist (ver Checklist §10).
+4. No duplican a `design.md`: los tokens, clases y patrones de componente SIEMPRE salen de este documento; los skills aportan el criterio de calidad.

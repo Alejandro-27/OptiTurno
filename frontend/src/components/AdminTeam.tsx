@@ -19,10 +19,15 @@ import {
   useStore,
 } from "../store";
 import type { Profesional } from "../types";
+import { esErrorInline, mensajeDeError } from "../api/dto";
+import { useToast } from "../contexts/toast";
+import AdminTableSkeleton from "./skeletons/AdminTableSkeleton";
 
 export default function AdminTeam() {
   const profesionales = useStore((s) => s.profesionales);
   const sucursalId = useStore((s) => s.sucursalId);
+  const inicializado = useStore((s) => s.inicializado);
+  const { mostrarToast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -84,12 +89,18 @@ export default function AdminTeam() {
         });
       }
       setIsDrawerOpen(false);
-    } catch (err) {
-      setOperationError(
-        err instanceof Error
-          ? err.message
-          : "No se pudo guardar el profesional.",
+      mostrarToast(
+        editingProf
+          ? "Profesional actualizado correctamente."
+          : "Profesional registrado correctamente.",
+        "exito",
       );
+    } catch (err) {
+      if (esErrorInline(err)) {
+        setOperationError(
+          mensajeDeError(err, "No se pudo guardar el profesional."),
+        );
+      }
     } finally {
       setSaving(false);
     }
@@ -102,12 +113,13 @@ export default function AdminTeam() {
     try {
       await eliminarProfesional(pendingDelete.id);
       setPendingDelete(null);
+      mostrarToast("Profesional eliminado correctamente.", "exito");
     } catch (err) {
-      setOperationError(
-        err instanceof Error
-          ? err.message
-          : "No se pudo eliminar el profesional.",
-      );
+      if (esErrorInline(err)) {
+        setOperationError(
+          mensajeDeError(err, "No se pudo eliminar el profesional."),
+        );
+      }
     } finally {
       setDeleting(false);
     }
@@ -165,102 +177,106 @@ export default function AdminTeam() {
           </button>
         </div>
 
-        <div className="bg-white dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-xl overflow-hidden shadow-sm dark:shadow-xl transition-colors duration-200">
-          <div className="p-4 border-b border-slate-100 dark:border-slate-800/80">
-            <div className="relative max-w-md">
-              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
-                <Search size={16} />
-              </span>
-              <input
-                type="text"
-                placeholder="Buscar por nombre, especialidad o email..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg pl-10 pr-4 py-2 text-xs font-medium text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
-              />
+        {!inicializado ? (
+          <AdminTableSkeleton columnas={4} />
+        ) : (
+          <div className="bg-white dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-xl overflow-hidden shadow-sm dark:shadow-xl transition-colors duration-200">
+            <div className="p-4 border-b border-slate-100 dark:border-slate-800/80">
+              <div className="relative max-w-md">
+                <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
+                  <Search size={16} />
+                </span>
+                <input
+                  type="text"
+                  placeholder="Buscar por nombre, especialidad o email..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg pl-10 pr-4 py-2 text-xs font-medium text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+                />
+              </div>
+            </div>
+
+            <div className="overflow-x-auto custom-scrollbar">
+              <table className="w-full text-left border-collapse min-w-[640px]">
+                <thead>
+                  <tr className="bg-slate-50 dark:bg-slate-950/80 text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider border-b border-border-subtle dark:border-slate-800/80">
+                    <th className="p-4 w-1/3">Profesional</th>
+                    <th className="p-4 hidden md:table-cell">Especialidad</th>
+                    <th className="p-4 hidden lg:table-cell">Email</th>
+                    <th className="p-4 w-[120px] text-right">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/30">
+                  {filtered.map((p) => (
+                    <tr
+                      key={p.id}
+                      className="hover:bg-slate-50/80 dark:hover:bg-slate-800/10 group transition-colors"
+                    >
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-full bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-extrabold text-xs flex-shrink-0">
+                            {p.nombre
+                              .split(" ")
+                              .map((n) => n[0])
+                              .slice(0, 2)
+                              .join("")
+                              .toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                              {p.nombre}
+                            </p>
+                            <p className="text-[10px] text-slate-400 font-medium md:hidden">
+                              {p.especialidad}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="p-4 hidden md:table-cell">
+                        <span className="text-[11px] bg-slate-100 dark:bg-slate-900 border border-border-subtle dark:border-slate-800 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300 font-medium">
+                          {p.especialidad}
+                        </span>
+                      </td>
+                      <td className="p-4 hidden lg:table-cell text-xs font-mono text-slate-500 dark:text-slate-400">
+                        {p.email || "—"}
+                      </td>
+                      <td className="p-4 text-right">
+                        <div className="flex justify-end items-center gap-1">
+                          <button
+                            onClick={() => openEditDrawer(p)}
+                            title="Editar"
+                            className="p-1 px-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                          >
+                            <Edit3 size={14} />
+                          </button>
+                          <button
+                            onClick={() => setPendingDelete(p)}
+                            title="Eliminar"
+                            className="p-1 px-1.5 rounded hover:bg-rose-50 dark:hover:bg-red-950 text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {filtered.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan={4}
+                        className="p-8 text-center text-xs text-slate-500"
+                      >
+                        {profesionales.length === 0
+                          ? "Aún no hay profesionales registrados para esta sucursal."
+                          : "No se encontraron profesionales que coincidan con los filtros."}
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
-
-          <div className="overflow-x-auto custom-scrollbar">
-            <table className="w-full text-left border-collapse min-w-[640px]">
-              <thead>
-                <tr className="bg-slate-50 dark:bg-slate-950/80 text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider border-b border-border-subtle dark:border-slate-800/80">
-                  <th className="p-4 w-1/3">Profesional</th>
-                  <th className="p-4 hidden md:table-cell">Especialidad</th>
-                  <th className="p-4 hidden lg:table-cell">Email</th>
-                  <th className="p-4 w-[120px] text-right">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/30">
-                {filtered.map((p) => (
-                  <tr
-                    key={p.id}
-                    className="hover:bg-slate-50/80 dark:hover:bg-slate-800/10 group transition-colors"
-                  >
-                    <td className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-9 h-9 rounded-full bg-indigo-50 dark:bg-indigo-500/15 text-indigo-600 dark:text-indigo-400 flex items-center justify-center font-extrabold text-xs flex-shrink-0">
-                          {p.nombre
-                            .split(" ")
-                            .map((n) => n[0])
-                            .slice(0, 2)
-                            .join("")
-                            .toUpperCase()}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
-                            {p.nombre}
-                          </p>
-                          <p className="text-[10px] text-slate-400 font-medium md:hidden">
-                            {p.especialidad}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-4 hidden md:table-cell">
-                      <span className="text-[11px] bg-slate-100 dark:bg-slate-900 border border-border-subtle dark:border-slate-800 px-2 py-0.5 rounded text-slate-600 dark:text-slate-300 font-medium">
-                        {p.especialidad}
-                      </span>
-                    </td>
-                    <td className="p-4 hidden lg:table-cell text-xs font-mono text-slate-500 dark:text-slate-400">
-                      {p.email || "—"}
-                    </td>
-                    <td className="p-4 text-right">
-                      <div className="flex justify-end items-center gap-1">
-                        <button
-                          onClick={() => openEditDrawer(p)}
-                          title="Editar"
-                          className="p-1 px-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
-                        >
-                          <Edit3 size={14} />
-                        </button>
-                        <button
-                          onClick={() => setPendingDelete(p)}
-                          title="Eliminar"
-                          className="p-1 px-1.5 rounded hover:bg-rose-50 dark:hover:bg-red-950 text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-                {filtered.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={4}
-                      className="p-8 text-center text-xs text-slate-500"
-                    >
-                      {profesionales.length === 0
-                        ? "Aún no hay profesionales registrados para esta sucursal."
-                        : "No se encontraron profesionales que coincidan con los filtros."}
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Modal centrado: crear / editar profesional */}

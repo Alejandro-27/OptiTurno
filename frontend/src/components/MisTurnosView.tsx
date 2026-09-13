@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import {
   CalendarX2,
   Clock,
@@ -9,6 +10,10 @@ import {
 } from "lucide-react";
 import { cancelarTurnoCliente, cargarMisTurnos, useStore } from "../store";
 import type { MisTurnoDTO } from "../api/dto";
+import { mensajeDeError } from "../api/dto";
+import { useToast } from "../contexts/toast";
+import EmptyState from "./EmptyState";
+import TurnoCardSkeleton from "./skeletons/TurnoCardSkeleton";
 import ConfirmarCancelacionModal from "./ConfirmarCancelacionModal";
 
 const ESTADOS: Record<string, { etiqueta: string; clase: string }> = {
@@ -40,6 +45,7 @@ const formatearHora = (hora: string): string => hora.slice(0, 5);
 export default function MisTurnosView() {
   const misTurnos = useStore((s) => s.misTurnos);
   const cargando = useStore((s) => s.misTurnosCargando);
+  const { mostrarToast } = useToast();
   const [error, setError] = useState<string | null>(null);
   const [cancelando, setCancelando] = useState<string | null>(null);
   const [turnoConfirmar, setTurnoConfirmar] = useState<MisTurnoDTO | null>(
@@ -49,7 +55,7 @@ export default function MisTurnosView() {
   const cargar = () => {
     setError(null);
     cargarMisTurnos().catch((err) =>
-      setError(err instanceof Error ? err.message : "Error al cargar turnos."),
+      setError(mensajeDeError(err, "Error al cargar tus turnos.")),
     );
   };
 
@@ -68,10 +74,9 @@ export default function MisTurnosView() {
     setError(null);
     try {
       await cancelarTurnoCliente(turnoConfirmar.id);
+      mostrarToast("Cita cancelada correctamente.", "exito");
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "No se pudo cancelar el turno.",
-      );
+      setError(mensajeDeError(err, "No se pudo cancelar el turno."));
     } finally {
       setCancelando(null);
       setTurnoConfirmar(null);
@@ -94,22 +99,24 @@ export default function MisTurnosView() {
       )}
 
       {cargando && misTurnos.length === 0 ? (
-        <div className="flex flex-col items-center justify-center space-y-3 py-16 text-slate-500 dark:text-slate-400">
-          <Loader2 size={28} className="animate-spin text-indigo-600" />
-          <p className="text-xs font-semibold">Cargando tus turnos...</p>
+        <div className="space-y-3" aria-busy="true">
+          <TurnoCardSkeleton />
+          <TurnoCardSkeleton />
+          <TurnoCardSkeleton />
         </div>
       ) : misTurnos.length === 0 ? (
-        <div className="flex flex-col items-center justify-center space-y-3 py-16 text-center text-slate-500 dark:text-slate-400">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-200/70 text-slate-400 dark:bg-slate-800/80 dark:text-slate-600">
-            <CalendarX2 size={30} />
-          </div>
-          <p className="font-display text-base font-semibold text-slate-800 dark:text-slate-200">
-            Aún no tienes turnos reservados
-          </p>
-          <p className="max-w-xs text-xs leading-relaxed">
-            Ve a "Reservar Cita" y agenda tu primer turno en segundos.
-          </p>
-        </div>
+        <EmptyState
+          icono={CalendarX2}
+          titulo="Aún no tienes turnos reservados"
+          descripcion={
+            'Ve a "Reservar Cita" y agenda tu primer turno en segundos.'
+          }
+          accion={
+            <Link to="/reservar" className="btn btn-primary px-5 py-2.5">
+              Reservar Cita
+            </Link>
+          }
+        />
       ) : (
         <div className="space-y-3">
           {misTurnos.map((turno) => {

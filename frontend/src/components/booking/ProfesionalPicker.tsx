@@ -1,6 +1,7 @@
 import React from "react";
 import { Check, UserRound } from "lucide-react";
 import type { Profesional } from "../../types";
+import Skeleton from "../Skeleton";
 
 interface Props {
   profesionales: Profesional[];
@@ -18,8 +19,10 @@ export default function ProfesionalPicker({
 }: Props) {
   if (cargando) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <span className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent"></span>
+      <div className="space-y-3 py-1" aria-busy="true">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <Skeleton key={i} className="h-16 w-full rounded-2xl" />
+        ))}
       </div>
     );
   }

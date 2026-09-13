@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -11,11 +12,12 @@ import { repositorios, turnosRepositorioMock } from "../data/index";
 import type { Service, Profesional } from "../types";
 import { reservarTurno, listarProfesionales, useStore } from "../store";
 import type { DisponibilidadDTO } from "../api/dto";
+import { guardarUltimoTurno } from "../utils/ultimoTurno";
 import BookingSteps from "./booking/BookingSteps";
 import ServiceCard from "./booking/ServiceCard";
 import ProfesionalPicker from "./booking/ProfesionalPicker";
 import SlotScheduler from "./booking/SlotScheduler";
-import TicketResumen from "./booking/TicketResumen";
+import BookingWizardSkeleton from "./skeletons/BookingWizardSkeleton";
 
 const SACAR_HORA_24H = (hora12: string): string => {
   const [hora, minutos] = hora12
@@ -65,7 +67,9 @@ const fechaDesdeOffset = (
 export default function ClientPwa() {
   const servicios = useStore((s) => s.servicios);
   const sesion = useStore((s) => s.sesion);
-  const [step, setStep] = useState<1 | 2 | 3 | 5>(1); // 1: catálogo, 2: profesional, 3: fecha/hora, 5: éxito
+  const inicializado = useStore((s) => s.inicializado);
+  const navigate = useNavigate();
+  const [step, setStep] = useState<1 | 2 | 3>(1); // 1: catálogo, 2: profesional, 3: fecha/hora
 
   const [selectedService, setSelectedService] = useState<Service>(
     servicios[0] || initialServices[0],
@@ -162,7 +166,17 @@ export default function ClientPwa() {
         servicio_nombre: selectedService!.name,
         servicio_precio: selectedService!.price,
       });
-      setStep(5);
+      guardarUltimoTurno({
+        servicioNombre: selectedService.name,
+        servicioPrecio: selectedService.price,
+        servicioDuracion: selectedService.duration,
+        profesionalNombre: selectedProfesional?.nombre || "—",
+        hora: selectedHour,
+        fecha: selectedDate,
+        fechaISO: selectedDateISO,
+        horaInicio: SACAR_HORA_24H(selectedHour),
+      });
+      navigate("/confirmacion");
     } catch (err) {
       setError(
         err instanceof Error
@@ -174,18 +188,9 @@ export default function ClientPwa() {
     }
   };
 
-  const resetFlow = () => {
-    setStep(1);
-    setSelectedHour("");
-    setSelectedDate("");
-    setSelectedDateISO("");
-    setSelectedProfesional(null);
-    setError(null);
-  };
-
   const pasoAnterior = () => {
     setError(null);
-    setStep((prev) => Math.max(1, prev - 1) as 1 | 2 | 3 | 5);
+    setStep((prev) => Math.max(1, prev - 1) as 1 | 2 | 3);
   };
 
   const infoServicio = (
@@ -216,8 +221,8 @@ export default function ClientPwa() {
       <div className="flex w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-slate-100 shadow-xl dark:border-slate-800 dark:bg-slate-900">
         <div className="relative flex flex-grow flex-col overflow-y-auto bg-slate-50 custom-scrollbar dark:bg-slate-950">
           {/* Header Bar */}
-          <div className="sticky top-0 z-40 flex items-center justify-between border-b border-slate-200 bg-white p-4 transition-colors dark:border-slate-800/80 dark:bg-slate-900">
-            {step > 1 && step < 5 ? (
+          <div className="sticky top-0 z-40 flex items-center justify-between border-b border-slate-200 bg-white/85 p-4 backdrop-blur-lg transition-colors dark:border-slate-800/80 dark:bg-slate-900/85">
+            {step > 1 ? (
               <button
                 onClick={pasoAnterior}
                 className="flex items-center gap-1.5 rounded-lg bg-slate-100 px-2 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-600 transition-colors hover:text-slate-900 dark:bg-slate-800 dark:text-slate-300 dark:hover:text-slate-100"
@@ -239,11 +244,7 @@ export default function ClientPwa() {
 
           {/* Progreso */}
           <div className="px-4 pt-4">
-            {step === 5 ? (
-              <BookingSteps paso={3} completado />
-            ) : (
-              <BookingSteps paso={step} />
-            )}
+            <BookingSteps paso={step} />
           </div>
 
           {error && (
@@ -256,49 +257,54 @@ export default function ClientPwa() {
           )}
 
           {/* STEP 1: SERVICES CATALOG */}
-          {step === 1 && (
-            <div className="flex flex-grow flex-col space-y-6 p-4">
-              <div className="relative flex h-28 flex-col justify-end overflow-hidden rounded-2xl border border-indigo-400/20 bg-gradient-to-r from-indigo-600 to-purple-600 p-4 shadow-sm dark:border-slate-800 dark:from-purple-900 dark:to-slate-950">
-                <div className="relative z-20 space-y-1">
-                  <div className="flex items-center">
-                    {[0, 1, 2, 3, 4].map((i) => (
-                      <Star
-                        key={i}
-                        size={11}
-                        className="fill-amber-400 text-amber-400"
-                      />
-                    ))}
-                    <span className="pl-1 text-[9px] font-bold text-white/90">
-                      5.0 (250 reseñas)
-                    </span>
+          {step === 1 &&
+            (!inicializado ? (
+              <div className="flex flex-grow flex-col space-y-6 p-4">
+                <BookingWizardSkeleton />
+              </div>
+            ) : (
+              <div className="flex flex-grow flex-col space-y-6 p-4">
+                <div className="relative flex h-28 flex-col justify-end overflow-hidden rounded-2xl border border-indigo-400/20 bg-gradient-to-r from-indigo-600 to-purple-600 p-4 shadow-sm dark:border-slate-800 dark:from-purple-900 dark:to-slate-950">
+                  <div className="relative z-20 space-y-1">
+                    <div className="flex items-center">
+                      {[0, 1, 2, 3, 4].map((i) => (
+                        <Star
+                          key={i}
+                          size={11}
+                          className="fill-amber-400 text-amber-400"
+                        />
+                      ))}
+                      <span className="pl-1 text-[9px] font-bold text-white/90">
+                        5.0 (250 reseñas)
+                      </span>
+                    </div>
+                    <h3 className="font-display text-sm font-semibold leading-none text-white">
+                      Cortes & Estilo Masculino
+                    </h3>
+                    <p className="flex items-center gap-1 text-[10px] text-indigo-100 dark:text-slate-300">
+                      <MapPin size={10} /> Sede Bogotá Centro
+                    </p>
                   </div>
-                  <h3 className="font-display text-sm font-semibold leading-none text-white">
-                    Cortes & Estilo Masculino
-                  </h3>
-                  <p className="flex items-center gap-1 text-[10px] text-indigo-100 dark:text-slate-300">
-                    <MapPin size={10} /> Sede Bogotá Centro
-                  </p>
                 </div>
-              </div>
 
-              <div className="space-y-4">
-                <span className="label-overline block">
-                  Servicios Disponibles
-                </span>
-                <div className="space-y-3">
-                  {(servicios.length > 0 ? servicios : initialServices).map(
-                    (svc) => (
-                      <ServiceCard
-                        key={svc.id}
-                        svc={svc}
-                        onSelect={handleElegirServicio}
-                      />
-                    ),
-                  )}
+                <div className="space-y-4">
+                  <span className="label-overline block">
+                    Servicios Disponibles
+                  </span>
+                  <div className="space-y-3">
+                    {(servicios.length > 0 ? servicios : initialServices).map(
+                      (svc) => (
+                        <ServiceCard
+                          key={svc.id}
+                          svc={svc}
+                          onSelect={handleElegirServicio}
+                        />
+                      ),
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          )}
+            ))}
 
           {/* STEP 2: SELECT PROFESSIONAL */}
           {step === 2 && (
@@ -362,19 +368,6 @@ export default function ClientPwa() {
                 </button>
               </div>
             </div>
-          )}
-
-          {/* STEP 5: SUCCESS CONFIRMATION */}
-          {step === 5 && (
-            <TicketResumen
-              servicio={selectedService}
-              profesional={selectedProfesional}
-              hora={selectedHour}
-              fecha={selectedDate}
-              onGoogle={() => alert("¡Agregado a Google Calendar con éxito!")}
-              onWhatsApp={() => alert("¡Enviando ticket digital!")}
-              onAgendarOtro={resetFlow}
-            />
           )}
         </div>
       </div>

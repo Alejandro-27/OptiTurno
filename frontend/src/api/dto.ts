@@ -1,4 +1,68 @@
+import { AxiosError } from "axios";
 import type { EstadoServicio, EstadoTurno, Rol } from "../types/enums";
+
+// ============================================================
+// Errores HTTP humanizados (design.md §7 / regla #9 del AGENTS raíz)
+// El interceptor de api.client.ts normaliza todo error a ApiError:
+// nunca se expone un mensaje técnico a la UI.
+// ============================================================
+
+export class ApiError extends Error {
+  readonly estado: number | undefined;
+
+  constructor(mensaje: string, estado?: number) {
+    super(mensaje);
+    this.name = "ApiError";
+    this.estado = estado;
+  }
+}
+
+const MENSAJES_HTTP: Record<number, string> = {
+  400: "Verificá los datos ingresados e intentá de nuevo.",
+  401: "Tu sesión ha expirado. Por favor, iniciá sesión nuevamente.",
+  403: "No tenés permisos para realizar esta acción.",
+  404: "No encontramos lo que buscabas. Puede que haya sido eliminado o movido.",
+  409: "Hay un conflicto con los datos enviados. Revisá la información e intentá de nuevo.",
+  422: "Verificá los datos ingresados e intentá de nuevo.",
+  429: "Estás haciendo demasiadas solicitudes. Esperá unos segundos e intentá de nuevo.",
+  500: "Ocurrió un error en el servidor. Intentá de nuevo en unos minutos.",
+  502: "El servidor respondió de forma incorrecta. Intentá de nuevo en unos minutos.",
+  503: "El servicio no está disponible en este momento. Intentá más tarde.",
+  504: "El servidor tardó demasiado en responder. Intentá de nuevo en unos minutos.",
+};
+
+export const MENSAJE_CONEXION =
+  "No pudimos conectarnos con el servidor. Comprobá tu conexión e intentá de nuevo.";
+
+export const mensajePorEstado = (estado?: number): string =>
+  (estado && MENSAJES_HTTP[estado]) || MENSAJE_CONEXION;
+
+// Devuelve una versión legible de cualquier error: ApiError normalizado por
+// el interceptor, AxiosError "crudo" (defensivo) o Error local del mock.
+export function mensajeDeError(error: unknown, fallback: string): string {
+  if (error instanceof ApiError) return error.message;
+  if (error instanceof AxiosError) {
+    const cuerpo = error.response?.data as { error?: unknown } | undefined;
+    if (typeof cuerpo?.error === "string" && cuerpo.error.trim()) {
+      return cuerpo.error;
+    }
+    return mensajePorEstado(error.response?.status);
+  }
+  if (error instanceof Error && error.message.trim()) return error.message;
+  return fallback;
+}
+
+// Errores que un formulario/banner debe mostrar inline (validación/negocio).
+// Los demás (5xx, red, 401/429) ya se notifican de forma global vía toast.
+export function esErrorInline(error: unknown): boolean {
+  if (!(error instanceof ApiError)) return false;
+  return (
+    error.estado !== undefined &&
+    error.estado < 500 &&
+    error.estado !== 401 &&
+    error.estado !== 429
+  );
+}
 
 export interface ServicioDTO {
   id: string;

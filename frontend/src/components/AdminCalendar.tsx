@@ -7,7 +7,6 @@ import {
   Edit2,
   CalendarX,
   Check,
-  CheckCircle2,
   Search,
   Clock,
   DollarSign,
@@ -15,16 +14,18 @@ import {
 } from "lucide-react";
 import { BookingEvent } from "../types";
 import { cancelarTurno, useStore } from "../store";
+import { useToast } from "../contexts/toast";
+import { mensajeDeError } from "../api/dto";
 
 type ViewMode = "diario" | "semanal" | "mensual";
 
 export default function AdminCalendar() {
   const bookings = useStore((s) => s.turnos);
   const profesionales = useStore((s) => s.profesionales);
+  const { mostrarToast } = useToast();
   const [selectedBooking, setSelectedBooking] = useState<BookingEvent | null>(
     null,
   );
-  const [showToast, setShowToast] = useState<string | null>(null);
 
   // ESTADOS DE CONTROL DEL CALENDARIO
   const [currentDate, setCurrentDate] = useState<Date>(new Date(2026, 9, 24)); // Octubre 24, 2026
@@ -95,28 +96,29 @@ export default function AdminCalendar() {
   const handleAction = (type: string) => {
     if (!selectedBooking) return;
     if (type === "send_whatsapp") {
-      setShowToast(
-        `¡Recordatorio enviado a ${selectedBooking.clientName} exitosamente vía Evolution API! 🚀`,
+      mostrarToast(
+        `Recordatorio enviado a ${selectedBooking.clientName} correctamente.`,
+        "exito",
       );
-      setTimeout(() => setShowToast(null), 4000);
     } else if (type === "cancel") {
       cancelarTurno(selectedBooking.id)
         .then(() => {
-          setShowToast(
-            `Cita de ${selectedBooking.clientName} cancelada exitosamente.`,
+          mostrarToast(
+            `Cita de ${selectedBooking.clientName} cancelada correctamente.`,
+            "exito",
           );
         })
-        .catch(() => {
-          setShowToast(
-            `No se pudo cancelar la cita de ${selectedBooking.clientName}.`,
+        .catch((err) => {
+          mostrarToast(
+            mensajeDeError(
+              err,
+              `No se pudo cancelar la cita de ${selectedBooking.clientName}.`,
+            ),
+            "error",
           );
         });
-      setTimeout(() => setShowToast(null), 3000);
     } else if (type === "modify") {
-      setShowToast(
-        `Redireccionando al editor de citas para modificar el turno de ${selectedBooking.clientName}.`,
-      );
-      setTimeout(() => setShowToast(null), 3000);
+      mostrarToast("Abriendo el editor de citas...", "info");
     }
     setSelectedBooking(null);
   };
@@ -162,18 +164,6 @@ export default function AdminCalendar() {
 
   return (
     <div className="space-y-6 animate-fade-in text-slate-800 dark:text-slate-100 h-full flex flex-col relative transition-colors duration-200 overflow-y-auto pr-1">
-      {/* Toast Notification */}
-      {showToast && (
-        <div className="fixed top-4 right-4 left-4 md:left-auto bg-white dark:bg-slate-900 border-2 border-emerald-500 rounded-xl p-4 shadow-2xl z-[100] animate-bounce flex items-center gap-3">
-          <div className="p-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg flex-shrink-0">
-            <CheckCircle2 size={20} />
-          </div>
-          <p className="text-xs font-bold text-slate-800 dark:text-slate-100">
-            {showToast}
-          </p>
-        </div>
-      )}
-
       {/* Header controls for Calendar */}
       <div className="flex justify-between items-center bg-white dark:bg-slate-900/40 p-4 border border-border-subtle dark:border-slate-800 rounded-xl flex-wrap gap-4 shadow-sm dark:shadow-none transition-colors duration-200">
         {/* Selector de Modos de Vista */}
@@ -747,11 +737,11 @@ export default function AdminCalendar() {
               >
                 Cerrar
               </button>
+              {/* Cargando ficha del cliente */}
               <button
                 onClick={() => {
                   setSelectedBooking(null);
-                  setShowToast("Cargando ficha del cliente...");
-                  setTimeout(() => setShowToast(null), 3000);
+                  mostrarToast("Cargando ficha del cliente...", "info");
                 }}
                 className="flex-1 py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold uppercase tracking-wider transition-all shadow-sm"
               >

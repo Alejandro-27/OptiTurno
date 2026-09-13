@@ -5,15 +5,17 @@ import {
   Edit3,
   X,
   ShieldAlert,
-  CheckCircle2,
   Mail,
   Shield,
   Loader2,
 } from "lucide-react";
 import { cargarUsuarios, editarUsuario, useStore } from "../store";
 import type { UsuarioAdminDTO } from "../api/dto";
+import { esErrorInline, mensajeDeError } from "../api/dto";
+import { useToast } from "../contexts/toast";
 import { ROLES_SISTEMA } from "../types/enums";
 import type { Rol } from "../types/enums";
+import AdminTableSkeleton from "./skeletons/AdminTableSkeleton";
 
 const ROLES = ROLES_SISTEMA;
 
@@ -38,18 +40,32 @@ const COLOR_ROL: Record<Rol, string> = {
 export default function AdminUsers() {
   const usuarios = useStore((s) => s.usuarios);
   const sesion = useStore((s) => s.sesion);
+  const { mostrarToast } = useToast();
   const [searchQuery, setSearchQuery] = useState("");
   const [editing, setEditing] = useState<UsuarioAdminDTO | null>(null);
   const [formEmail, setFormEmail] = useState("");
   const [formRol, setFormRol] = useState<Rol>("cliente");
   const [saving, setSaving] = useState(false);
+  const [cargando, setCargando] = useState(true);
   const [errorText, setErrorText] = useState<string | null>(null);
-  const [okText, setOkText] = useState<string | null>(null);
 
   useEffect(() => {
-    cargarUsuarios().catch(() =>
-      setErrorText("No se pudieron cargar los usuarios."),
-    );
+    let activo = true;
+    setCargando(true);
+    cargarUsuarios()
+      .catch((err) => {
+        if (esErrorInline(err)) {
+          setErrorText(
+            mensajeDeError(err, "No se pudieron cargar los usuarios."),
+          );
+        }
+      })
+      .finally(() => {
+        if (activo) setCargando(false);
+      });
+    return () => {
+      activo = false;
+    };
   }, []);
 
   const sesionId = sesion?.usuario.id;
@@ -69,14 +85,12 @@ export default function AdminUsers() {
     setFormEmail(u.email);
     setFormRol(u.rol);
     setErrorText(null);
-    setOkText(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editing) return;
     setErrorText(null);
-    setOkText(null);
     setSaving(true);
     try {
       await editarUsuario(editing.id, {
@@ -84,14 +98,12 @@ export default function AdminUsers() {
           formEmail.trim() !== editing.email ? formEmail.trim() : undefined,
         rol: esPropio ? undefined : formRol,
       });
-      setOkText("Usuario actualizado correctamente.");
+      mostrarToast("Usuario actualizado correctamente.", "exito");
       setEditing(null);
     } catch (err) {
-      setErrorText(
-        err instanceof Error
-          ? err.message
-          : "No se pudo actualizar el usuario.",
-      );
+      if (esErrorInline(err)) {
+        setErrorText(mensajeDeError(err, "No se pudo actualizar el usuario."));
+      }
     } finally {
       setSaving(false);
     }
@@ -103,12 +115,6 @@ export default function AdminUsers() {
         <div className="flex items-center gap-2 text-[11px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2">
           <ShieldAlert size={14} />
           {errorText}
-        </div>
-      )}
-      {okText && !editing && (
-        <div className="flex items-center gap-2 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-3 py-2">
-          <CheckCircle2 size={14} />
-          {okText}
         </div>
       )}
 
@@ -129,96 +135,100 @@ export default function AdminUsers() {
         </div>
       </div>
 
-      <div className="bg-white dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-xl overflow-hidden shadow-sm dark:shadow-xl transition-colors duration-200">
-        <div className="p-4 border-b border-slate-100 dark:border-slate-800/80">
-          <div className="relative max-w-md">
-            <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
-              <Search size={16} />
-            </span>
-            <input
-              type="text"
-              placeholder="Buscar por nombre, correo o rol..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg pl-10 pr-4 py-2 text-xs font-medium text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
-            />
+      {cargando ? (
+        <AdminTableSkeleton columnas={4} />
+      ) : (
+        <div className="bg-white dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-xl overflow-hidden shadow-sm dark:shadow-xl transition-colors duration-200">
+          <div className="p-4 border-b border-slate-100 dark:border-slate-800/80">
+            <div className="relative max-w-md">
+              <span className="absolute inset-y-0 left-0 pl-3 flex items-center text-slate-400 pointer-events-none">
+                <Search size={16} />
+              </span>
+              <input
+                type="text"
+                placeholder="Buscar por nombre, correo o rol..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg pl-10 pr-4 py-2 text-xs font-medium text-slate-800 dark:text-slate-200 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:border-indigo-500 transition-colors"
+              />
+            </div>
+          </div>
+
+          <div className="overflow-x-auto custom-scrollbar">
+            <table className="w-full text-left border-collapse min-w-[640px]">
+              <thead>
+                <tr className="bg-slate-50 dark:bg-slate-950/80 text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider border-b border-border-subtle dark:border-slate-800/80">
+                  <th className="p-4 w-1/3">Nombre</th>
+                  <th className="p-4 hidden md:table-cell">Correo</th>
+                  <th className="p-4 text-center">Rol</th>
+                  <th className="p-4 w-[120px] text-right">Acciones</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/30">
+                {filtered.map((u) => (
+                  <tr
+                    key={u.id}
+                    className="hover:bg-slate-50/80 dark:hover:bg-slate-800/10 group transition-colors"
+                  >
+                    <td className="p-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-full bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center font-extrabold text-xs flex-shrink-0">
+                          {u.nombre
+                            .split(" ")
+                            .map((n) => n[0])
+                            .slice(0, 2)
+                            .join("")
+                            .toUpperCase()}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                            {u.nombre}
+                          </p>
+                          <p className="text-[10px] text-slate-400 font-medium md:hidden">
+                            {u.email}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="p-4 hidden md:table-cell text-xs font-mono text-slate-500 dark:text-slate-400">
+                      {u.email}
+                    </td>
+                    <td className="p-4">
+                      <div className="flex justify-center">
+                        <span
+                          className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[10px] font-bold ${COLOR_ROL[u.rol] || COLOR_ROL.cliente}`}
+                        >
+                          <Shield size={10} />
+                          {ETIQUETA_ROL[u.rol] || u.rol}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-4 text-right">
+                      <button
+                        onClick={() => openEdit(u)}
+                        title="Editar usuario"
+                        className="p-1 px-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                      >
+                        <Edit3 size={14} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {filtered.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={4}
+                      className="p-8 text-center text-xs text-slate-500"
+                    >
+                      No se encontraron usuarios que coincidan con los filtros.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
-
-        <div className="overflow-x-auto custom-scrollbar">
-          <table className="w-full text-left border-collapse min-w-[640px]">
-            <thead>
-              <tr className="bg-slate-50 dark:bg-slate-950/80 text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider border-b border-border-subtle dark:border-slate-800/80">
-                <th className="p-4 w-1/3">Nombre</th>
-                <th className="p-4 hidden md:table-cell">Correo</th>
-                <th className="p-4 text-center">Rol</th>
-                <th className="p-4 w-[120px] text-right">Acciones</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/30">
-              {filtered.map((u) => (
-                <tr
-                  key={u.id}
-                  className="hover:bg-slate-50/80 dark:hover:bg-slate-800/10 group transition-colors"
-                >
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-9 h-9 rounded-full bg-amber-50 dark:bg-amber-500/15 text-amber-600 dark:text-amber-400 flex items-center justify-center font-extrabold text-xs flex-shrink-0">
-                        {u.nombre
-                          .split(" ")
-                          .map((n) => n[0])
-                          .slice(0, 2)
-                          .join("")
-                          .toUpperCase()}
-                      </div>
-                      <div className="min-w-0">
-                        <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
-                          {u.nombre}
-                        </p>
-                        <p className="text-[10px] text-slate-400 font-medium md:hidden">
-                          {u.email}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="p-4 hidden md:table-cell text-xs font-mono text-slate-500 dark:text-slate-400">
-                    {u.email}
-                  </td>
-                  <td className="p-4">
-                    <div className="flex justify-center">
-                      <span
-                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-[10px] font-bold ${COLOR_ROL[u.rol] || COLOR_ROL.cliente}`}
-                      >
-                        <Shield size={10} />
-                        {ETIQUETA_ROL[u.rol] || u.rol}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="p-4 text-right">
-                    <button
-                      onClick={() => openEdit(u)}
-                      title="Editar usuario"
-                      className="p-1 px-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
-                    >
-                      <Edit3 size={14} />
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {filtered.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={4}
-                    className="p-8 text-center text-xs text-slate-500"
-                  >
-                    No se encontraron usuarios que coincidan con los filtros.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+      )}
 
       {/* Modal centrado: editar correo / rol */}
       {editing && (

@@ -6,14 +6,17 @@ Contexto específico del frontend (React 19 + Vite 6 + Tailwind 4). Léelo junto
 
 ```
 src/
-├── App.tsx                 # Routing por rol (landing / ClientShell / panel admin) + drawer admin móvil
-├── main.tsx                # Bootstrap + ThemeToggle inicial
+├── App.tsx                 # Router (react-router-dom): landing / PWA cliente / panel admin / 404 + SEO por ruta
+├── main.tsx                # Bootstrap + BrowserRouter
 ├── index.css               # Tailwind 4 + animaciones CSS (slideIn, slideLeft, fadeIn, scaleUp)
 ├── types.ts                # Tipos UI (Service, BookingEvent, DayAvailability, ActivityLog)
 ├── types/enums.ts          # Uniones Rol / EstadoTurno / EstadoServicio (+ ROLES_SISTEMA, ESTADOS_TURNO)
 ├── contexts/               # Contextos (AbrirVistaClienteContext para navegación admin→cliente)
+├── hooks/useSEO.ts         # Título + meta description/OG por ruta (mapa en el archivo)
+├── layouts/AdminLayout.tsx # Shell del panel admin (sidebar + drawer + breadcrumbs + Outlet)
+├── utils/                  # analytics.ts (GA4 silencioso) · ultimoTurno.ts (respaldo de /confirmacion)
 ├── data.ts                 # Datos demo seed (servicios, turnos, logs, equipo)
-├── components/             # Vistas y sub-componentes
+├── components/             # Vistas, sub-componentes, páginas (Landing, NotFound, ConfirmacionView…)
 ├── api/                    # Capa HTTP: client axios + DTOs + llamadas por dominio
 ├── data/
 │   ├── index.ts            # Factory de repositorios: mock vs API según usarMocks()
@@ -21,7 +24,7 @@ src/
 │   ├── mappers.ts          # DTO → tipos UI
 │   └── repos/              # Repos mock y API por dominio (auth, turnos, servicios…)
 ├── store/index.ts          # Estado global useSyncExternalStore + acciones async
-└── config/env.ts           # VITE_* → constantes (MODO_DEMO, API_URL…)
+└── config/env.ts           # VITE_* → constantes (MODO_DEMO, API_URL, GA_MEASUREMENT_ID…)
 ```
 
 ## Comandos
@@ -53,18 +56,37 @@ Componente → acción del store → `repositorios.<dominio>` (mock o API según
 - Interceptor axios (`api/api.client.ts`) inyecta `Authorization: Bearer <token>` y limpia token en 401.
 - Roles comparados como string: `sesion.usuario.rol === "cliente"`.
 
-## Vistas y navegación
+## Vistas y navegación (react-router-dom v7)
 
-- **Sin sesión** → landing con `AccessAuth` (registro/login unificado, selector Cliente|Comerciante).
-- **cliente** → `ClientShell` (sidebar escritorio / drawer hamburguesa móvil) con secciones:
-  - `Reservar Cita` → `ClientPwa` (flujo 4 pasos: catálogo → fecha/hora → datos → confirmación)
-  - `Mis Turnos` → `MisTurnosView` (listar + cancelar con confirm)
-  - `Mi Perfil` → `MiPerfilView` (nombre + WhatsApp vía `/usuarios/me`)
-- **admin_negocio/superadmin** → panel admin en `App.tsx` con tabs: dashboard, calendar, catalog, availability, profile + footer con nombre de cuenta.
+Rutas definidas en `App.tsx`. Los layouts (`ClientShell`, `AdminLayout`) sirven de "gate": sin sesión muestran `AccessAuth` inline (no redirigen), igual que la app original.
+
+| Ruta                                 | Vista                                     | Notas                                                                        |
+| ------------------------------------ | ----------------------------------------- | ---------------------------------------------------------------------------- |
+| `/`                                  | `Landing` (hero CRO + auth + testimonios) | Si hay sesión redirige a `/reservar` o `/admin`                              |
+| `/reservar`                          | `ClientPwa` (wizard 3 pasos)              | El éxito navega a `/confirmacion`                                            |
+| `/turnos`                            | `MisTurnosView`                           |                                                                              |
+| `/perfil`                            | `MiPerfilView`                            |                                                                              |
+| `/confirmacion`                      | `ConfirmacionView`                        | Lee `location.state` → `utils/ultimoTurno.ts` (sessionStorage) → `misTurnos` |
+| `/admin`                             | AdminLayout + `AdminDashboard`            |                                                                              |
+| `/admin/{calendario,disponibilidad}` | AdminCalendar / AdminAvailability         | Todos los roles admin                                                        |
+| `/admin/{catalogo,equipo,perfil}`    | AdminCatalog / AdminTeam / AdminProfile   | `SoloNoEmpleado` redirige `empleado` → `/admin`                              |
+| `/admin/usuarios`                    | AdminUsers                                | `SoloSuperadmin`                                                             |
+| `*`                                  | `NotFound` (404)                          |                                                                              |
+
+- Breadcrumbs URL-based: `components/Breadcrumbs.tsx` (mapa `MIGAS_POR_RUTA`).
+- `StickyMobileCTA`: barra CTA fija solo móvil (`md:hidden`), contextual por ruta, oculta en `/reservar`.
+- Confirmación ya NO es el paso 5 inline: `TicketResumen.tsx` fue eliminado. Los placeholders de `alert()` (Google Calendar/WhatsApp) se reemplazaron por deep links reales (`calendar.google.com/calendar/render`, `wa.me`).
+- Acceso admin → cliente sigue vía `AbrirVistaClienteContext` (provisto por `AdminLayout` usando `useNavigate`), sin `window`.
+- SEO: `hooks/useSEO.ts` actualiza `title`/`meta` por ruta; `utils/analytics.ts` registra pageviews GA4 en cada cambio de `pathname` (silencioso en localhost y sin `VITE_GA_MEASUREMENT_ID`).
+- Al desplegar en Vercel: `vercel.json` reescribe toda ruta a `/index.html` (SPA) — no romper ese rewrite o los deep links y el 404 devuelven 404 reales.
+
+### Roles y permisos
+
+- **cliente** → PWA en `ClientShell` (sidebar escritorio / drawer hamburguesa móvil).
+- **admin_negocio/superadmin** → panel admin (`AdminLayout`) con tabs: dashboard, calendar, catalog, availability, profile.
 - **superadmin** → tab adicional **Usuarios** (`AdminUsers`): lista usuarios, cambia correo (único) y rol; el propio rol está bloqueado. El mock de registros agrega la cuenta nueva vía `agregarUsuarioMock` para que aparezca en la lista.
-- **empleado** → mismo panel pero SOLO tabs dashboard, calendar, availability ("Modo: Mi Semana" + sección "Mis Ausencias y Vacaciones"); sin Catálogo/Equipo/Editar Comercio.
+- **empleado** → mismo panel pero SOLO tabs dashboard, calendar, availability ("Modo: Mi Semana" + sección "Mis Ausencias y Vacaciones"); sin Catálogo/Equipo/Editar Comercio (URLs también bloqueadas).
 - Alertas ausencias: cuando el backend o el mock rechazan una reserva por ausencia, el mensaje genérico es "El profesional no está disponible en esa fecha." / "...en ese horario.".
-- Navegación admin → cliente sin `window`: `AdminProfile` usa `AbrirVistaClienteContext` de `contexts/navegacion.ts` (provisto por `App.tsx`).
 
 ## Convenciones de UI
 

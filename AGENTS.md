@@ -11,14 +11,14 @@ OptiTurno es un SaaS de agendamiento inteligente para comercios de servicios pre
 
 ## Stack (no cambiar sin justificación)
 
-| Área            | Tecnología                                                          |
-| --------------- | ------------------------------------------------------------------- |
-| Monorepo        | pnpm workspaces (`pnpm-workspace.yaml`)                             |
-| Backend         | Node 24 + Fastify 5 + TypeScript + Supabase (Postgres + Auth + RLS) |
-| Frontend        | React 19 + Vite 6 + Tailwind CSS 4 + axios + lucide-react           |
-| Estado frontend | `useSyncExternalStore` (NO usar Redux/Zustand)                      |
-| Datos frontend  | Repository pattern mock/API con fallback automático                 |
-| Auth            | JWT de Supabase; sesión persistida en localStorage                  |
+| Área            | Tecnología                                                                      |
+| --------------- | ------------------------------------------------------------------------------- |
+| Monorepo        | pnpm workspaces (`pnpm-workspace.yaml`)                                         |
+| Backend         | Node 24 + Fastify 5 + TypeScript + Supabase (Postgres + Auth + RLS)             |
+| Frontend        | React 19 + Vite 6 + Tailwind CSS 4 + axios + lucide-react + react-router-dom v7 |
+| Estado frontend | `useSyncExternalStore` (NO usar Redux/Zustand)                                  |
+| Datos frontend  | Repository pattern mock/API con fallback automático                             |
+| Auth            | JWT de Supabase; sesión persistida en localStorage                              |
 
 ## Estructura
 

@@ -4,13 +4,13 @@ import {
   Globe,
   MapPin,
   Phone,
-  CheckCircle2,
   ShieldCheck,
   Palette,
   ArrowRight,
   UserCheck,
 } from "lucide-react";
 import { useAbrirVistaCliente } from "../contexts/navegacion";
+import { useToast } from "../contexts/toast";
 
 export default function AdminProfile() {
   const abrirVistaCliente = useAbrirVistaCliente();
@@ -24,9 +24,9 @@ export default function AdminProfile() {
   );
 
   const [activeStep, setActiveStep] = useState(1);
-  const [showToast, setShowToast] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [selectedColor, setSelectedColor] = useState("indigo");
+  const { mostrarToast } = useToast();
 
   const colorOptions = [
     {
@@ -64,31 +64,16 @@ export default function AdminProfile() {
     setIsLoading(true);
     setTimeout(() => {
       setIsLoading(false);
-      setShowToast(true);
       setActiveStep(3); // Success step
-      setTimeout(() => setShowToast(false), 4000);
+      mostrarToast(
+        "Perfil actualizado: tu subdominio y portal de clientes ya están activos.",
+        "exito",
+      );
     }, 1500);
   };
 
   return (
     <div className="space-y-6 animate-fade-in text-slate-800 dark:text-slate-100 max-w-4xl mx-auto transition-colors duration-200">
-      {/* Toast Notification */}
-      {showToast && (
-        <div className="fixed top-4 right-4 left-4 md:left-auto bg-white dark:bg-slate-900 border-2 border-emerald-500 rounded-xl p-4 shadow-2xl z-[100] animate-bounce flex items-center gap-3">
-          <div className="p-1 bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 rounded-lg flex-shrink-0">
-            <CheckCircle2 size={20} />
-          </div>
-          <div>
-            <p className="text-xs font-bold text-slate-900 dark:text-slate-100">
-              ¡Perfil Actualizado!
-            </p>
-            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5">
-              El subdominio y pasarela de pago han sido activados en OptiTurno.
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* Progress Wizard Header */}
       <div className="bg-white dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-xl p-6 shadow-sm dark:shadow-xl transition-colors duration-200">
         <div className="flex justify-between items-center max-w-xl mx-auto mb-4">

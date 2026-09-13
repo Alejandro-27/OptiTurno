@@ -5,10 +5,11 @@ import {
   Plus,
   Loader2,
   AlertTriangle,
-  CheckCircle2,
 } from "lucide-react";
 import { crearAusencia, eliminarAusencia, useStore } from "../store";
 import type { AusenciaDTO } from "../api/dto";
+import { esErrorInline, mensajeDeError } from "../api/dto";
+import { useToast } from "../contexts/toast";
 
 const formatearFecha = (fecha: string) =>
   new Date(`${fecha}T00:00:00`).toLocaleDateString("es-AR", {
@@ -19,6 +20,7 @@ const formatearFecha = (fecha: string) =>
 
 export default function AdminAusencias() {
   const ausencias = useStore((s) => s.ausencias);
+  const { mostrarToast } = useToast();
   const [fecha, setFecha] = useState("");
   const [fechaHasta, setFechaHasta] = useState("");
   const [todoElDia, setTodoElDia] = useState(true);
@@ -27,7 +29,6 @@ export default function AdminAusencias() {
   const [motivo, setMotivo] = useState("Ausencia personal");
   const [guardando, setGuardando] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
-  const [okText, setOkText] = useState<string | null>(null);
 
   const ordenadas = [...ausencias].sort((a, b) =>
     a.fecha.localeCompare(b.fecha),
@@ -36,13 +37,12 @@ export default function AdminAusencias() {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setErrorText(null);
-    setOkText(null);
     if (!fecha) {
-      setErrorText("Selecciona al menos la fecha de inicio.");
+      setErrorText("Seleccioná al menos la fecha de inicio.");
       return;
     }
     if (!todoElDia && (!horaInicio || !horaFin)) {
-      setErrorText("Indica la hora de inicio y de fin de la franja.");
+      setErrorText("Indicá la hora de inicio y de fin de la franja.");
       return;
     }
     setGuardando(true);
@@ -54,19 +54,20 @@ export default function AdminAusencias() {
         hora_fin: todoElDia ? null : horaFin,
         motivo,
       });
-      setOkText(
+      mostrarToast(
         creadas.length > 1
           ? `Se registraron ${creadas.length} días de ausencia.`
           : "Ausencia registrada.",
+        "exito",
       );
       setFecha("");
       setFechaHasta("");
       setHoraInicio("");
       setHoraFin("");
     } catch (err) {
-      setErrorText(
-        err instanceof Error ? err.message : "No se pudo registrar.",
-      );
+      if (esErrorInline(err)) {
+        setErrorText(mensajeDeError(err, "No se pudo registrar la ausencia."));
+      }
     } finally {
       setGuardando(false);
     }
@@ -74,12 +75,13 @@ export default function AdminAusencias() {
 
   const handleEliminar = async (id: string) => {
     setErrorText(null);
-    setOkText(null);
     try {
       await eliminarAusencia(id);
-      setOkText("Ausencia eliminada.");
+      mostrarToast("Ausencia eliminada.", "exito");
     } catch (err) {
-      setErrorText(err instanceof Error ? err.message : "No se pudo eliminar.");
+      if (esErrorInline(err)) {
+        setErrorText(mensajeDeError(err, "No se pudo eliminar la ausencia."));
+      }
     }
   };
 
@@ -105,12 +107,6 @@ export default function AdminAusencias() {
         <div className="flex items-center gap-2 bg-red-500/10 border border-red-500/30 rounded-lg p-3 text-rose-600 dark:text-rose-400 text-[11px] font-semibold">
           <AlertTriangle size={14} className="shrink-0" />
           {errorText}
-        </div>
-      )}
-      {okText && (
-        <div className="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3 text-emerald-600 dark:text-emerald-400 text-[11px] font-semibold">
-          <CheckCircle2 size={14} className="shrink-0" />
-          {okText}
         </div>
       )}
 
