@@ -9,20 +9,20 @@
 --        - Project URL  → SUPABASE_URL (backend) + VITE_SUPABASE_URL (frontend)
 --        - anon key     → SUPABASE_ANON_KEY (backend) + VITE_SUPABASE_ANON_KEY (frontend)
 --        - service_role → SUPABASE_SERVICE_ROLE_KEY (solo backend, NUNCA en frontend)
---   4) ANTES DE CORRER: reemplazá la contraseña demo en la sección "0."
+--   4) ANTES DE CORRER: reemplazá la contraseña inicial en la sección "0."
 --      (aparece 3 veces, una por usuario).
 --
 -- El script es idempotente: se puede ejecutar de nuevo sin errores.
 -- ============================================================
 
 -- ==============================
--- 0. CONTRASEÑA DE LOS USUARIOS DEMO
+-- 0. CONTRASEÑA DE LOS USUARIOS INICIALES
 -- ==============================
--- Reemplazá 'REEMPLAZAR_CONTRASENA_DEMO' por una contraseña segura.
--- (El mock del frontend usa password123; en la API real elegí otra.)
-DROP TABLE IF EXISTS tmp_contrasena_demo;
-CREATE TEMP TABLE tmp_contrasena_demo (valor text);
-INSERT INTO tmp_contrasena_demo VALUES ('REEMPLAZAR_CONTRASENA_DEMO');
+-- Reemplazá 'REEMPLAZAR_CONTRASENA_INICIAL' por una contraseña segura.
+
+DROP TABLE IF EXISTS tmp_contrasena_inicial;
+CREATE TEMP TABLE tmp_contrasena_inicial (valor text);
+INSERT INTO tmp_contrasena_inicial VALUES ('REEMPLAZAR_CONTRASENA_INICIAL');
 
 -- ==============================
 -- 1. EXTENSIONES
@@ -177,7 +177,7 @@ END
 $$;
 
 -- ==============================
--- 4. USUARIOS DEMO (auth.users + tabla espejo 'usuarios')
+-- 4. USUARIOS INICIALES (auth.users + tabla espejo 'usuarios')
 -- ==============================
 -- Cuentas alineadas con AGENTS.md:
 --   admin@optiturno.com   → admin_negocio
@@ -199,7 +199,7 @@ SELECT
   'authenticated',
   'authenticated',
   'admin@optiturno.com',
-  crypt((SELECT valor FROM tmp_contrasena_demo LIMIT 1), gen_salt('bf')),
+  crypt((SELECT valor FROM tmp_contrasena_inicial LIMIT 1), gen_salt('bf')),
   now(),
   jsonb_build_object('provider','email','providers',array['email']::text[]),
   jsonb_build_object('nombre','Admin OptiTurno'),
@@ -222,10 +222,10 @@ SELECT
   'authenticated',
   'authenticated',
   'cliente@optiturno.com',
-  crypt((SELECT valor FROM tmp_contrasena_demo LIMIT 1), gen_salt('bf')),
+  crypt((SELECT valor FROM tmp_contrasena_inicial LIMIT 1), gen_salt('bf')),
   now(),
   jsonb_build_object('provider','email','providers',array['email']::text[]),
-  jsonb_build_object('nombre','Cliente Demo'),
+  jsonb_build_object('nombre','Cliente OptiTurno'),
   now(), now(),
   '', '', '', '',
   false, false
@@ -245,10 +245,10 @@ SELECT
   'authenticated',
   'authenticated',
   'empleado@optiturno.com',
-  crypt((SELECT valor FROM tmp_contrasena_demo LIMIT 1), gen_salt('bf')),
+  crypt((SELECT valor FROM tmp_contrasena_inicial LIMIT 1), gen_salt('bf')),
   now(),
   jsonb_build_object('provider','email','providers',array['email']::text[]),
-  jsonb_build_object('nombre','Empleado Demo'),
+  jsonb_build_object('nombre','Empleado OptiTurno'),
   now(), now(),
   '', '', '', '',
   false, false
@@ -262,12 +262,12 @@ FROM auth.users WHERE email = 'admin@optiturno.com'
 ON CONFLICT (email) DO NOTHING;
 
 INSERT INTO usuarios (id, nombre, email, telefono, rol)
-SELECT id, 'Cliente Demo', email, '3001113333', 'cliente'
+SELECT id, 'Cliente OptiTurno', email, '3001113333', 'cliente'
 FROM auth.users WHERE email = 'cliente@optiturno.com'
 ON CONFLICT (email) DO NOTHING;
 
 INSERT INTO usuarios (id, nombre, email, telefono, rol)
-SELECT id, 'Empleado Demo', email, '3001114444', 'empleado'
+SELECT id, 'Empleado OptiTurno', email, '3001114444', 'empleado'
 FROM auth.users WHERE email = 'empleado@optiturno.com'
 ON CONFLICT (email) DO NOTHING;
 
@@ -278,7 +278,7 @@ WHERE rol = 'cliente'
   AND id IN (SELECT usuario_id FROM profesionales);
 
 -- ==============================
--- 5. SEED DE NEGOCIO DEMO
+-- 5. SEED INICIAL DE NEGOCIO
 -- ==============================
 
 -- 5.1 Negocio
