@@ -138,7 +138,7 @@ export const consultarDisponibilidadService = async (
 
   // Averiguar qué día de la semana es la fecha consultada (0 = Domingo, 6 = Sábado)
   // Usar un reemplazo de guiones para evitar desfases de zona horaria en Node
-  const numeroDiaSemana = new Date(fecha.replace(/-/g, "\/")).getDay();
+  const numeroDiaSemana = new Date(fecha.replace(/-/g, "/")).getDay();
 
   // Consultar la disponibilidad del profesional
   const { data: horarioLaboral, error: errorHorario } = await supabase
@@ -277,7 +277,7 @@ export const cancelarTurnoClienteService = async (
     .single();
 
   if (error) {
-    throw { status: 400, message: error.message };
+    throw { status: 400, message: "No se pudo actualizar el turno." };
   }
 
   return actualizado;
@@ -363,7 +363,7 @@ export const cancelarTurnoAdminService = async (
     .single();
 
   if (error) {
-    throw { status: 400, message: error.message };
+    throw { status: 400, message: "No se pudo actualizar el turno." };
   }
 
   return actualizado;

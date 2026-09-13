@@ -5,7 +5,12 @@ import { supabase, supabaseAuth } from "../config/database";
 const ROLES_REGISTRO_PERMITIDOS = ["cliente", "admin_negocio"] as const;
 
 // Roles editables por el superadmin en la gestión de usuarios
-const ROLES_SISTEMA = ["cliente", "admin_negocio", "superadmin", "empleado"] as const;
+const ROLES_SISTEMA = [
+  "cliente",
+  "admin_negocio",
+  "superadmin",
+  "empleado",
+] as const;
 
 interface RegistrarDatos {
   email: string;
@@ -18,34 +23,40 @@ interface RegistrarDatos {
 export const usuariosService = {
   async registrar(datos: RegistrarDatos) {
     const rol =
-      datos.rol && (ROLES_REGISTRO_PERMITIDOS as readonly string[]).includes(datos.rol)
+      datos.rol &&
+      (ROLES_REGISTRO_PERMITIDOS as readonly string[]).includes(datos.rol)
         ? datos.rol
         : "cliente";
 
     // USAR EL MODULO ADMIN: Registra y confirma al usuario de un solo golpe automáticamente
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email: datos.email,
-      password: datos.password,
-      email_confirm: true, // <--- Esto lo activa de inmediato sin mandar correos
-      user_metadata: { nombre: datos.nombre, telefono: datos.telefono || null },
-    });
+    const { data: authData, error: authError } =
+      await supabase.auth.admin.createUser({
+        email: datos.email,
+        password: datos.password,
+        email_confirm: true, // <--- Esto lo activa de inmediato sin mandar correos
+        user_metadata: {
+          nombre: datos.nombre,
+          telefono: datos.telefono || null,
+        },
+      });
 
     if (authError) throw authError;
-    if (!authData.user) throw new Error('No se pudo generar el registro de autenticación.');
+    if (!authData.user)
+      throw new Error("No se pudo generar el registro de autenticación.");
 
     const userUUID = authData.user.id;
 
     // 2. Insertar los datos en tu tabla espejo pública 'usuarios'
     const { data: perfilData, error: perfilError } = await supabase
-      .from('usuarios')
+      .from("usuarios")
       .insert([
         {
           id: userUUID,
           nombre: datos.nombre,
           email: datos.email,
           telefono: datos.telefono || null,
-          rol
-        }
+          rol,
+        },
       ])
       .select();
 
@@ -58,7 +69,7 @@ export const usuariosService = {
         nombre: datos.nombre,
         email: datos.email,
         telefono: datos.telefono || null,
-        rol
+        rol,
       };
     }
 
@@ -121,7 +132,10 @@ export const usuariosService = {
   },
 
   // Actualiza los datos editables del perfil espejo
-  async actualizarPerfil(usuarioId: string, datos: { nombre?: string; telefono?: string }) {
+  async actualizarPerfil(
+    usuarioId: string,
+    datos: { nombre?: string; telefono?: string },
+  ) {
     const campos: { nombre?: string; telefono?: string } = {};
     if (datos.nombre !== undefined) campos.nombre = datos.nombre;
     if (datos.telefono !== undefined) campos.telefono = datos.telefono;
@@ -137,7 +151,8 @@ export const usuariosService = {
       .select("id, email, nombre, telefono, rol")
       .single();
 
-    if (error) throw { status: 400, message: error.message };
+    if (error)
+      throw { status: 400, message: "No se pudo actualizar el perfil." };
 
     return actualizado;
   },
@@ -149,7 +164,8 @@ export const usuariosService = {
       .select("id, nombre, email, telefono, rol")
       .order("nombre", { ascending: true });
 
-    if (error) throw { status: 400, message: error.message };
+    if (error)
+      throw { status: 400, message: "No se pudo listar los usuarios." };
     return data || [];
   },
 
@@ -173,9 +189,13 @@ export const usuariosService = {
     const cambios: { email?: string; rol?: string } = {};
 
     // Dirección nueva → sincronizar Supabase Auth + tabla espejo
-    if (datos.email !== undefined && datos.email.trim().toLowerCase() !== actual.email) {
+    if (
+      datos.email !== undefined &&
+      datos.email.trim().toLowerCase() !== actual.email
+    ) {
       const email = datos.email.trim().toLowerCase();
-      if (!email) throw { status: 400, message: "El correo no puede estar vacío." };
+      if (!email)
+        throw { status: 400, message: "El correo no puede estar vacío." };
 
       // Unicidad del correo
       const { data: existente } = await supabase
@@ -231,7 +251,10 @@ export const usuariosService = {
       .single();
 
     if (error || !actualizado) {
-      throw { status: 400, message: error?.message || "No se pudo actualizar el usuario." };
+      throw {
+        status: 400,
+        message: "No se pudo actualizar el usuario.",
+      };
     }
 
     return actualizado;

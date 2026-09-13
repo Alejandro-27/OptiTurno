@@ -1,94 +1,58 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { usuariosService } from "../services/usuarios.service";
+import { validarCuerpo } from "../schemas/validar";
+import {
+  registrarUsuarioSchema,
+  loginSchema,
+  actualizarPerfilSchema,
+  editarUsuarioSchema,
+} from "../schemas/usuarios.schemas";
 
 export const usuariosController = {
   async registrar(request: FastifyRequest, reply: FastifyReply) {
-    try {
-      const cuerpo = request.body as any;
-      const nuevoUsuario = await usuariosService.registrar(cuerpo);
-      return reply.status(201).send(nuevoUsuario);
-    } catch (error: any) {
-      return reply.status(400).send({ error: error.message });
-    }
+    const cuerpo = validarCuerpo(registrarUsuarioSchema, request.body);
+    const nuevoUsuario = await usuariosService.registrar(cuerpo);
+    return reply.status(201).send(nuevoUsuario);
   },
 
   // Login de clientes (PWA) y cualquier rol del sistema
   async login(request: FastifyRequest, reply: FastifyReply) {
-    try {
-      const { email, password } = request.body as {
-        email?: string;
-        password?: string;
-      };
-
-      if (!email || !password) {
-        return reply
-          .status(400)
-          .send({ error: "Email y contraseña son requeridos." });
-      }
-
-      const sesion = await usuariosService.login({ email, password });
-      return reply.status(200).send(sesion);
-    } catch (error: any) {
-      const status = error.status || 500;
-      return reply.status(status).send({ error: error.message });
-    }
+    const { email, password } = validarCuerpo(loginSchema, request.body);
+    const sesion = await usuariosService.login({ email, password });
+    return reply.status(200).send(sesion);
   },
 
   // Perfil del usuario autenticado (solo con JWT válido)
   async obtenerMe(request: FastifyRequest, reply: FastifyReply) {
-    try {
-      const perfil = await usuariosService.obtenerPerfil(request.usuario!.id);
-      return reply.status(200).send(perfil);
-    } catch (error: any) {
-      return reply.status(error.status || 500).send({ error: error.message });
-    }
+    const perfil = await usuariosService.obtenerPerfil(request.usuario!.id);
+    return reply.status(200).send(perfil);
   },
 
   // Actualización del perfil propio (nombre, teléfono)
   async actualizarMe(request: FastifyRequest, reply: FastifyReply) {
-    try {
-      const { nombre, telefono } = request.body as {
-        nombre?: string;
-        telefono?: string;
-      };
-      const actualizado = await usuariosService.actualizarPerfil(
-        request.usuario!.id,
-        { nombre, telefono },
-      );
-      return reply.status(200).send(actualizado);
-    } catch (error: any) {
-      return reply.status(error.status || 500).send({ error: error.message });
-    }
+    const datos = validarCuerpo(actualizarPerfilSchema, request.body);
+    const actualizado = await usuariosService.actualizarPerfil(
+      request.usuario!.id,
+      datos,
+    );
+    return reply.status(200).send(actualizado);
   },
 
   // Lista todos los usuarios del sistema (solo superadmin)
   async listarUsuarios(request: FastifyRequest, reply: FastifyReply) {
-    try {
-      const usuarios = await usuariosService.listarUsuarios();
-      return reply.status(200).send(usuarios);
-    } catch (error: any) {
-      return reply.status(error.status || 500).send({ error: error.message });
-    }
+    const usuarios = await usuariosService.listarUsuarios();
+    return reply.status(200).send(usuarios);
   },
 
   // Edita correo (único) y/o rol de un usuario (solo superadmin)
   async editarUsuario(request: FastifyRequest, reply: FastifyReply) {
-    try {
-      const { id } = request.params as { id: string };
-      const { email, rol } = request.body as {
-        email?: string;
-        rol?: string;
-      };
-      const actualizado = await usuariosService.editarUsuario(
-        id,
-        request.usuario!.id,
-        { email, rol },
-      );
-      return reply.status(200).send(actualizado);
-    } catch (error: any) {
-      return reply
-        .status(error.status || 500)
-        .send({ error: error.message });
-    }
+    const { id } = request.params as { id: string };
+    const datos = validarCuerpo(editarUsuarioSchema, request.body);
+    const actualizado = await usuariosService.editarUsuario(
+      id,
+      request.usuario!.id,
+      datos,
+    );
+    return reply.status(200).send(actualizado);
   },
 };

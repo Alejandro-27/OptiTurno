@@ -3,16 +3,23 @@ import cors from "@fastify/cors";
 import dotenv from "dotenv";
 import { turnosRouter } from "./routes/turnos.routes.js";
 import { negociosRoutes } from "./routes/negocios.routes.js";
-import profesionalesRoutes from './routes/profesionales.routes';
-import usuariosRoutes from './routes/usuarios.routes';
-import { actividadRoutes } from './routes/actividad.routes';
-import { disponibilidadRoutes } from './routes/disponibilidad.routes';
-import { ausenciasRoutes } from './routes/ausencias.routes';
+import profesionalesRoutes from "./routes/profesionales.routes";
+import usuariosRoutes from "./routes/usuarios.routes";
+import { actividadRoutes } from "./routes/actividad.routes";
+import { disponibilidadRoutes } from "./routes/disponibilidad.routes";
+import { ausenciasRoutes } from "./routes/ausencias.routes";
+import { errorHandler } from "./plugins/errorHandler";
 
 dotenv.config();
 
 const fastify = Fastify({
   logger: true,
+});
+
+fastify.setErrorHandler(errorHandler);
+
+fastify.setNotFoundHandler((_request, reply) => {
+  return reply.status(404).send({ error: "Ruta no encontrada." });
 });
 
 const start = async () => {
@@ -30,13 +37,17 @@ const start = async () => {
     });
 
     // Registro de Módulos de Rutas de la API
-    await fastify.register(usuariosRoutes, { prefix: '/api/usuarios' }); // Registrar usuarios
+    await fastify.register(usuariosRoutes, { prefix: "/api/usuarios" }); // Registrar usuarios
     await fastify.register(turnosRouter, { prefix: "/api/turnos" }); // Ruta de los turnos
     await fastify.register(negociosRoutes, { prefix: "/api" }); // Insertar un negocio, una sucursal física y 3 servicios estructurados con precios a supabase /api/seed
-    await fastify.register(profesionalesRoutes, { prefix: '/api/profesionales' }); // Registrar profesionales
-    await fastify.register(actividadRoutes, { prefix: '/api/actividad' }); // Actividad reciente de la sucursal (panel admin)
-    await fastify.register(disponibilidadRoutes, { prefix: '/api/disponibilidad-semanal' }); // Disponibilidad semanal (panel admin)
-    await fastify.register(ausenciasRoutes, { prefix: '/api/ausencias' }); // Ausencias de profesionales (panel empleado)
+    await fastify.register(profesionalesRoutes, {
+      prefix: "/api/profesionales",
+    }); // Registrar profesionales
+    await fastify.register(actividadRoutes, { prefix: "/api/actividad" }); // Actividad reciente de la sucursal (panel admin)
+    await fastify.register(disponibilidadRoutes, {
+      prefix: "/api/disponibilidad-semanal",
+    }); // Disponibilidad semanal (panel admin)
+    await fastify.register(ausenciasRoutes, { prefix: "/api/ausencias" }); // Ausencias de profesionales (panel empleado)
 
     // Health Check global
     fastify.get("/api/ping", async () => {

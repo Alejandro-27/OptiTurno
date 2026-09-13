@@ -151,8 +151,7 @@ export const eliminarServicioService = async (servicioId: string) => {
   if (count && count > 0) {
     throw {
       status: 409,
-      message:
-        "No puedes eliminar un servicio que ya tiene turnos asociados.",
+      message: "No puedes eliminar un servicio que ya tiene turnos asociados.",
     };
   }
 
@@ -184,9 +183,17 @@ export const listarActividadService = async (sucursalId: string) => {
 
   if (error) throw error;
 
-  const ver = (turno: any) => {
-    const cliente = turno.clientes?.nombre || "Cliente";
-    const servicio = turno.servicios?.nombre || "Servicio";
+  interface TurnoActividad {
+    id: string;
+    created_at: string;
+    estado: string;
+    clientes?: Array<{ nombre: string }> | null;
+    servicios?: Array<{ nombre: string }> | null;
+  }
+
+  const ver = (turno: TurnoActividad) => {
+    const cliente = turno.clientes?.[0]?.nombre || "Cliente";
+    const servicio = turno.servicios?.[0]?.nombre || "Servicio";
     const minutos = Math.max(
       1,
       Math.round((Date.now() - new Date(turno.created_at).getTime()) / 60000),
@@ -228,7 +235,9 @@ export const listarActividadService = async (sucursalId: string) => {
 
 // Obtiene la primera tabla de disponibilidad semanal de la sucursal.
 // Sirve de base para el panel "Disponibilidad"; se aplica a todos sus profesionales.
-export const listarDisponibilidadSemanalService = async (sucursalId: string) => {
+export const listarDisponibilidadSemanalService = async (
+  sucursalId: string,
+) => {
   const { data: principal } = await supabase
     .from("profesionales")
     .select("id")
@@ -330,7 +339,7 @@ export const guardarDisponibilidadSemanalService = async (
 
 export const sembrarDatosInicialesService = async () => {
   // Crear un usuario de prueba para el PROFESIONAL en la tabla 'usuarios'
-  const { data: usuarioProf, error: errUserProf } = await supabase
+  const { error: errUserProf } = await supabase
     .from("usuarios")
     .insert([
       {
@@ -347,12 +356,12 @@ export const sembrarDatosInicialesService = async () => {
   if (errUserProf && !errUserProf.message.includes("duplicate key")) {
     throw {
       status: 400,
-      message: `Error al crear usuario profesional: ${errUserProf.message}`,
+      message: "No se pudo crear el usuario profesional de prueba.",
     };
   }
 
   // Crear un usuario de prueba para el CLIENTE en la tabla 'usuarios'
-  const { data: usuarioCli, error: errUserCli } = await supabase
+  const { error: errUserCli } = await supabase
     .from("usuarios")
     .insert([
       {
@@ -368,7 +377,7 @@ export const sembrarDatosInicialesService = async () => {
   if (errUserCli && !errUserCli.message.includes("duplicate key")) {
     throw {
       status: 400,
-      message: `Error al crear usuario cliente: ${errUserCli.message}`,
+      message: "No se pudo crear el usuario cliente de prueba.",
     };
   }
 
