@@ -2,14 +2,14 @@ import { useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
+  CalendarX,
   ShieldCheck,
   Sparkles,
   Store,
-  TrendingUp,
 } from "lucide-react";
 import AccessAuth from "./AccessAuth";
 import ComoFuncionaSection from "./ComoFuncionaSection";
-import TestimonialsSection from "./TestimonialsSection";
+import BeneficiosSection from "./BeneficiosSection";
 import ThemeToggle from "./ThemeToggle";
 import { useStore } from "../store";
 import { MODO_DEMO } from "../config/env";
@@ -109,8 +109,8 @@ export default function Landing() {
 
               <div className="mt-8 flex flex-wrap gap-x-6 gap-y-2 text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                 <span className="flex items-center gap-1.5">
-                  <TrendingUp size={13} className="text-emerald-600" />
-                  −35% inasistencias
+                  <CalendarX size={13} className="text-emerald-600" />
+                  Sin doble reserva
                 </span>
                 <span className="flex items-center gap-1.5">
                   <ShieldCheck
@@ -135,7 +135,7 @@ export default function Landing() {
       </section>
 
       <ComoFuncionaSection />
-      <TestimonialsSection />
+      <BeneficiosSection />
 
       <footer className="border-t border-border-subtle bg-surface px-4 py-10 md:px-6">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 md:flex-row md:items-start md:justify-between">
@@ -187,8 +187,8 @@ export default function Landing() {
           </nav>
         </div>
         <p className="mx-auto mt-8 max-w-6xl border-t border-border-subtle pt-4 text-[10px] text-slate-400 dark:text-slate-500">
-          © {new Date().getFullYear()} OptiTurno — SaaS de agendamiento. Datos
-          de demostración.
+          © {new Date().getFullYear()} OptiTurno — SaaS de agendamiento
+          {MODO_DEMO && " · Datos de demostración."}
         </p>
       </footer>
     </div>
