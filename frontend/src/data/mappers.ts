@@ -1,9 +1,5 @@
-import type {
-  Service,
-  BookingEvent,
-  Profesional,
-  ActivityLog,
-} from "../types";
+import type { Service, BookingEvent, Profesional, ActivityLog } from "../types";
+import type { Rol } from "../types/enums";
 import type {
   ServicioDTO,
   UsuarioSesionDTO,
@@ -13,17 +9,17 @@ import type {
 } from "../api/dto";
 
 const CATEGORIA_ICONOS: Record<string, string> = {
-  "estética": "scissors",
-  "corte": "scissors",
-  "barba": "face",
-  "piel": "spa",
-  "facial": "spa",
-  "tratamiento": "spa",
-  "color": "brush",
-  "mech": "brush",
-  "manicura": "brush",
-  "pedicura": "brush",
-  "spa": "spa",
+  estética: "scissors",
+  corte: "scissors",
+  barba: "face",
+  piel: "spa",
+  facial: "spa",
+  tratamiento: "spa",
+  color: "brush",
+  mech: "brush",
+  manicura: "brush",
+  pedicura: "brush",
+  spa: "spa",
 };
 
 export function iconoDesdeNombre(nombre: string): string {
@@ -34,7 +30,11 @@ export function iconoDesdeNombre(nombre: string): string {
   return "scissors";
 }
 
-const PALETA: Array<BookingEvent["color"]> = ["primary", "secondary", "tertiary"];
+const PALETA: Array<BookingEvent["color"]> = [
+  "primary",
+  "secondary",
+  "tertiary",
+];
 
 export function colorDesdeId(id: string): BookingEvent["color"] {
   let hash = 0;
@@ -99,7 +99,7 @@ export function activityLogDtoToUI(dto: ActivityLogDTO): ActivityLog {
 export function usuarioDTODesdeSesion(usuario: {
   id?: string;
   email?: string;
-  rol?: string;
+  rol?: Rol;
   nombre?: string;
 }): UsuarioSesionDTO {
   return {

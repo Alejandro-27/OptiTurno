@@ -5,6 +5,7 @@ import type {
   ReservarTurnoInputDTO,
   TurnoAdminDTO,
 } from "./dto";
+import type { EstadoTurno } from "../types/enums";
 
 // Consulta los horarios bloqueados y la jornada laboral de un profesional
 export const obtenerDisponibilidad = async (
@@ -23,7 +24,7 @@ export const obtenerDisponibilidad = async (
 // Envía la solicitud para reservar un turno
 export interface TurnoReservadoDTO {
   id: string;
-  estado: string;
+  estado: EstadoTurno;
   fecha: string;
   hora_inicio: string;
   hora_fin: string;
@@ -58,8 +59,9 @@ export const listarTurnosAdmin = async (): Promise<TurnoAdminDTO[]> => {
 
 // Cancela un turno (PATCH /turnos/:id/cancelar) — backend responde { message, turno }
 export const cancelarTurno = async (id: string): Promise<MisTurnoDTO> => {
-  const { data } = await apiClient.patch<{ message: string; turno: MisTurnoDTO }>(
-    `/turnos/${id}/cancelar`,
-  );
+  const { data } = await apiClient.patch<{
+    message: string;
+    turno: MisTurnoDTO;
+  }>(`/turnos/${id}/cancelar`);
   return data.turno;
 };

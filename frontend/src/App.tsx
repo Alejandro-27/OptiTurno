@@ -27,6 +27,8 @@ import AccessAuth from "./components/AccessAuth";
 import ThemeToggle from "./components/ThemeToggle"; // <-- IMPORTANTE: Componente importado
 import { iniciarApp, logout, useStore, getEstado } from "./store";
 import { MODO_DEMO } from "./config/env";
+import { AbrirVistaClienteContext } from "./contexts/navegacion";
+import type { Rol } from "./types/enums";
 
 export default function App() {
   // Vista activa según el rol de la sesión (cliente -> PWA, resto -> panel)
@@ -45,7 +47,7 @@ export default function App() {
   const esEmpleado = sesion?.usuario.rol === "empleado";
   const esSuperadmin = sesion?.usuario.rol === "superadmin";
 
-  // Carga inicial: repositorios (mock o API) + comunicación hacia el PWA
+  // Carga inicial: repositorios (mock o API)
   useEffect(() => {
     iniciarApp().then(() => {
       // Si hay una sesión persistida de cliente, restauramos su vista PWA
@@ -54,18 +56,10 @@ export default function App() {
         setVista("cliente");
       }
     });
-    (window as any).abrirVistaCliente = () => {
-      setVista("cliente");
-    };
-    return () => {
-      delete (window as any).abrirVistaCliente;
-    };
   }, []);
 
   // Centraliza la redirección post-autenticación según el rol de la cuenta
-  const manejarAutenticado = (sesion: {
-    usuario: { rol: string };
-  }) => {
+  const manejarAutenticado = (sesion: { usuario: { rol: Rol } }) => {
     if (sesion.usuario.rol === "cliente") {
       setVista("cliente");
     } else {
@@ -311,7 +305,11 @@ export default function App() {
                 ? "text-amber-600 dark:text-amber-400 bg-amber-500/10 dark:bg-amber-500/5 border-amber-500/20 dark:border-amber-500/10"
                 : "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 dark:bg-emerald-500/5 border-emerald-500/20 dark:border-emerald-500/10"
             }`}
-            title={MODO_DEMO ? "Usando datos de demostración locales" : "Conectado al backend real"}
+            title={
+              MODO_DEMO
+                ? "Usando datos de demostración locales"
+                : "Conectado al backend real"
+            }
           >
             <span
               className={`w-1.5 h-1.5 rounded-full ${MODO_DEMO ? "bg-amber-500" : "bg-emerald-500"} animate-ping`}
@@ -384,7 +382,13 @@ export default function App() {
           {!esEmpleado && adminTab === "team" && <AdminTeam />}
           {esSuperadmin && adminTab === "usuarios" && <AdminUsers />}
           {adminTab === "availability" && <AdminAvailability />}
-          {!esEmpleado && adminTab === "profile" && <AdminProfile />}
+          {!esEmpleado && adminTab === "profile" && (
+            <AbrirVistaClienteContext.Provider
+              value={() => setVista("cliente")}
+            >
+              <AdminProfile />
+            </AbrirVistaClienteContext.Provider>
+          )}
         </main>
       </div>
     </div>

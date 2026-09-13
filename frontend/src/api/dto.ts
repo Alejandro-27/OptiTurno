@@ -1,10 +1,12 @@
+import type { EstadoServicio, EstadoTurno, Rol } from "../types/enums";
+
 export interface ServicioDTO {
   id: string;
   nombre: string;
   descripcion: string;
   precio: number;
   duracion_minutos: number;
-  estado?: string;
+  estado?: EstadoServicio;
   sucursal_id?: string;
 }
 
@@ -35,7 +37,7 @@ export interface TurnoAdminDTO {
   fecha: string;
   hora_inicio: string;
   hora_fin: string;
-  estado: string;
+  estado: EstadoTurno;
   created_at: string;
   clientes: {
     id: string;
@@ -109,7 +111,7 @@ export interface MisTurnoDTO {
   fecha: string;
   hora_inicio: string;
   hora_fin: string;
-  estado: string;
+  estado: EstadoTurno;
   created_at: string;
   servicios: {
     nombre: string;
@@ -127,7 +129,7 @@ export interface UsuarioSesionDTO {
   id: string;
   email: string;
   nombre: string;
-  rol: string;
+  rol: Rol;
   telefono?: string | null;
 }
 
@@ -136,13 +138,13 @@ export interface UsuarioAdminDTO {
   id: string;
   nombre: string;
   email: string;
-  rol: string;
+  rol: Rol;
   telefono?: string | null;
 }
 
 export interface EditarUsuarioInputDTO {
   email?: string;
-  rol?: string;
+  rol?: Rol;
 }
 
 export interface SesionDTO {
@@ -160,7 +162,7 @@ export interface RegistrarUsuarioInput {
   password: string;
   nombre: string;
   telefono?: string;
-  rol?: string;
+  rol?: Rol;
 }
 
 export interface SeederResponseDTO {

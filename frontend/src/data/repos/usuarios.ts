@@ -1,4 +1,5 @@
 import type { EditarUsuarioInputDTO, UsuarioAdminDTO } from "../../api/dto";
+import { ROLES_SISTEMA } from "../../types/enums";
 import {
   editarUsuario as editarUsuarioApi,
   listarUsuarios as listarUsuariosApi,
@@ -6,10 +7,11 @@ import {
 
 export interface UsuariosRepositorio {
   listarUsuarios(): Promise<UsuarioAdminDTO[]>;
-  editarUsuario(id: string, datos: EditarUsuarioInputDTO): Promise<UsuarioAdminDTO>;
+  editarUsuario(
+    id: string,
+    datos: EditarUsuarioInputDTO,
+  ): Promise<UsuarioAdminDTO>;
 }
-
-const ROLES_SISTEMA = ["cliente", "admin_negocio", "superadmin", "empleado"];
 
 // Cuentas demo en memoria (modo demo). Compartidas con el mock de auth.
 export const usuariosMock: UsuarioAdminDTO[] = [
@@ -60,8 +62,7 @@ export const usuariosRepositorioMock: UsuariosRepositorio = {
       throw new Error("El correo ya está en uso por otro usuario.");
     }
 
-    const rol =
-      datos.rol !== undefined ? datos.rol : usuariosMock[indice].rol;
+    const rol = datos.rol !== undefined ? datos.rol : usuariosMock[indice].rol;
     if (!ROLES_SISTEMA.includes(rol)) {
       throw new Error("El rol indicado no es válido.");
     }

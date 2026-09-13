@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { login, registrar } from "../store";
 import type { SesionDTO } from "../api/dto";
+import type { Rol } from "../types/enums";
 
 export type TipoCuenta = "cliente" | "comercio";
 
@@ -23,13 +24,12 @@ interface AccessAuthProps {
   onAutenticado: (sesion: SesionDTO) => void;
 }
 
-const ROL_POR_TIPO: Record<TipoCuenta, string> = {
+const ROL_POR_TIPO: Record<TipoCuenta, Rol> = {
   cliente: "cliente",
   comercio: "admin_negocio",
 };
 
-const inputClase =
-  "input";
+const inputClase = "input";
 
 export default function AccessAuth({
   tipoInicial = "cliente",
@@ -292,7 +292,9 @@ export default function AccessAuth({
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute inset-y-0 right-0 flex items-center pr-3 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300"
-                aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                aria-label={
+                  showPassword ? "Ocultar contraseña" : "Mostrar contraseña"
+                }
               >
                 {showPassword ? <EyeOff size={14} /> : <Eye size={14} />}
               </button>

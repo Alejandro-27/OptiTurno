@@ -1,21 +1,19 @@
 import React, { useState } from "react";
 import {
   Building2,
-  Hash,
   Globe,
   MapPin,
   Phone,
-  FileText,
   CheckCircle2,
-  Sparkles,
   ShieldCheck,
-  HeartPulse,
   Palette,
   ArrowRight,
   UserCheck,
 } from "lucide-react";
+import { useAbrirVistaCliente } from "../contexts/navegacion";
 
 export default function AdminProfile() {
+  const abrirVistaCliente = useAbrirVistaCliente();
   const [name, setName] = useState("OptiTurno Pro Studio");
   const [category, setCategory] = useState("Estética & Barberías");
   const [subdomain, setSubdomain] = useState("optiturnoprostudio");
@@ -452,12 +450,7 @@ export default function AdminProfile() {
             </button>
             <button
               type="button"
-              onClick={() => {
-                const win = window as any;
-                if (win.abrirVistaCliente) {
-                  win.abrirVistaCliente(); // Salto directo a la vista del cliente
-                }
-              }}
+              onClick={abrirVistaCliente}
               className="flex-grow flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-indigo-600/15 active:scale-95"
             >
               Abrir Vista Cliente

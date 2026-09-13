@@ -1,10 +1,16 @@
-import type {
-  RegistrarUsuarioInput,
-  SesionDTO,
-  UsuarioSesionDTO,
-} from "../../api/dto";
-import { setSessionToken, setSesionPersistida, getSesionPersistida } from "../session";
-import { loginUsuario, registrarUsuario, obtenerPerfil as obtenerPerfilApi, actualizarPerfil as actualizarPerfilApi } from "../../api/usuarios.api";
+import type { SesionDTO, UsuarioSesionDTO } from "../../api/dto";
+import type { Rol } from "../../types/enums";
+import {
+  setSessionToken,
+  setSesionPersistida,
+  getSesionPersistida,
+} from "../session";
+import {
+  loginUsuario,
+  registrarUsuario,
+  obtenerPerfil as obtenerPerfilApi,
+  actualizarPerfil as actualizarPerfilApi,
+} from "../../api/usuarios.api";
 import { agregarUsuarioMock } from "./usuarios";
 
 export interface RegistrarCuentaInput {
@@ -12,7 +18,7 @@ export interface RegistrarCuentaInput {
   password: string;
   nombre: string;
   telefono?: string;
-  rol?: string;
+  rol?: Rol;
 }
 
 export interface AuthRepositorio {
@@ -32,7 +38,7 @@ const USUARIO_DEMO = {
   password: "password123",
 };
 
-const USUARIO_DEMO_DTO = {
+const USUARIO_DEMO_DTO: UsuarioSesionDTO = {
   id: "usr-demo-001",
   email: USUARIO_DEMO.email,
   nombre: "Administrador Demo",
@@ -45,7 +51,7 @@ const USUARIO_EMPLEADO = {
   password: "password123",
 };
 
-const USUARIO_EMPLEADO_DTO = {
+const USUARIO_EMPLEADO_DTO: UsuarioSesionDTO = {
   id: "usr-1102",
   email: USUARIO_EMPLEADO.email,
   nombre: "Carlos Méndez",
@@ -58,7 +64,7 @@ const USUARIO_CLIENTE = {
   password: "password123",
 };
 
-const USUARIO_CLIENTE_DTO = {
+const USUARIO_CLIENTE_DTO: UsuarioSesionDTO = {
   id: "usr-1104",
   email: USUARIO_CLIENTE.email,
   nombre: "Cliente Demo",
@@ -73,7 +79,7 @@ const cuentasRegistradas: Array<{
   id: string;
   nombre: string;
   telefono?: string;
-  rol: string;
+  rol: Rol;
 }> = [];
 
 export const authRepositorioMock: AuthRepositorio = {
@@ -197,7 +203,10 @@ export const authRepositorioApi: AuthRepositorio = {
       rol: datos.rol || "cliente",
     });
     // El registro entra automáticamente (login implícito)
-    const sesion = await loginUsuario({ email: datos.email, password: datos.password });
+    const sesion = await loginUsuario({
+      email: datos.email,
+      password: datos.password,
+    });
     return { token: sesion.token, usuario: perfil };
   },
   async logout() {

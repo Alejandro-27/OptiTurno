@@ -12,17 +12,19 @@ import {
 } from "lucide-react";
 import { cargarUsuarios, editarUsuario, useStore } from "../store";
 import type { UsuarioAdminDTO } from "../api/dto";
+import { ROLES_SISTEMA } from "../types/enums";
+import type { Rol } from "../types/enums";
 
-const ROLES = ["cliente", "admin_negocio", "superadmin", "empleado"];
+const ROLES = ROLES_SISTEMA;
 
-const ETIQUETA_ROL: Record<string, string> = {
+const ETIQUETA_ROL: Record<Rol, string> = {
   cliente: "Cliente",
   admin_negocio: "Comercio",
   superadmin: "Super Admin",
   empleado: "Profesional",
 };
 
-const COLOR_ROL: Record<string, string> = {
+const COLOR_ROL: Record<Rol, string> = {
   cliente:
     "bg-slate-100 dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-border-subtle dark:border-slate-800",
   admin_negocio:
@@ -39,7 +41,7 @@ export default function AdminUsers() {
   const [searchQuery, setSearchQuery] = useState("");
   const [editing, setEditing] = useState<UsuarioAdminDTO | null>(null);
   const [formEmail, setFormEmail] = useState("");
-  const [formRol, setFormRol] = useState("");
+  const [formRol, setFormRol] = useState<Rol>("cliente");
   const [saving, setSaving] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
   const [okText, setOkText] = useState<string | null>(null);
@@ -86,7 +88,9 @@ export default function AdminUsers() {
       setEditing(null);
     } catch (err) {
       setErrorText(
-        err instanceof Error ? err.message : "No se pudo actualizar el usuario.",
+        err instanceof Error
+          ? err.message
+          : "No se pudo actualizar el usuario.",
       );
     } finally {
       setSaving(false);
@@ -203,7 +207,10 @@ export default function AdminUsers() {
               ))}
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="p-8 text-center text-xs text-slate-500">
+                  <td
+                    colSpan={4}
+                    className="p-8 text-center text-xs text-slate-500"
+                  >
                     No se encontraron usuarios que coincidan con los filtros.
                   </td>
                 </tr>
@@ -224,7 +231,10 @@ export default function AdminUsers() {
           <div className="bg-white dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-4 animate-scale-up">
             <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800/80">
               <div className="flex items-center gap-2">
-                <Edit3 size={16} className="text-indigo-600 dark:text-indigo-400" />
+                <Edit3
+                  size={16}
+                  className="text-indigo-600 dark:text-indigo-400"
+                />
                 <h3 className="text-base font-bold text-slate-900 dark:text-slate-100">
                   Editar usuario
                 </h3>
@@ -240,7 +250,10 @@ export default function AdminUsers() {
             <form onSubmit={handleSubmit} className="space-y-4 pt-2">
               <div className="space-y-1.5">
                 <label className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider flex items-center gap-1">
-                  <Mail size={10} className="text-indigo-600 dark:text-indigo-400" />
+                  <Mail
+                    size={10}
+                    className="text-indigo-600 dark:text-indigo-400"
+                  />
                   Correo electrónico (único)
                 </label>
                 <input
@@ -254,13 +267,16 @@ export default function AdminUsers() {
 
               <div className="space-y-1.5">
                 <label className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider flex items-center gap-1">
-                  <Shield size={10} className="text-amber-600 dark:text-amber-400" />
+                  <Shield
+                    size={10}
+                    className="text-amber-600 dark:text-amber-400"
+                  />
                   Rol
                 </label>
                 <select
                   value={formRol}
                   disabled={esPropio}
-                  onChange={(e) => setFormRol(e.target.value)}
+                  onChange={(e) => setFormRol(e.target.value as Rol)}
                   className="w-full bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg py-2.5 px-3 text-xs font-semibold text-slate-800 dark:text-slate-200 focus:outline-none focus:border-indigo-500 transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {ROLES.map((r) => (
