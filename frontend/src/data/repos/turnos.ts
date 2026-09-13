@@ -30,7 +30,10 @@ export interface TurnosRepositorio {
   listarTurnos(): Promise<BookingEvent[]>;
   reservarTurno(input: ReservarTurnoInput): Promise<ReservarTurnoResultado>;
   cancelarTurno(id: string): Promise<void>;
-  obtenerDisponibilidad(profesionalId: string, fecha: string): Promise<DisponibilidadDTO>;
+  obtenerDisponibilidad(
+    profesionalId: string,
+    fecha: string,
+  ): Promise<DisponibilidadDTO>;
   listarMisTurnos(clienteId: string): Promise<MisTurnoDTO[]>;
   cancelarTurnoCliente(id: string): Promise<MisTurnoDTO>;
 }
@@ -52,7 +55,11 @@ const semillaMisTurnos = (): MisTurnoDTO[] => [
     estado: "pendiente_pago",
     created_at: new Date().toISOString(),
     servicios: { nombre: "Corte Clásico", precio: 30000, duracion_minutos: 45 },
-    profesionales: { id: "elena", especialidad: "Barbería", usuarios: { nombre: "Elena Ríos" } },
+    profesionales: {
+      id: "elena",
+      especialidad: "Barbería",
+      usuarios: { nombre: "Elena Ríos" },
+    },
   },
   {
     id: "mis-0002",
@@ -61,8 +68,16 @@ const semillaMisTurnos = (): MisTurnoDTO[] => [
     hora_fin: "15:00:00",
     estado: "confirmado",
     created_at: new Date().toISOString(),
-    servicios: { nombre: "Afeitado Clásico", precio: 18000, duracion_minutos: 30 },
-    profesionales: { id: "carlos", especialidad: "Estilismo", usuarios: { nombre: "Carlos Méndez" } },
+    servicios: {
+      nombre: "Afeitado Clásico",
+      precio: 18000,
+      duracion_minutos: 30,
+    },
+    profesionales: {
+      id: "carlos",
+      especialidad: "Estilismo",
+      usuarios: { nombre: "Carlos Méndez" },
+    },
   },
 ];
 
@@ -98,14 +113,11 @@ export const turnosRepositorioMock: TurnosRepositorio = {
       return d.toTimeString().slice(0, 5);
     };
 
-    const fechaConsulta =
-      fecha || new Date().toISOString().slice(0, 10);
+    const fechaConsulta = fecha || new Date().toISOString().slice(0, 10);
 
     // Ausencias en memoria del profesional para la fecha consultada
     const ausencias = obtenerAusenciasMock().filter(
-      (a) =>
-        a.fecha === fechaConsulta &&
-        a.profesional_id === profesionalId,
+      (a) => a.fecha === fechaConsulta && a.profesional_id === profesionalId,
     );
 
     // Día completo: sin disponibilidad alguna

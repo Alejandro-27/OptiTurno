@@ -1,8 +1,5 @@
 import type { SucursalDTO } from "../../api/dto";
-import {
-  obtenerSucursales,
-  obtenerMiSucursal,
-} from "../../api/negocios.api";
+import { obtenerSucursales, obtenerMiSucursal } from "../../api/negocios.api";
 import { getSessionToken } from "../session";
 
 export interface SucursalesRepositorio {

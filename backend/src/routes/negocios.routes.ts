@@ -1,4 +1,4 @@
-import fastify, { FastifyInstance } from "fastify";
+import { FastifyInstance } from "fastify";
 import {
   listarServiciosHandler,
   listarProfesionalesHandler,
@@ -70,7 +70,12 @@ export const negociosRoutes = async (fastify: FastifyInstance) => {
   );
   fastify.post(
     "/servicios",
-    { preHandler: [verificarAutenticacion, permitirRoles(["admin_negocio", "superadmin"])] },
+    {
+      preHandler: [
+        verificarAutenticacion,
+        permitirRoles(["admin_negocio", "superadmin"]),
+      ],
+    },
     crearServicioHandler,
   );
   fastify.put(

@@ -1,17 +1,12 @@
 import React from "react";
 import type { DisponibilidadDTO } from "../../api/dto";
 
-const MESES_CORTO = [
-  "Ene", "Feb", "Mar", "Abr", "May", "Jun",
-  "Jul", "Ago", "Sep", "Oct", "Nov", "Dic",
-];
-
 const DIAS_CORTO = ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"];
 
 const A_HORA12 = (hora24: string): string => {
   const [h, m] = hora24.split(":").map(Number);
   const esPM = h >= 12;
-  const hora12 = ((h % 12) || 12).toString().padStart(2, "0");
+  const hora12 = (h % 12 || 12).toString().padStart(2, "0");
   return `${hora12}:${String(m).padStart(2, "0")} ${esPM ? "PM" : "AM"}`;
 };
 
@@ -43,9 +38,7 @@ const construirSlots = (
     const finSlot = new Date(`1970-01-01T${s}:00`);
     finSlot.setMinutes(finSlot.getMinutes() + 30);
     const finS = finSlot.toTimeString().slice(0, 5);
-    return !ocupados.some(
-      (o) => !(finS <= o.inicio || s >= o.fin),
-    );
+    return !ocupados.some((o) => !(finS <= o.inicio || s >= o.fin));
   });
 
   const ocupado = slots.filter((s) => !disponible.includes(s));
@@ -94,7 +87,9 @@ export default function SlotScheduler({
                     : "border-border-subtle bg-white text-slate-600 hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-400 dark:hover:border-slate-700"
                 }`}
               >
-                <span className="text-[10px] font-bold">{DIAS_CORTO[dateObj.getDay()]}</span>
+                <span className="text-[10px] font-bold">
+                  {DIAS_CORTO[dateObj.getDay()]}
+                </span>
                 <span className="mt-0.5 font-mono text-sm font-extrabold">
                   {dateObj.getDate()}
                 </span>

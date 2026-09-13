@@ -50,8 +50,7 @@ const TITULOS: Record<SeccionCliente, string> = {
 };
 
 const SUBTITULOS: Record<SeccionCliente, string> = {
-  reservar:
-    "Explora los servicios disponibles y agenda tu horario preferido.",
+  reservar: "Explora los servicios disponibles y agenda tu horario preferido.",
   turnos: "Historial de tus reservas y cancelaciones.",
   perfil: "Actualiza tus datos de contacto para recibir tus recordatorios.",
 };

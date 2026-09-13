@@ -308,7 +308,11 @@ export const profesionalesService = {
     }
 
     // 2. Limpiar el perfil espejo 'usuarios' (mejor esfuerzo)
-    await supabase.from("usuarios").delete().eq("id", profesional.usuario_id).eq("rol", "empleado");
+    await supabase
+      .from("usuarios")
+      .delete()
+      .eq("id", profesional.usuario_id)
+      .eq("rol", "empleado");
 
     return { id, eliminado: true };
   },

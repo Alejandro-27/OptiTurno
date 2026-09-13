@@ -64,7 +64,9 @@ export default function AdminAusencias() {
       setHoraInicio("");
       setHoraFin("");
     } catch (err) {
-      setErrorText(err instanceof Error ? err.message : "No se pudo registrar.");
+      setErrorText(
+        err instanceof Error ? err.message : "No se pudo registrar.",
+      );
     } finally {
       setGuardando(false);
     }
@@ -77,9 +79,7 @@ export default function AdminAusencias() {
       await eliminarAusencia(id);
       setOkText("Ausencia eliminada.");
     } catch (err) {
-      setErrorText(
-        err instanceof Error ? err.message : "No se pudo eliminar.",
-      );
+      setErrorText(err instanceof Error ? err.message : "No se pudo eliminar.");
     }
   };
 

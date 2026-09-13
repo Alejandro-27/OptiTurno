@@ -14,7 +14,10 @@ export interface CrearProfesionalInput {
 export const crearProfesional = async (
   datos: CrearProfesionalInput,
 ): Promise<ProfesionalDTO> => {
-  const { data } = await apiClient.post<ProfesionalDTO>("/profesionales", datos);
+  const { data } = await apiClient.post<ProfesionalDTO>(
+    "/profesionales",
+    datos,
+  );
   return data;
 };
 

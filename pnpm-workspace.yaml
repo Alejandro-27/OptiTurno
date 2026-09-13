@@ -3,9 +3,9 @@
 #   esbuild: true
 #   protobufjs: false
 packages:
-  - 'frontend'
-  - 'backend'
+  - "frontend"
+  - "backend"
 allowBuilds:
-  '@google/genai': false
+  "@google/genai": false
   esbuild: false
   protobufjs: false

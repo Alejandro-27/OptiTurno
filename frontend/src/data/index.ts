@@ -25,7 +25,10 @@ import {
   ausenciasRepositorioMock,
   ausenciasRepositorioApi,
 } from "./repos/ausencias";
-import { usuariosRepositorioMock, usuariosRepositorioApi } from "./repos/usuarios";
+import {
+  usuariosRepositorioMock,
+  usuariosRepositorioApi,
+} from "./repos/usuarios";
 
 export const repositorios = usarMocks()
   ? {

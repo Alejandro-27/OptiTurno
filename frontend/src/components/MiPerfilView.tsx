@@ -55,10 +55,7 @@ export default function MiPerfilView() {
         </div>
       )}
 
-      <form
-        onSubmit={guardar}
-        className="card space-y-4 p-5 shadow-sm"
-      >
+      <form onSubmit={guardar} className="card space-y-4 p-5 shadow-sm">
         <div className="space-y-1.5">
           <label className="label-overline block">Nombre Completo</label>
           <div className="relative">

@@ -11,7 +11,9 @@ export interface CrearAusenciaInput {
 
 // Resuelve el vínculo 'profesionales' de un usuario autenticado.
 // Devuelve null si la cuenta no es un profesional de alguna sucursal.
-export const resolverProfesionalDeUsuarioService = async (usuarioId: string) => {
+export const resolverProfesionalDeUsuarioService = async (
+  usuarioId: string,
+) => {
   const { data, error } = await supabase
     .from("profesionales")
     .select("id, sucursal_id")
@@ -38,14 +40,8 @@ export const listarAusenciasService = async (profesionalId: string) => {
 // - Sin horas  -> día completo (el profesional no atiende).
 // - Con horas  -> franja dentro del día (bloque ocupado en la agenda).
 export const crearAusenciasService = async (input: CrearAusenciaInput) => {
-  const {
-    profesional_id,
-    fecha,
-    fecha_hasta,
-    hora_inicio,
-    hora_fin,
-    motivo,
-  } = input;
+  const { profesional_id, fecha, fecha_hasta, hora_inicio, hora_fin, motivo } =
+    input;
 
   if (!profesional_id || !fecha) {
     throw { status: 400, message: "Faltan campos obligatorios." };

@@ -28,7 +28,10 @@ export default function ServiceCard({ svc, onSelect }: Props) {
         </div>
       </div>
 
-      <button onClick={() => onSelect(svc)} className="btn btn-primary px-3 py-1.5">
+      <button
+        onClick={() => onSelect(svc)}
+        className="btn btn-primary px-3 py-1.5"
+      >
         Agendar
       </button>
     </div>

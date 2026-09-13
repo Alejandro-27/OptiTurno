@@ -1,12 +1,8 @@
 import React, { useState, useEffect } from "react";
 import {
-  Calendar,
-  Clock,
-  Check,
   Save,
   ToggleLeft,
   ToggleRight,
-  Info,
   AlertTriangle,
   Coffee,
   Sun,
@@ -78,9 +74,7 @@ export default function AdminAvailability() {
       setShowToast(true);
       setTimeout(() => setShowToast(false), 4000);
     } catch (err) {
-      setErrorText(
-        err instanceof Error ? err.message : "No se pudo guardar.",
-      );
+      setErrorText(err instanceof Error ? err.message : "No se pudo guardar.");
     } finally {
       setIsLoading(false);
     }

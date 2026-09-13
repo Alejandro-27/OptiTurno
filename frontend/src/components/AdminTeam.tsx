@@ -7,7 +7,6 @@ import {
   Mail,
   Phone,
   Briefcase,
-  Sparkles,
   Search,
   Edit3,
   Trash2,
@@ -87,7 +86,9 @@ export default function AdminTeam() {
       setIsDrawerOpen(false);
     } catch (err) {
       setOperationError(
-        err instanceof Error ? err.message : "No se pudo guardar el profesional.",
+        err instanceof Error
+          ? err.message
+          : "No se pudo guardar el profesional.",
       );
     } finally {
       setSaving(false);
@@ -103,7 +104,9 @@ export default function AdminTeam() {
       setPendingDelete(null);
     } catch (err) {
       setOperationError(
-        err instanceof Error ? err.message : "No se pudo eliminar el profesional.",
+        err instanceof Error
+          ? err.message
+          : "No se pudo eliminar el profesional.",
       );
     } finally {
       setDeleting(false);
@@ -288,7 +291,11 @@ export default function AdminTeam() {
                 </button>
               </div>
 
-              <form ref={formRef} onSubmit={handleSubmit} className="mt-6 space-y-4">
+              <form
+                ref={formRef}
+                onSubmit={handleSubmit}
+                className="mt-6 space-y-4"
+              >
                 <div className="space-y-1.5">
                   <label className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider">
                     Nombre completo
@@ -305,7 +312,10 @@ export default function AdminTeam() {
 
                 <div className="space-y-1.5">
                   <label className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider flex items-center gap-1">
-                    <Mail size={10} className="text-indigo-600 dark:text-indigo-400" />
+                    <Mail
+                      size={10}
+                      className="text-indigo-600 dark:text-indigo-400"
+                    />
                     {editingProf
                       ? "Correo electrónico (no editable)"
                       : "Correo electrónico (crea su cuenta de acceso)"}
@@ -323,7 +333,10 @@ export default function AdminTeam() {
 
                 <div className="space-y-1.5">
                   <label className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider flex items-center gap-1">
-                    <Phone size={10} className="text-emerald-600 dark:text-emerald-400" />
+                    <Phone
+                      size={10}
+                      className="text-emerald-600 dark:text-emerald-400"
+                    />
                     Teléfono / WhatsApp (opcional)
                   </label>
                   <input
@@ -337,7 +350,10 @@ export default function AdminTeam() {
 
                 <div className="space-y-1.5">
                   <label className="text-[10px] uppercase font-bold text-slate-500 dark:text-slate-400 tracking-wider flex items-center gap-1">
-                    <Briefcase size={10} className="text-amber-600 dark:text-amber-400" />
+                    <Briefcase
+                      size={10}
+                      className="text-amber-600 dark:text-amber-400"
+                    />
                     Especialidad (opcional)
                   </label>
                   <input
@@ -372,7 +388,11 @@ export default function AdminTeam() {
                   disabled={saving}
                   className="flex-1 py-2.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white rounded-xl text-xs font-bold uppercase tracking-wider transition-all shadow-md shadow-indigo-600/15"
                 >
-                  {saving ? "Guardando..." : editingProf ? "Guardar" : "Registrar"}
+                  {saving
+                    ? "Guardando..."
+                    : editingProf
+                      ? "Guardar"
+                      : "Registrar"}
                 </button>
               </div>
             </div>
@@ -403,8 +423,9 @@ export default function AdminTeam() {
               </div>
             </div>
             <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-              Se eliminará a <span className="font-bold">{pendingDelete.nombre}</span>{" "}
-              de la sucursal. Sus turnos y horarios asignados también se borrarán.
+              Se eliminará a{" "}
+              <span className="font-bold">{pendingDelete.nombre}</span> de la
+              sucursal. Sus turnos y horarios asignados también se borrarán.
             </p>
             {operationError && (
               <div className="flex items-center gap-2 text-[11px] font-semibold text-rose-600 dark:text-rose-400 bg-rose-500/10 border border-rose-500/20 rounded-lg px-3 py-2">

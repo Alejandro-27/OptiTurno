@@ -1,0 +1,12 @@
+node_modules
+dist
+backend/dist
+frontend/dist
+.husky/_
+Collections
+pnpm-lock.yaml
+.agents
+backend/.agents
+frontend/.agents
+README.md
+design.md

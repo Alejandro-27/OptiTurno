@@ -4,7 +4,7 @@ export interface Service {
   category: string;
   price: number;
   duration: number;
-  status: 'Activo' | 'Pausado';
+  status: "Activo" | "Pausado";
   icon: string;
   sucursalId?: string;
 }
@@ -16,7 +16,7 @@ export interface BookingEvent {
   timeStart: string; // "08:00" etc
   timeEnd: string;
   columnId: string; // "carlos", "elena" etc
-  color: 'primary' | 'secondary' | 'tertiary';
+  color: "primary" | "secondary" | "tertiary";
   icon: string;
 }
 

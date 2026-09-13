@@ -6,7 +6,15 @@ import type {
   DayAvailability,
   Profesional,
 } from "../types";
-import type { MisTurnoDTO, SesionDTO, UsuarioSesionDTO, AusenciaDTO, CrearAusenciaDTO, UsuarioAdminDTO, EditarUsuarioInputDTO } from "../api/dto";
+import type {
+  MisTurnoDTO,
+  SesionDTO,
+  UsuarioSesionDTO,
+  AusenciaDTO,
+  CrearAusenciaDTO,
+  UsuarioAdminDTO,
+  EditarUsuarioInputDTO,
+} from "../api/dto";
 import {
   serviciosRepositorioMock,
   turnosRepositorioMock,
@@ -15,8 +23,14 @@ import {
   profesionalesRepositorioMock,
   ausenciasRepositorioMock,
 } from "../data/index";
-import type { ReservarTurnoInput, ReservarTurnoResultado } from "../data/repos/turnos";
-import type { DatosCrearProfesional, DatosEditarProfesional } from "../data/repos/profesionales";
+import type {
+  ReservarTurnoInput,
+  ReservarTurnoResultado,
+} from "../data/repos/turnos";
+import type {
+  DatosCrearProfesional,
+  DatosEditarProfesional,
+} from "../data/repos/profesionales";
 import type { RegistrarCuentaInput } from "../data/repos/auth";
 import { repositorios } from "../data/index";
 
@@ -114,9 +128,7 @@ const resolverProfesionalPropio = (
   sesion: SesionDTO | null,
 ): Profesional | null => {
   if (!sesion || sesion.usuario.rol !== "empleado") return null;
-  return (
-    profesionales.find((p) => p.usuarioId === sesion.usuario.id) || null
-  );
+  return profesionales.find((p) => p.usuarioId === sesion.usuario.id) || null;
 };
 
 export async function iniciarApp(): Promise<void> {
@@ -145,9 +157,7 @@ export async function iniciarApp(): Promise<void> {
     ),
     cargarConFallback(
       () =>
-        repositorios.profesionales.listarProfesionales(
-          sucursalId || undefined,
-        ),
+        repositorios.profesionales.listarProfesionales(sucursalId || undefined),
       () => profesionalesRepositorioMock.listarProfesionales(),
     ),
   ]);
@@ -173,7 +183,9 @@ export async function iniciarApp(): Promise<void> {
     ? await cargarConFallback(
         () =>
           propioEmpleado
-            ? repositorios.profesionales.obtenerHorarioSemanal(propioEmpleado.id)
+            ? repositorios.profesionales.obtenerHorarioSemanal(
+                propioEmpleado.id,
+              )
             : repositorios.disponibilidad.listarDisponibilidad(),
         () => disponibilidadRepositorioMock.listarDisponibilidad(),
       )
@@ -352,7 +364,10 @@ export async function actualizarPerfil(datos: {
   const perfil = await repositorios.auth.actualizarPerfil(datos);
   setEstado((e) =>
     e.sesion
-      ? { ...e, sesion: { ...e.sesion, usuario: { ...e.sesion.usuario, ...perfil } } }
+      ? {
+          ...e,
+          sesion: { ...e.sesion, usuario: { ...e.sesion.usuario, ...perfil } },
+        }
       : e,
   );
   return perfil;
@@ -375,7 +390,10 @@ export async function guardarServicio(
     return actualizado;
   }
   const creado = await repositorios.servicios.crearServicio(
-    { ...svc, sucursalId: svc.sucursalId || getEstado().sucursalId || undefined },
+    {
+      ...svc,
+      sucursalId: svc.sucursalId || getEstado().sucursalId || undefined,
+    },
     getEstado().sucursalId || undefined,
   );
   setEstado((e) => ({
@@ -434,9 +452,8 @@ export function agregarLog(log: ActivityLog): void {
 export async function listarProfesionales(
   sucursalId?: string,
 ): Promise<Profesional[]> {
-  const profesionales = await repositorios.profesionales.listarProfesionales(
-    sucursalId,
-  );
+  const profesionales =
+    await repositorios.profesionales.listarProfesionales(sucursalId);
   return profesionales;
 }
 

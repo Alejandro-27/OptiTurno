@@ -9,11 +9,7 @@ import {
 import { initialServices } from "../data";
 import { repositorios, turnosRepositorioMock } from "../data/index";
 import type { Service, Profesional } from "../types";
-import {
-  reservarTurno,
-  listarProfesionales,
-  useStore,
-} from "../store";
+import { reservarTurno, listarProfesionales, useStore } from "../store";
 import type { DisponibilidadDTO } from "../api/dto";
 import BookingSteps from "./booking/BookingSteps";
 import ServiceCard from "./booking/ServiceCard";
@@ -22,22 +18,43 @@ import SlotScheduler from "./booking/SlotScheduler";
 import TicketResumen from "./booking/TicketResumen";
 
 const SACAR_HORA_24H = (hora12: string): string => {
-  const [hora, minutos] = hora12.replace(/\s*(AM|PM)/i, "").split(":").map(Number);
+  const [hora, minutos] = hora12
+    .replace(/\s*(AM|PM)/i, "")
+    .split(":")
+    .map(Number);
   const esPM = /PM/i.test(hora12);
   const hora24 = esPM ? (hora % 12) + 12 : hora % 12;
   return `${String(hora24).padStart(2, "0")}:${String(minutos).padStart(2, "0")}`;
 };
 
 const DIAS_LARGO = [
-  "Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado",
+  "Domingo",
+  "Lunes",
+  "Martes",
+  "Miércoles",
+  "Jueves",
+  "Viernes",
+  "Sábado",
 ];
 const MESES_CORTO = [
-  "Ene", "Feb", "Mar", "Abr", "May", "Jun",
-  "Jul", "Ago", "Sep", "Oct", "Nov", "Dic",
+  "Ene",
+  "Feb",
+  "Mar",
+  "Abr",
+  "May",
+  "Jun",
+  "Jul",
+  "Ago",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dic",
 ];
 
 // Genera una etiqueta legible tipo "Jueves, Oct 24" y la fecha ISO de hoy + offset
-const fechaDesdeOffset = (offset: number): { etiqueta: string; iso: string } => {
+const fechaDesdeOffset = (
+  offset: number,
+): { etiqueta: string; iso: string } => {
   const d = new Date();
   d.setDate(d.getDate() + offset);
   const iso = d.toISOString().slice(0, 10);
@@ -55,11 +72,13 @@ export default function ClientPwa() {
   );
   const [profesionales, setProfesionales] = useState<Profesional[]>([]);
   const [profesionalesCargando, setProfesionalesCargando] = useState(false);
-  const [selectedProfesional, setSelectedProfesional] = useState<Profesional | null>(null);
+  const [selectedProfesional, setSelectedProfesional] =
+    useState<Profesional | null>(null);
   const [selectedDate, setSelectedDate] = useState<string>("");
   const [selectedDateISO, setSelectedDateISO] = useState<string>("");
   const [selectedHour, setSelectedHour] = useState<string>("");
-  const [disponibilidad, setDisponibilidad] = useState<DisponibilidadDTO | null>(null);
+  const [disponibilidad, setDisponibilidad] =
+    useState<DisponibilidadDTO | null>(null);
   const [disponibilidadCargando, setDisponibilidadCargando] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -146,7 +165,9 @@ export default function ClientPwa() {
       setStep(5);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "No se pudo pre-reservar el turno.",
+        err instanceof Error
+          ? err.message
+          : "No se pudo pre-reservar el turno.",
       );
     } finally {
       setIsSubmitting(false);
@@ -169,9 +190,7 @@ export default function ClientPwa() {
 
   const infoServicio = (
     <div className="space-y-1 text-left">
-      <span className="label-overline block">
-        {selectedService.category}
-      </span>
+      <span className="label-overline block">{selectedService.category}</span>
       <h3 className="text-sm font-display font-semibold text-slate-900 dark:text-slate-50">
         {selectedService.name}
       </h3>
@@ -230,7 +249,9 @@ export default function ClientPwa() {
           {error && (
             <div className="mx-4 mt-3 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-red-600 dark:text-red-400">
               <AlertTriangle size={14} className="mt-0.5 flex-shrink-0" />
-              <p className="text-[11px] font-semibold leading-relaxed">{error}</p>
+              <p className="text-[11px] font-semibold leading-relaxed">
+                {error}
+              </p>
             </div>
           )}
 
@@ -241,7 +262,11 @@ export default function ClientPwa() {
                 <div className="relative z-20 space-y-1">
                   <div className="flex items-center">
                     {[0, 1, 2, 3, 4].map((i) => (
-                      <Star key={i} size={11} className="fill-amber-400 text-amber-400" />
+                      <Star
+                        key={i}
+                        size={11}
+                        className="fill-amber-400 text-amber-400"
+                      />
                     ))}
                     <span className="pl-1 text-[9px] font-bold text-white/90">
                       5.0 (250 reseñas)
@@ -346,9 +371,7 @@ export default function ClientPwa() {
               profesional={selectedProfesional}
               hora={selectedHour}
               fecha={selectedDate}
-              onGoogle={() =>
-                alert("¡Agregado a Google Calendar con éxito!")
-              }
+              onGoogle={() => alert("¡Agregado a Google Calendar con éxito!")}
               onWhatsApp={() => alert("¡Enviando ticket digital!")}
               onAgendarOtro={resetFlow}
             />

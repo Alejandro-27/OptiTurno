@@ -35,8 +35,8 @@ export default function TicketResumen({
           ¡Cita Confirmada con Éxito!
         </h3>
         <p className="mx-auto max-w-xs text-xs leading-relaxed text-slate-600 dark:text-slate-400">
-          Tu espacio quedó reservado. Te notificaremos a tu número de
-          WhatsApp registrado.
+          Tu espacio quedó reservado. Te notificaremos a tu número de WhatsApp
+          registrado.
         </p>
       </div>
 

@@ -35,8 +35,7 @@ const formatearFecha = (iso: string): string => {
   return `${dia}/${mes}/${anio}`;
 };
 
-const formatearHora = (hora: string): string =>
-  hora.slice(0, 5);
+const formatearHora = (hora: string): string => hora.slice(0, 5);
 
 export default function MisTurnosView() {
   const misTurnos = useStore((s) => s.misTurnos);
@@ -114,9 +113,7 @@ export default function MisTurnosView() {
       ) : (
         <div className="space-y-3">
           {misTurnos.map((turno) => {
-            const estado =
-              ESTADOS[turno.estado] ||
-              ESTADOS.completado;
+            const estado = ESTADOS[turno.estado] || ESTADOS.completado;
             const cancelado = turno.estado === "cancelado";
             return (
               <div
@@ -135,8 +132,8 @@ export default function MisTurnosView() {
                         {turno.servicios?.nombre || "Servicio"}
                       </h4>
                       <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                        {turno.profesionales?.usuarios.nombre || "Profesional"} ·{" "}
-                        {turno.profesionales?.especialidad || "Especialidad"}
+                        {turno.profesionales?.usuarios.nombre || "Profesional"}{" "}
+                        · {turno.profesionales?.especialidad || "Especialidad"}
                       </p>
                     </div>
                   </div>
@@ -160,7 +157,8 @@ export default function MisTurnosView() {
                     {formatearHora(turno.hora_fin)}
                   </span>
                   <span className="ml-auto font-mono font-bold text-slate-800 dark:text-slate-200">
-                    ${(turno.servicios?.precio || 0).toLocaleString("es-CO")} COP
+                    ${(turno.servicios?.precio || 0).toLocaleString("es-CO")}{" "}
+                    COP
                   </span>
                 </div>
 

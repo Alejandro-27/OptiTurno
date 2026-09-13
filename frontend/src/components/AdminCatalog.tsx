@@ -5,15 +5,12 @@ import {
   Search,
   Edit3,
   Trash2,
-  Check,
   X,
   ShieldAlert,
   Coins,
   Hourglass,
-  Tag,
   ToggleLeft,
   ToggleRight,
-  ListFilter,
 } from "lucide-react";
 import { Service } from "../types";
 import { guardarServicio, eliminarServicio, useStore } from "../store";
@@ -98,13 +95,17 @@ export default function AdminCatalog() {
       duration: Number(formDuration),
       status: formStatus,
       icon: editingService?.icon || "scissors",
-    }).then(() => {
-      setIsDrawerOpen(false);
-    }).catch((err) => {
-      setOperationError(
-        err instanceof Error ? err.message : "No se pudo guardar el servicio.",
-      );
-    });
+    })
+      .then(() => {
+        setIsDrawerOpen(false);
+      })
+      .catch((err) => {
+        setOperationError(
+          err instanceof Error
+            ? err.message
+            : "No se pudo guardar el servicio.",
+        );
+      });
   };
 
   const filteredServices = servicios.filter((s) => {
@@ -213,64 +214,64 @@ export default function AdminCatalog() {
                     <td className="p-4 text-xs font-mono font-semibold text-slate-600 dark:text-slate-300 hidden lg:table-cell">
                       {svc.duration} min
                     </td>
-                  <td className="p-4 text-xs font-mono font-bold text-slate-900 dark:text-slate-100">
-                    ${svc.price.toLocaleString("es-CO")}
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center justify-center gap-2">
-                      <span
-                        className={`inline-block w-2 h-2 rounded-full ${svc.status === "Activo" ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.7)]" : "bg-rose-500"}`}
-                      ></span>
-                      <span
-                        className={`text-[11px] font-bold ${svc.status === "Activo" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"}`}
-                      >
-                        {svc.status}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="p-4 text-right">
-                    <div className="flex justify-end items-center gap-1">
-                      <button
-                        onClick={() => handleToggleStatus(svc)}
-                        title="Alternar Estado"
-                        className="p-1 px-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
-                      >
-                        {svc.status === "Activo" ? (
-                          <ToggleRight size={16} />
-                        ) : (
-                          <ToggleLeft size={16} />
-                        )}
-                      </button>
-                      <button
-                        onClick={() => openEditDrawer(svc)}
-                        title="Editar"
-                        className="p-1 px-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
-                      >
-                        <Edit3 size={14} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(svc.id)}
-                        title="Eliminar"
-                        className="p-1 px-1.5 rounded hover:bg-rose-50 dark:hover:bg-red-950 text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {filteredServices.length === 0 && (
-                <tr>
-                  <td
-                    colSpan={6}
-                    className="p-8 text-center text-xs text-slate-500"
-                  >
-                    No se encontraron servicios que coincidan con los filtros.
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                    <td className="p-4 text-xs font-mono font-bold text-slate-900 dark:text-slate-100">
+                      ${svc.price.toLocaleString("es-CO")}
+                    </td>
+                    <td className="p-4">
+                      <div className="flex items-center justify-center gap-2">
+                        <span
+                          className={`inline-block w-2 h-2 rounded-full ${svc.status === "Activo" ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.7)]" : "bg-rose-500"}`}
+                        ></span>
+                        <span
+                          className={`text-[11px] font-bold ${svc.status === "Activo" ? "text-emerald-600 dark:text-emerald-400" : "text-slate-500 dark:text-slate-400"}`}
+                        >
+                          {svc.status}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="p-4 text-right">
+                      <div className="flex justify-end items-center gap-1">
+                        <button
+                          onClick={() => handleToggleStatus(svc)}
+                          title="Alternar Estado"
+                          className="p-1 px-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors"
+                        >
+                          {svc.status === "Activo" ? (
+                            <ToggleRight size={16} />
+                          ) : (
+                            <ToggleLeft size={16} />
+                          )}
+                        </button>
+                        <button
+                          onClick={() => openEditDrawer(svc)}
+                          title="Editar"
+                          className="p-1 px-1.5 rounded hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                        >
+                          <Edit3 size={14} />
+                        </button>
+                        <button
+                          onClick={() => handleDelete(svc.id)}
+                          title="Eliminar"
+                          className="p-1 px-1.5 rounded hover:bg-rose-50 dark:hover:bg-red-950 text-slate-400 hover:text-red-600 dark:hover:text-red-400 transition-colors"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+                {filteredServices.length === 0 && (
+                  <tr>
+                    <td
+                      colSpan={6}
+                      className="p-8 text-center text-xs text-slate-500"
+                    >
+                      No se encontraron servicios que coincidan con los filtros.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -407,8 +408,7 @@ export default function AdminCatalog() {
                     </button>
                   </div>
                 </div>
-
-                </form>
+              </form>
             </div>
 
             <div className="bg-slate-50 dark:bg-slate-950/60 p-4 border-t border-border-subtle dark:border-slate-800 flex flex-col gap-3 rounded-b-2xl">

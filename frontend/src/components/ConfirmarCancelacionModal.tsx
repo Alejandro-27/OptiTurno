@@ -1,5 +1,11 @@
 import React from "react";
-import { AlertCircle, AlertTriangle, Loader2, X, CalendarCheck } from "lucide-react";
+import {
+  AlertCircle,
+  AlertTriangle,
+  Loader2,
+  X,
+  CalendarCheck,
+} from "lucide-react";
 import type { MisTurnoDTO } from "../api/dto";
 
 const formatearFecha = (iso: string): string => {

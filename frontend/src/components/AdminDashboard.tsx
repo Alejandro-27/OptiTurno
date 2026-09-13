@@ -4,14 +4,12 @@ import {
   Calendar,
   AlertCircle,
   UserPlus,
-  TrendingUp,
   Sparkles,
   Clock,
   CheckCircle,
   AlertTriangle,
   Mail,
   ArrowRight,
-  UserCheck,
 } from "lucide-react";
 import { ActivityLog } from "../types";
 import { agregarLog, useStore } from "../store";
@@ -340,10 +338,7 @@ export default function AdminDashboard({
                 y2="150"
               />
               {/* Area */}
-              <path
-                d={area}
-                fill="url(#gradient-area-fill)"
-              ></path>
+              <path d={area} fill="url(#gradient-area-fill)"></path>
               {/* Neon Line */}
               <path
                 d={linea}
@@ -353,7 +348,9 @@ export default function AdminDashboard({
               ></path>
             </svg>
             <div className="absolute inset-x-0 bottom-0 flex justify-between text-[10px] text-slate-500 dark:text-slate-400 px-2 font-medium">
-              {datosPico.labels.map((l) => <span key={l}>{l}</span>)}
+              {datosPico.labels.map((l) => (
+                <span key={l}>{l}</span>
+              ))}
             </div>
           </div>
 

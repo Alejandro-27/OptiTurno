@@ -88,7 +88,8 @@ export const profesionalesRepositorioMock: ProfesionalesRepositorio = {
     const actualizado: Profesional = {
       ...profesionalesMock[indice],
       nombre: datos.nombre ?? profesionalesMock[indice].nombre,
-      especialidad: datos.especialidad ?? profesionalesMock[indice].especialidad,
+      especialidad:
+        datos.especialidad ?? profesionalesMock[indice].especialidad,
     };
     profesionalesMock[indice] = actualizado;
     return { ...actualizado };
@@ -102,14 +103,20 @@ export const profesionalesRepositorioMock: ProfesionalesRepositorio = {
     const indice = profesionalesMock.findIndex((p) => p.id === id);
     if (indice === -1) throw new Error("El profesional no existe.");
     if (!horariosMock.has(id)) {
-      horariosMock.set(id, defaultAvailability.map((d) => ({ ...d })));
+      horariosMock.set(
+        id,
+        defaultAvailability.map((d) => ({ ...d })),
+      );
     }
     return horariosMock.get(id)!.map((d) => ({ ...d }));
   },
   async guardarHorarioSemanal(id, schedule) {
     const indice = profesionalesMock.findIndex((p) => p.id === id);
     if (indice === -1) throw new Error("El profesional no existe.");
-    horariosMock.set(id, schedule.map((d) => ({ ...d })));
+    horariosMock.set(
+      id,
+      schedule.map((d) => ({ ...d })),
+    );
     return horariosMock.get(id)!.map((d) => ({ ...d }));
   },
 };
@@ -120,7 +127,9 @@ const horariosMock = new Map<string, DayAvailability[]>();
 export const profesionalesRepositorioApi: ProfesionalesRepositorio = {
   async listarProfesionales(sucursalId) {
     if (!sucursalId) {
-      throw new Error("Se requiere el id de la sucursal para listar profesionales.");
+      throw new Error(
+        "Se requiere el id de la sucursal para listar profesionales.",
+      );
     }
     const dtos = await obtenerProfesionales(sucursalId);
     return dtos.map(profesionalDtoToUI);

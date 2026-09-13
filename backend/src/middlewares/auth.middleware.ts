@@ -1,6 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { supabase } from "../config/database";
-import { error } from "node:console";
 
 // Extendemos los tipos de FastifyRequest para poder guardar los datos del usuario logueado
 declare module "fastify" {

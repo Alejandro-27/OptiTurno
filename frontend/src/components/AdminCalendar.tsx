@@ -3,12 +3,10 @@ import {
   Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
-  Bell,
   MessageSquare,
   Edit2,
   CalendarX,
   Check,
-  Send,
   CheckCircle2,
   Search,
   Clock,
@@ -58,21 +56,6 @@ export default function AdminCalendar() {
     name: `Sillón ${i + 1}`,
     staff: p.nombre,
   }));
-
-  const monthsList = [
-    "Enero",
-    "Febrero",
-    "Marzo",
-    "Abril",
-    "Mayo",
-    "Junio",
-    "Julio",
-    "Agosto",
-    "Septiembre",
-    "Octubre",
-    "Noviembre",
-    "Diciembre",
-  ];
 
   // NAVEGACIÓN DE FECHA (ANTERIOR / SIGUIENTE)
   const handleNavigateDate = (direction: "prev" | "next") => {
