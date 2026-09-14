@@ -6,17 +6,19 @@ WORKDIR /app
 # 1. Activar pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# 2. Copiar archivos de dependencias
-COPY package.json pnpm-lock.yaml ./
+# 2. Copiar SOLO el package.json (quitamos el lockfile para evitar el error)
+COPY package.json ./
 
-# 3. SOLUCIÓN AL ERROR: Permitir scripts de build (necesario para esbuild/tsx)
+# 3. Permitir scripts de build
 RUN echo "ignore-scripts=false" > .npmrc
-RUN pnpm install --frozen-lockfile
 
-# 4. Copiar el resto del código (tsconfig.json, src/, etc.)
+# 4. Instalar dependencias
+RUN pnpm install
+
+# 5. Copiar el resto del código (tsconfig.json, src/, etc.)
 COPY . .
 
-# 5. Compilar TypeScript
+# 6. Compilar TypeScript
 RUN pnpm build
 
 
@@ -25,25 +27,16 @@ FROM node:24-alpine
 
 WORKDIR /app
 
-# 1. Activar pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# 2. Copiar archivos de dependencias
-COPY package.json pnpm-lock.yaml ./
-
-# 3. Permitir scripts también en producción (por si alguna dependencia lo necesita)
+COPY package.json ./
 RUN echo "ignore-scripts=false" > .npmrc
-RUN pnpm install --prod --frozen-lockfile
+RUN pnpm install --prod
 
-# 4. Copiar los archivos compilados desde la etapa de builder
 COPY --from=builder /app/dist ./dist
 
-# 5. Puerto (Render inyecta su propio puerto, pero exponemos 5000 por si acaso)
 EXPOSE 5000
-
-# 6. Entorno de producción
 ENV NODE_ENV=production
 ENV PORT=5000
 
-# 7. Comando de inicio (¡Asegúrate de que tu archivo compilado se llame app.js!)
 CMD ["node", "dist/app.js"]
