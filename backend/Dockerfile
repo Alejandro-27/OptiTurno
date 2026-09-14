@@ -9,16 +9,13 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 # 2. Copiar solo el package.json
 COPY package.json ./
 
-# 3. SOLUCIÓN DEFINITIVA: Permitir scripts de build (evita el error de esbuild/tsx)
-RUN echo "ignore-scripts=false" > .npmrc
+# 3. SOLUCIÓN DEFINITIVA PARA PNPM V9: Aprobar esbuild para que ejecute sus scripts
+RUN pnpm install --config.onlyBuiltDependencies=esbuild
 
-# 4. Instalar dependencias
-RUN pnpm install
-
-# 5. Copiar el resto del código (tsconfig.json, src/, etc.)
+# 4. Copiar el resto del código (tsconfig.json, src/, etc.)
 COPY . .
 
-# 6. Compilar TypeScript
+# 5. Compilar TypeScript
 RUN pnpm build
 
 
@@ -33,7 +30,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 # 2. Copiar package.json
 COPY package.json ./
 
-# 3. Instalar solo dependencias de producción (aquí no fallará porque esbuild es devDependency)
+# 3. Instalar solo dependencias de producción (aquí no falla porque esbuild es dev)
 RUN pnpm install --prod
 
 # 4. Copiar los archivos compilados desde la etapa de builder
@@ -44,5 +41,5 @@ EXPOSE 5000
 ENV NODE_ENV=production
 ENV PORT=5000
 
-# 6. Comando de inicio 
+# 6. Comando de inicio
 CMD ["node", "dist/app.js"]
