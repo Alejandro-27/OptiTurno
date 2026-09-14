@@ -103,9 +103,9 @@ export function usuarioDTODesdeSesion(usuario: {
   nombre?: string;
 }): UsuarioSesionDTO {
   return {
-    id: usuario.id || "usuario-demo",
+    id: usuario.id || "usuario-invitado",
     email: usuario.email || "",
-    nombre: usuario.nombre || "Usuario Demo",
+    nombre: usuario.nombre || "Usuario invitado",
     rol: usuario.rol || "superadmin",
   };
 }

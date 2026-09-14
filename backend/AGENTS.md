@@ -85,11 +85,11 @@ Si falta `SUPABASE_ANON_KEY`, el login devuelve "El login no esta disponible" �
 | `GET /api/turnos/mios`                                 | JWT (cliente)                     | Historial del cliente                                                                                                       |
 | `PATCH /api/turnos/:id/cancelar`                       | JWT (cliente)                     | Valida propiedad                                                                                                            |
 | `POST /api/turnos/limpiar-expirados`                   | admin_negocio/superadmin          |                                                                                                                             |
-| `POST /api/seed`                                       | superadmin                        | Datos demo                                                                                                                  |
+| `POST /api/seed`                                       | superadmin                        | Datos de prueba                                                                                                             |
 
 ## Queries y datos
 
 - Tablas: `usuarios`, `negocios`, `sucursales`, `servicios`, `profesionales`, `turnos`, `horarios_laborales`, `profesional_ausencias`.
 - Los joins de `turnos` suelen incluir `servicios (nombre, precio)` y `profesionales (especialidad) → usuarios (nombre)`.
-- El seeder de `negocios.service.ts` es la fuente de datos demo (UUIDs fijos 11111111-…/22222222-…).
+- El seeder de `negocios.service.ts` es la fuente de datos de prueba (UUIDs fijos 11111111-…/22222222-…).
 - Cuidado con el typo histórico `descripción` (con tilde) en un SELECT de servicios — verificar contra el esquema real.

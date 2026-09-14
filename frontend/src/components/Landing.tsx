@@ -12,7 +12,7 @@ import ComoFuncionaSection from "./ComoFuncionaSection";
 import BeneficiosSection from "./BeneficiosSection";
 import ThemeToggle from "./ThemeToggle";
 import { useStore } from "../store";
-import { MODO_DEMO } from "../config/env";
+import { MODO_PRUEBA } from "../config/env";
 import type { SesionDTO } from "../api/dto";
 import { trackEvent } from "../utils/analytics";
 
@@ -50,7 +50,9 @@ export default function Landing() {
                 OptiTurno
               </h1>
               <p className="mt-1 text-[10px] font-medium leading-none text-slate-500 dark:text-slate-400">
-                {MODO_DEMO ? "Modo demostración" : "Conectado a tu comercio"}
+                {MODO_PRUEBA
+                  ? "Conectado a un entorno de prueba"
+                  : "Conectado a tu comercio"}
               </p>
             </div>
           </div>
@@ -188,7 +190,7 @@ export default function Landing() {
         </div>
         <p className="mx-auto mt-8 max-w-6xl border-t border-border-subtle pt-4 text-[10px] text-slate-400 dark:text-slate-500">
           © {new Date().getFullYear()} OptiTurno — SaaS de agendamiento
-          {MODO_DEMO && " · Datos de demostración."}
+          {MODO_PRUEBA && " · Datos de prueba."}
         </p>
       </footer>
     </div>

@@ -33,15 +33,15 @@ export interface AuthRepositorio {
   }): Promise<UsuarioSesionDTO>;
 }
 
-const USUARIO_DEMO = {
+const USUARIO_ADMIN = {
   email: "admin@optiturno.com",
   password: "password123",
 };
 
-const USUARIO_DEMO_DTO: UsuarioSesionDTO = {
-  id: "usr-demo-001",
-  email: USUARIO_DEMO.email,
-  nombre: "Administrador Demo",
+const USUARIO_ADMIN_DTO: UsuarioSesionDTO = {
+  id: "usr-001",
+  email: USUARIO_ADMIN.email,
+  nombre: "Alejandro Vargas",
   rol: "superadmin",
   telefono: null,
 };
@@ -67,12 +67,12 @@ const USUARIO_CLIENTE = {
 const USUARIO_CLIENTE_DTO: UsuarioSesionDTO = {
   id: "usr-1104",
   email: USUARIO_CLIENTE.email,
-  nombre: "Cliente Demo",
+  nombre: "Valentina Rojas",
   rol: "cliente",
   telefono: null,
 };
 
-// Cuentas registradas en memoria durante la sesión del navegador (solo modo demo)
+// Cuentas registradas en memoria durante la sesión del navegador (entorno de prueba)
 const cuentasRegistradas: Array<{
   email: string;
   password: string;
@@ -86,12 +86,12 @@ export const authRepositorioMock: AuthRepositorio = {
   async login(email, password) {
     const normalizado = email.trim().toLowerCase();
     if (
-      normalizado === USUARIO_DEMO.email &&
-      password === USUARIO_DEMO.password
+      normalizado === USUARIO_ADMIN.email &&
+      password === USUARIO_ADMIN.password
     ) {
       const sesion: SesionDTO = {
         token: "TOKEN_SIMULADO_SUPERADMIN",
-        usuario: { ...USUARIO_DEMO_DTO },
+        usuario: { ...USUARIO_ADMIN_DTO },
       };
       setSesionPersistida(sesion);
       return sesion;
@@ -152,7 +152,7 @@ export const authRepositorioMock: AuthRepositorio = {
       telefono: datos.telefono,
       rol: datos.rol || "cliente",
     });
-    // La nueva cuenta también aparece en el panel de gestión de usuarios (demo)
+    // La nueva cuenta también aparece en el panel de gestión de usuarios
     agregarUsuarioMock({
       id,
       nombre: datos.nombre,

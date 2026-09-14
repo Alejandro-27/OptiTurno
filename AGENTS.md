@@ -58,7 +58,7 @@ pnpm build:frontend   # build del frontend (usado por Vercel)
 - **Backend** (`backend/.env`, no versionar): `PORT`, `NODE_ENV`, `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_ANON_KEY` (la usa el cliente anónimo para login).
 - **Frontend** (`frontend/.env`): `VITE_API_URL` (default `http://localhost:5000/api`), `VITE_USE_MOCKS`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_ANON_KEY`.
 
-`MODO_DEMO` se muestra en la UI; el switch mock/API real ocurre en `frontend/src/data/index.ts` (`usarMocks()`). El modo demo solo se activa con `VITE_USE_MOCKS=true` explícito: si falta o es `false`, la app usa la API y nunca muestra textos de demostración. En Vercel las variables se configuran en Settings → Environment Variables (el repo no versiona `.env`).
+`MODO_PRUEBA` se muestra en la UI; el switch mock/API real ocurre en `frontend/src/data/index.ts` (`usarMocks()`). El modo de prueba solo se activa con `VITE_USE_MOCKS=true` explícito: si falta o es `false`, la app usa la API y nunca muestra textos de prueba. En Vercel las variables se configuran en Settings → Environment Variables (el repo no versiona `.env`).
 
 ## Reglas obligatorias para agentes
 
@@ -78,7 +78,7 @@ pnpm build:frontend   # build del frontend (usado por Vercel)
 - Roles: `cliente | admin_negocio | superadmin | empleado` (tabla `usuarios`). `empleado` = profesional registrado con su cuenta; en el panel solo gestiona su propio horario y ausencias.
 - Ausencias: tabla `profesional_ausencias` (día completo = `hora_inicio NULL`; parcial = rango `hora_inicio`/`hora_fin`). El backend y el mock excluyen esas franjas de la disponibilidad y bloquean reservas (409).
 - Gestión de usuarios (superadmin): `GET /api/usuarios` y `PATCH /api/usuarios/:id` cambian email (único; 409 si está tomado; sincroniza Supabase Auth con `email_confirm: true`) y rol. Un superadmin no puede degradarse a sí mismo (400).
-- Cuentas demo del frontend (mock): comercio `admin@optiturno.com`, cliente `cliente@optiturno.com`, empleado `empleado@optiturno.com` — todas con `password123`.
+- Cuentas de prueba del frontend (mock): comercio `admin@optiturno.com`, cliente `cliente@optiturno.com`, empleado `empleado@optiturno.com` — todas con `password123`.
 - El `cliente_id` de una reserva sale del JWT, nunca del body del request.
 - Índice GIST `no_solapar_turnos` en `turnos` evita doble reserva (error 23P01 → 409).
 - El middleware `verificarAutenticacion` valida JWT; `permitirRoles([...])` controla roles.
@@ -90,5 +90,5 @@ El `backend/src/**/*.js` está gitignoreado y son restos obsoletos de compilaci�
 ## Bugs/estado conocido (a febrero 2026)
 
 - Login del backend requiere `SUPABASE_ANON_KEY` en `.env` (el nombre `SUPABASE_KEY` es legacy; verificar ambos).
-- Dashboard y calendario admin usan datos demo hardcodeados (KPIs, fechas, "4 Citas") — es visualización, no datos reales.
+- Dashboard y calendario admin usan datos de prueba hardcodeados (KPIs, fechas, "4 Citas") — es visualización, no datos reales.
 - Sin tests automatizados: está en la hoja de ruta de calidad (lint, formato y typecheck ya cubiertos por CI y hooks).

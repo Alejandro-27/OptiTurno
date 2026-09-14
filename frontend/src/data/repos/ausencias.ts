@@ -11,7 +11,7 @@ export interface AusenciasRepositorio {
   eliminarAusencia(id: string): Promise<void>;
 }
 
-// Ausencias en memoria (modo demo). Accesible desde otros mocks (ej. disponibilidad).
+// Ausencias en memoria (entorno de prueba). Accesible desde otros mocks (ej. disponibilidad).
 let cacheAusencias: AusenciaDTO[] | null = null;
 
 export const obtenerAusenciasMock = (): AusenciaDTO[] => cacheAusencias || [];

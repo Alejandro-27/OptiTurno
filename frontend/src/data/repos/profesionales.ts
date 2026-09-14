@@ -49,21 +49,21 @@ const profesionalesMock: Profesional[] = [
     nombre: "Elena Ríos",
     especialidad: "Barbería y Estilismo",
     usuarioId: "usr-1101",
-    email: "elena@demo.com",
+    email: "elena@elelegante.com",
   },
   {
     id: "carlos",
     nombre: "Carlos Méndez",
     especialidad: "Cortes clásicos y degradados",
     usuarioId: "usr-1102",
-    email: "carlos@demo.com",
+    email: "carlos@elelegante.com",
   },
   {
     id: "andres",
     nombre: "Andrés Barbero",
     especialidad: "Barba y arreglo facial",
     usuarioId: "usr-1103",
-    email: "andres@demo.com",
+    email: "andres@elelegante.com",
   },
 ];
 
@@ -121,7 +121,7 @@ export const profesionalesRepositorioMock: ProfesionalesRepositorio = {
   },
 };
 
-// Horarios semanales por profesional en memoria (modo demo)
+// Horarios semanales por profesional en memoria (entorno de prueba)
 const horariosMock = new Map<string, DayAvailability[]>();
 
 export const profesionalesRepositorioApi: ProfesionalesRepositorio = {

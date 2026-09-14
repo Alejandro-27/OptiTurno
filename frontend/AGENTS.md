@@ -15,7 +15,7 @@ src/
 ├── hooks/useSEO.ts         # Título + meta description/OG por ruta (mapa en el archivo)
 ├── layouts/AdminLayout.tsx # Shell del panel admin (sidebar + drawer + breadcrumbs + Outlet)
 ├── utils/                  # analytics.ts (GA4 silencioso) · ultimoTurno.ts (respaldo de /confirmacion)
-├── data.ts                 # Datos demo seed (servicios, turnos, logs, equipo)
+├── data.ts                 # Datos seed de prueba (servicios, turnos, logs, equipo)
 ├── components/             # Vistas, sub-componentes, páginas (Landing, NotFound, ConfirmacionView…)
 ├── api/                    # Capa HTTP: client axios + DTOs + llamadas por dominio
 ├── data/
@@ -24,7 +24,7 @@ src/
 │   ├── mappers.ts          # DTO → tipos UI
 │   └── repos/              # Repos mock y API por dominio (auth, turnos, servicios…)
 ├── store/index.ts          # Estado global useSyncExternalStore + acciones async
-└── config/env.ts           # VITE_* → constantes (MODO_DEMO, API_URL, GA_MEASUREMENT_ID…)
+└── config/env.ts           # VITE_* → constantes (MODO_PRUEBA, API_URL, GA_MEASUREMENT_ID…)
 ```
 
 ## Comandos
@@ -39,7 +39,7 @@ npx tsc --noEmit      # typecheck obligatorio
 
 Componente → acción del store → `repositorios.<dominio>` (mock o API según `usarMocks()`) → fallback automático a mock si la API falla.
 
-- En modo demo (`VITE_USE_MOCKS=true`) no se necesita backend: login demo `admin@optiturno.com / password123` (comercio), `cliente@optiturno.com / password123` (cliente demo), `empleado@optiturno.com / password123` (profesional).
+- En modo de prueba (`VITE_USE_MOCKS=true`) no se necesita backend: login de prueba `admin@optiturno.com / password123` (comercio), `cliente@optiturno.com / password123` (cliente), `empleado@optiturno.com / password123` (profesional).
 - Al agregar un endpoint al backend: crear contraparte **mock Y API** en `data/repos/` (regla #3 del AGENTS raíz).
 - Los repos API que no tienen endpoint implementado hacen `throw new Error("...")` — el fallback del store los absorbe.
 

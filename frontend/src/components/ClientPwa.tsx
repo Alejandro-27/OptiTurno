@@ -157,7 +157,7 @@ export default function ClientPwa() {
     try {
       const clienteId = sesion?.usuario.id;
       await reservarTurno({
-        cliente_id: clienteId || "cli-demo",
+        cliente_id: clienteId || "cli-invitado",
         profesional_id: selectedProfesional!.id,
         servicio_id: selectedService!.id,
         fecha: selectedDateISO,

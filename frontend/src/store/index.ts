@@ -217,7 +217,7 @@ export async function iniciarApp(): Promise<void> {
     sesion,
     ausencias: ausencias.datos,
     error: conFallback
-      ? "La API del backend no respondió. Mostrando datos de demostración."
+      ? "La API del backend no respondió. Mostrando datos de prueba."
       : null,
   }));
 }

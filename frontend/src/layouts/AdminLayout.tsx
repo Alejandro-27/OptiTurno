@@ -25,7 +25,7 @@ import ThemeToggle from "../components/ThemeToggle";
 import Breadcrumbs from "../components/Breadcrumbs";
 import { AbrirVistaClienteContext } from "../contexts/navegacion";
 import { logout, useStore } from "../store";
-import { MODO_DEMO } from "../config/env";
+import { MODO_PRUEBA } from "../config/env";
 import { trackEvent } from "../utils/analytics";
 
 interface ItemNav {
@@ -230,23 +230,23 @@ export default function AdminLayout() {
           <div className="flex items-center gap-3">
             <div
               className={`hidden items-center gap-2 rounded-full border px-2.5 py-1 font-mono text-[9px] lg:flex ${
-                MODO_DEMO
+                MODO_PRUEBA
                   ? "border-amber-500/20 bg-amber-500/10 text-amber-600 dark:bg-amber-500/5 dark:text-amber-400"
                   : "border-emerald-500/20 bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/5 dark:text-emerald-400"
               }`}
             >
               <span
                 className={`h-1.5 w-1.5 rounded-full ${
-                  MODO_DEMO ? "bg-amber-500" : "bg-emerald-500"
+                  MODO_PRUEBA ? "bg-amber-500" : "bg-emerald-500"
                 } animate-ping`}
               />
-              {MODO_DEMO ? "MODO DEMO" : "API ONLINE"}
+              {MODO_PRUEBA ? "MODO PRUEBA" : "API ONLINE"}
             </div>
             <ThemeToggle />
           </div>
         </header>
 
-        {errorDatos && !MODO_DEMO && (
+        {errorDatos && !MODO_PRUEBA && (
           <div className="flex items-center gap-2 border-b border-amber-500/20 bg-amber-500/10 px-4 py-2 text-[11px] font-semibold text-amber-700 dark:bg-amber-500/5 md:px-6 dark:text-amber-400">
             <Info size={13} />
             {errorDatos}

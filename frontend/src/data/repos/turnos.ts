@@ -43,7 +43,7 @@ let cacheTurnos: BookingEvent[] | null = null;
 const semillaTurnos = (): BookingEvent[] =>
   initialBookings.map((b) => ({ ...b }));
 
-// Turnos del cliente en memoria (modo demo)
+// Turnos del cliente en memoria (entorno de prueba)
 let cacheMisTurnos: MisTurnoDTO[] | null = null;
 
 const semillaMisTurnos = (): MisTurnoDTO[] => [

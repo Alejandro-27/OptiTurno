@@ -8,7 +8,7 @@ export interface SucursalesRepositorio {
   obtenerSucursalActiva(): Promise<SucursalDTO | null>;
 }
 
-const SUCURSAL_DEMO: SucursalDTO = {
+const SUCURSAL_PRINCIPAL: SucursalDTO = {
   id: "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
   negocio_id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
   nombre: "Sede Central Anapoima",
@@ -19,10 +19,10 @@ const SUCURSAL_DEMO: SucursalDTO = {
 
 export const sucursalesRepositorioMock: SucursalesRepositorio = {
   async listarSucursales() {
-    return [{ ...SUCURSAL_DEMO }];
+    return [{ ...SUCURSAL_PRINCIPAL }];
   },
   async obtenerSucursalActiva() {
-    return { ...SUCURSAL_DEMO };
+    return { ...SUCURSAL_PRINCIPAL };
   },
 };
 

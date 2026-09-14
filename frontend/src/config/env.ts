@@ -15,4 +15,4 @@ export function usarMocks(): boolean {
   //return bandera === "true" || bandera === "1";
 }
 
-export const MODO_DEMO = usarMocks();
+export const MODO_PRUEBA = usarMocks();

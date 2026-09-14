@@ -13,11 +13,11 @@ export interface UsuariosRepositorio {
   ): Promise<UsuarioAdminDTO>;
 }
 
-// Cuentas demo en memoria (modo demo). Compartidas con el mock de auth.
+// Cuentas de prueba en memoria. Compartidas con el mock de auth.
 export const usuariosMock: UsuarioAdminDTO[] = [
   {
-    id: "usr-demo-001",
-    nombre: "Administrador Demo",
+    id: "usr-001",
+    nombre: "Alejandro Vargas",
     email: "admin@optiturno.com",
     rol: "superadmin",
     telefono: null,
@@ -31,7 +31,7 @@ export const usuariosMock: UsuarioAdminDTO[] = [
   },
   {
     id: "usr-1104",
-    nombre: "Cliente Demo",
+    nombre: "Valentina Rojas",
     email: "cliente@optiturno.com",
     rol: "cliente",
     telefono: null,
