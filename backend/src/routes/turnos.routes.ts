@@ -5,7 +5,9 @@ import {
   consultarDisponibilidadHandler,
   misTurnosHandler,
   cancelarTurnoHandler,
+  reagendarTurnoHandler,
   listarTurnosAdminHandler,
+  bloquearHorarioHandler,
 } from "../controllers/turnos.controller";
 
 import {
@@ -14,7 +16,6 @@ import {
 } from "../middlewares/auth.middleware";
 
 export const turnosRouter = async (fastify: FastifyInstance) => {
-  // Reservar turnos: exige sesión de cliente (cliente_id sale del token JWT)
   fastify.post(
     "/reservar",
     {
@@ -26,7 +27,6 @@ export const turnosRouter = async (fastify: FastifyInstance) => {
     reservarTurnoHandler,
   );
 
-  // Historial de reservas del cliente autenticado (PWA)
   fastify.get(
     "/mios",
     {
@@ -35,7 +35,6 @@ export const turnosRouter = async (fastify: FastifyInstance) => {
     misTurnosHandler,
   );
 
-  // Agenda de la sucursal del admin (Calendario Maestro)
   fastify.get(
     "/",
     {
@@ -47,7 +46,6 @@ export const turnosRouter = async (fastify: FastifyInstance) => {
     listarTurnosAdminHandler,
   );
 
-  // Cancelación de un turno propio (PWA cliente)
   fastify.patch(
     "/:id/cancelar",
     {
@@ -59,7 +57,28 @@ export const turnosRouter = async (fastify: FastifyInstance) => {
     cancelarTurnoHandler,
   );
 
-  // Solo accesible por el Super Administrador del sistema
+  fastify.patch(
+    "/:id/reagendar",
+    {
+      preHandler: [
+        verificarAutenticacion,
+        permitirRoles(["cliente", "superadmin", "admin_negocio"]),
+      ],
+    },
+    reagendarTurnoHandler,
+  );
+
+  fastify.post(
+    "/bloquear-horario",
+    {
+      preHandler: [
+        verificarAutenticacion,
+        permitirRoles(["superadmin", "admin_negocio"]),
+      ],
+    },
+    bloquearHorarioHandler,
+  );
+
   fastify.post(
     "/limpiar-expirados",
     {
@@ -69,7 +88,7 @@ export const turnosRouter = async (fastify: FastifyInstance) => {
       ],
     },
     limpiarTurnosHandler,
-  ); // limpiar turnos expirados (+ 15 min)
+  );
 
-  fastify.get("/disponibilidad", consultarDisponibilidadHandler); // Verificar qué espacios hay libres
+  fastify.get("/disponibilidad", consultarDisponibilidadHandler);
 };

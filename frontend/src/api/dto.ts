@@ -103,6 +103,8 @@ export interface TurnoAdminDTO {
   hora_fin: string;
   estado: EstadoTurno;
   created_at: string;
+  motivo_cancelacion?: string | null;
+  cancelado_por?: string | null;
   clientes: {
     id: string;
     nombre: string;
@@ -177,6 +179,8 @@ export interface MisTurnoDTO {
   hora_fin: string;
   estado: EstadoTurno;
   created_at: string;
+  motivo_cancelacion?: string | null;
+  cancelado_por?: string | null;
   servicios: {
     nombre: string;
     precio: number;

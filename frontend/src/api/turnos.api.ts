@@ -7,7 +7,6 @@ import type {
 } from "./dto";
 import type { EstadoTurno } from "../types/enums";
 
-// Consulta los horarios bloqueados y la jornada laboral de un profesional
 export const obtenerDisponibilidad = async (
   profesionalId: string,
   fecha: string,
@@ -21,7 +20,6 @@ export const obtenerDisponibilidad = async (
   return data;
 };
 
-// Envía la solicitud para reservar un turno
 export interface TurnoReservadoDTO {
   id: string;
   estado: EstadoTurno;
@@ -45,23 +43,58 @@ export const reservarTurno = async (
   return data;
 };
 
-// Historial de turnos del cliente autenticado (GET /turnos/mios)
 export const obtenerMisTurnos = async (): Promise<MisTurnoDTO[]> => {
   const { data } = await apiClient.get<MisTurnoDTO[]>("/turnos/mios");
   return data;
 };
 
-// Agenda completa de la sucursal del admin (GET /turnos)
 export const listarTurnosAdmin = async (): Promise<TurnoAdminDTO[]> => {
   const { data } = await apiClient.get<TurnoAdminDTO[]>("/turnos");
   return data;
 };
 
-// Cancela un turno (PATCH /turnos/:id/cancelar) — backend responde { message, turno }
-export const cancelarTurno = async (id: string): Promise<MisTurnoDTO> => {
+export const cancelarTurno = async (
+  id: string,
+  motivo?: string,
+): Promise<MisTurnoDTO> => {
   const { data } = await apiClient.patch<{
     message: string;
     turno: MisTurnoDTO;
-  }>(`/turnos/${id}/cancelar`);
+  }>(`/turnos/${id}/cancelar`, motivo ? { motivo } : undefined);
   return data.turno;
+};
+
+export const reagendarTurno = async (
+  id: string,
+  nuevaFecha: string,
+  nuevaHoraInicio: string,
+): Promise<MisTurnoDTO> => {
+  const { data } = await apiClient.patch<{
+    message: string;
+    turno: MisTurnoDTO;
+  }>(`/turnos/${id}/reagendar`, {
+    nueva_fecha: nuevaFecha,
+    nueva_hora_inicio: nuevaHoraInicio,
+  });
+  return data.turno;
+};
+
+export const bloquearHorario = async (datos: {
+  profesional_id: string;
+  fecha_inicio: string;
+  fecha_fin: string;
+  hora_inicio?: string | null;
+  hora_fin?: string | null;
+  motivo?: string;
+}): Promise<{
+  mensaje: string;
+  fechasAfectadas: number;
+  turnosAfectados: number;
+}> => {
+  const { data } = await apiClient.post<{
+    mensaje: string;
+    fechasAfectadas: number;
+    turnosAfectados: number;
+  }>("/turnos/bloquear-horario", datos);
+  return data;
 };

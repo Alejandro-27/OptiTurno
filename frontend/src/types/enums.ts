@@ -1,7 +1,13 @@
 export type Rol = "cliente" | "admin_negocio" | "superadmin" | "empleado";
 
 export type EstadoTurno =
-  "pendiente_pago" | "confirmado" | "cancelado" | "completado";
+  | "pendiente_pago"
+  | "confirmado"
+  | "cancelado"
+  | "reagendado"
+  | "pendiente_reagendamiento"
+  | "completado"
+  | "no_asistio";
 
 export type EstadoServicio = "Activo" | "Pausado";
 
@@ -19,5 +25,8 @@ export const ESTADOS_TURNO: readonly EstadoTurno[] = [
   "pendiente_pago",
   "confirmado",
   "cancelado",
+  "reagendado",
+  "pendiente_reagendamiento",
   "completado",
+  "no_asistio",
 ];

@@ -19,6 +19,8 @@ interface Props {
   turno: MisTurnoDTO | null;
   cancelando: boolean;
   error: string | null;
+  motivo: string;
+  onMotivoChange: (valor: string) => void;
   onClose: () => void;
   onConfirmar: () => void;
 }
@@ -27,6 +29,8 @@ export default function ConfirmarCancelacionModal({
   turno,
   cancelando,
   error,
+  motivo,
+  onMotivoChange,
   onClose,
   onConfirmar,
 }: Props) {
@@ -84,6 +88,18 @@ export default function ConfirmarCancelacionModal({
             {formatearFecha(turno.fecha)} · {formatearHora(turno.hora_inicio)} -{" "}
             {formatearHora(turno.hora_fin)}
           </p>
+        </div>
+
+        <div>
+          <label className="label-overline mb-1 block">Motivo (opcional)</label>
+          <textarea
+            value={motivo}
+            onChange={(e) => onMotivoChange(e.target.value)}
+            placeholder="Ejemplo: Cambio de planes..."
+            rows={2}
+            className="input w-full resize-none text-[11px]"
+            disabled={cancelando}
+          />
         </div>
 
         {error && (

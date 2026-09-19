@@ -348,12 +348,38 @@ export async function cargarMisTurnos(): Promise<MisTurnoDTO[]> {
 }
 
 // Cancelación de un turno propio del cliente
-export async function cancelarTurnoCliente(id: string): Promise<void> {
-  const actualizado = await repositorios.turnos.cancelarTurnoCliente(id);
+export async function cancelarTurnoCliente(
+  id: string,
+  motivo?: string,
+): Promise<void> {
+  const actualizado = await repositorios.turnos.cancelarTurnoCliente(
+    id,
+    motivo,
+  );
   setEstado((e) => ({
     ...e,
     misTurnos: e.misTurnos.map((t) => (t.id === id ? actualizado : t)),
   }));
+}
+
+// Reagendamiento de un turno propio del cliente
+export async function reagendarTurnoCliente(
+  id: string,
+  nuevaFecha: string,
+  nuevaHoraInicio: string,
+): Promise<MisTurnoDTO> {
+  const turnoAnterior = await repositorios.turnos.reagendarTurnoCliente(
+    id,
+    nuevaFecha,
+    nuevaHoraInicio,
+  );
+  setEstado((e) => ({
+    ...e,
+    misTurnos: e.misTurnos.map((t) =>
+      t.id === id ? { ...turnoAnterior, estado: "reagendado" as const } : t,
+    ),
+  }));
+  return turnoAnterior;
 }
 
 // Actualización del perfil propio (nombre/teléfono)

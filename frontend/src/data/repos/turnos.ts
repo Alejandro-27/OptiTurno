@@ -7,6 +7,7 @@ import {
   reservarTurno,
   obtenerMisTurnos,
   cancelarTurno as cancelarTurnoApi,
+  reagendarTurno as reagendarTurnoApi,
   listarTurnosAdmin,
 } from "../../api/turnos.api";
 import { colorDesdeId, iconoDesdeNombre, turnoAdminDtoToUI } from "../mappers";
@@ -35,7 +36,12 @@ export interface TurnosRepositorio {
     fecha: string,
   ): Promise<DisponibilidadDTO>;
   listarMisTurnos(clienteId: string): Promise<MisTurnoDTO[]>;
-  cancelarTurnoCliente(id: string): Promise<MisTurnoDTO>;
+  cancelarTurnoCliente(id: string, motivo?: string): Promise<MisTurnoDTO>;
+  reagendarTurnoCliente(
+    id: string,
+    nuevaFecha: string,
+    nuevaHoraInicio: string,
+  ): Promise<MisTurnoDTO>;
 }
 
 let cacheTurnos: BookingEvent[] | null = null;
@@ -43,7 +49,6 @@ let cacheTurnos: BookingEvent[] | null = null;
 const semillaTurnos = (): BookingEvent[] =>
   initialBookings.map((b) => ({ ...b }));
 
-// Turnos del cliente en memoria (entorno de prueba)
 let cacheMisTurnos: MisTurnoDTO[] | null = null;
 
 const semillaMisTurnos = (): MisTurnoDTO[] => [
@@ -54,7 +59,11 @@ const semillaMisTurnos = (): MisTurnoDTO[] => [
     hora_fin: "10:45:00",
     estado: "pendiente_pago",
     created_at: new Date().toISOString(),
-    servicios: { nombre: "Corte Clásico", precio: 30000, duracion_minutos: 45 },
+    servicios: {
+      nombre: "Corte Clásico",
+      precio: 30000,
+      duracion_minutos: 45,
+    },
     profesionales: {
       id: "elena",
       especialidad: "Barbería",
@@ -115,12 +124,10 @@ export const turnosRepositorioMock: TurnosRepositorio = {
 
     const fechaConsulta = fecha || new Date().toISOString().slice(0, 10);
 
-    // Ausencias en memoria del profesional para la fecha consultada
     const ausencias = obtenerAusenciasMock().filter(
       (a) => a.fecha === fechaConsulta && a.profesional_id === profesionalId,
     );
 
-    // Día completo: sin disponibilidad alguna
     if (ausencias.some((a) => !a.hora_inicio)) {
       return {
         fecha: fechaConsulta,
@@ -129,7 +136,6 @@ export const turnosRepositorioMock: TurnosRepositorio = {
       };
     }
 
-    // Franjas parciales: se suman a los bloques ocupados
     const franjasAusentes = ausencias
       .filter((a) => a.hora_inicio && a.hora_fin)
       .map((a) => ({
@@ -152,7 +158,7 @@ export const turnosRepositorioMock: TurnosRepositorio = {
     if (!cacheMisTurnos) cacheMisTurnos = semillaMisTurnos();
     return cacheMisTurnos;
   },
-  async cancelarTurnoCliente(id) {
+  async cancelarTurnoCliente(id, _motivo) {
     const turnos = await this.listarMisTurnos();
     const turno = turnos.find((t) => t.id === id);
     if (!turno) throw new Error("El turno no existe.");
@@ -161,6 +167,18 @@ export const turnosRepositorioMock: TurnosRepositorio = {
     }
     turno.estado = "cancelado";
     return turno;
+  },
+  async reagendarTurnoCliente(id, nuevaFecha, nuevaHoraInicio) {
+    const turnos = await this.listarMisTurnos();
+    const turno = turnos.find((t) => t.id === id);
+    if (!turno) throw new Error("El turno no existe.");
+    if (turno.estado === "cancelado" || turno.estado === "reagendado") {
+      throw new Error("No se puede reagendar este turno.");
+    }
+    const anterior = { ...turno };
+    turno.fecha = nuevaFecha;
+    turno.hora_inicio = nuevaHoraInicio + ":00";
+    return anterior;
   },
 };
 
@@ -199,7 +217,10 @@ export const turnosRepositorioApi: TurnosRepositorio = {
   async listarMisTurnos() {
     return obtenerMisTurnos();
   },
-  async cancelarTurnoCliente(id) {
-    return cancelarTurnoApi(id);
+  async cancelarTurnoCliente(id, motivo) {
+    return cancelarTurnoApi(id, motivo);
+  },
+  async reagendarTurnoCliente(id, nuevaFecha, nuevaHoraInicio) {
+    return reagendarTurnoApi(id, nuevaFecha, nuevaHoraInicio);
   },
 };

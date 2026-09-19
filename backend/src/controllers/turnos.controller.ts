@@ -5,22 +5,24 @@ import {
   limpiarTurnosExpiradosService,
   listarTurnosClienteService,
   cancelarTurnoClienteService,
+  reagendarTurnoService,
   listarTurnosAdminService,
   cancelarTurnoAdminService,
+  bloquearHorarioService,
 } from "../services/turnos.service.js";
 import { resolverSucursalDeUsuarioService } from "../services/negocios.service.js";
 import { validarCuerpo } from "../schemas/validar";
 import {
   reservarTurnoSchema,
   disponibilidadSchema,
+  reagendarTurnoSchema,
+  bloquearHorarioSchema,
 } from "../schemas/turnos.schemas";
 
-// reservar turnos (requiere sesión: cliente_id se toma del token JWT)
 export const reservarTurnoHandler = async (
   request: FastifyRequest,
   reply: FastifyReply,
 ) => {
-  // Delegamos toda la carga al servicio; el cliente sale del token autenticado
   const cuerpo = validarCuerpo(reservarTurnoSchema, request.body);
   const turno = await crearTurnoService({
     ...cuerpo,
@@ -33,7 +35,6 @@ export const reservarTurnoHandler = async (
   });
 };
 
-// Limpiar turnos
 export const limpiarTurnosHandler = async (
   request: FastifyRequest,
   reply: FastifyReply,
@@ -42,7 +43,6 @@ export const limpiarTurnosHandler = async (
   return reply.status(200).send(resultado);
 };
 
-// Historial de reservas del cliente autenticado
 export const misTurnosHandler = async (
   request: FastifyRequest,
   reply: FastifyReply,
@@ -51,7 +51,6 @@ export const misTurnosHandler = async (
   return reply.status(200).send(turnos);
 };
 
-// Agenda completa de la sucursal del admin (Calendario Maestro)
 export const listarTurnosAdminHandler = async (
   request: FastifyRequest,
   reply: FastifyReply,
@@ -66,21 +65,52 @@ export const listarTurnosAdminHandler = async (
   return reply.status(200).send(turnos);
 };
 
-// Cancela un turno: clientes solo los propios; admin de la sucursal cualquiera de ella
 export const cancelarTurnoHandler = async (
   request: FastifyRequest,
   reply: FastifyReply,
 ) => {
   const { id } = request.params as { id: string };
   const usuario = request.usuario!;
+  const body = request.body as Record<string, unknown> | undefined;
+  const motivo = body?.motivo as string | undefined;
   const esCliente = usuario.rol === "cliente";
   const turno = esCliente
-    ? await cancelarTurnoClienteService(usuario.id, id)
-    : await cancelarTurnoAdminService(usuario.id, id);
+    ? await cancelarTurnoClienteService(usuario.id, id, motivo)
+    : await cancelarTurnoAdminService(usuario.id, id, motivo);
   return reply.status(200).send({
     message: "Turno cancelado con éxito.",
     turno,
   });
+};
+
+export const reagendarTurnoHandler = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  const { id } = request.params as { id: string };
+  const usuario = request.usuario!;
+  const cuerpo = validarCuerpo(reagendarTurnoSchema, request.body);
+  const turno = await reagendarTurnoService(
+    usuario.id,
+    id,
+    cuerpo.nueva_fecha,
+    cuerpo.nueva_hora_inicio,
+    usuario.rol,
+  );
+  return reply.status(200).send({
+    message: "Turno reagendado con éxito.",
+    turno,
+  });
+};
+
+export const bloquearHorarioHandler = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  const usuario = request.usuario!;
+  const cuerpo = validarCuerpo(bloquearHorarioSchema, request.body);
+  const resultado = await bloquearHorarioService(usuario.id, cuerpo);
+  return reply.status(200).send(resultado);
 };
 
 export const consultarDisponibilidadHandler = async (
