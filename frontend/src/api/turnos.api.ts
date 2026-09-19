@@ -79,6 +79,18 @@ export const reagendarTurno = async (
   return data.turno;
 };
 
+// El comercio cierra un turno (completado / no_asistio)
+export const cambiarEstadoTurno = async (
+  id: string,
+  estado: "completado" | "no_asistio",
+): Promise<TurnoAdminDTO> => {
+  const { data } = await apiClient.patch<{
+    message: string;
+    turno: TurnoAdminDTO;
+  }>(`/turnos/${id}/estado`, { estado });
+  return data.turno;
+};
+
 export const bloquearHorario = async (datos: {
   profesional_id: string;
   fecha_inicio: string;

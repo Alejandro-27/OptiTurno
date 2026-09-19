@@ -27,6 +27,11 @@ export const cancelarTurnoSchema = z.object({
   cancelado_por: z.enum(["cliente", "comercio", "sistema"]).optional(),
 });
 
+// PATCH /turnos/:id/estado — el comercio cierra un turno (completado/no_asistio)
+export const cambiarEstadoTurnoSchema = z.object({
+  estado: z.enum(["completado", "no_asistio"]),
+});
+
 // POST /comercio/bloquear-horario — el comercio bloquea un rango
 export const bloquearHorarioSchema = z.object({
   profesional_id: z.string().min(1),

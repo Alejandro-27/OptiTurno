@@ -15,14 +15,6 @@ import type {
   UsuarioAdminDTO,
   EditarUsuarioInputDTO,
 } from "../api/dto";
-import {
-  serviciosRepositorioMock,
-  turnosRepositorioMock,
-  actividadRepositorioMock,
-  disponibilidadRepositorioMock,
-  profesionalesRepositorioMock,
-  ausenciasRepositorioMock,
-} from "../data/index";
 import type {
   ReservarTurnoInput,
   ReservarTurnoResultado,
@@ -101,25 +93,27 @@ function logDeTurno(turno: BookingEvent, titulo: string): ActivityLog {
   };
 }
 
-interface CargaConFallback<T> {
+interface CargaEstricta<T> {
   datos: T;
-  conFallback: boolean;
+  conError: boolean;
 }
 
-async function cargarConFallback<T>(
-  origen: () => Promise<T> | T,
-  fallback: () => Promise<T>,
-): Promise<CargaConFallback<T>> {
+// Carga estricta: en modo API jamás cae a datos quemados. Si la consulta
+// falla, devuelve un array vacío y marca el error para que la UI muestre
+// estados vacíos reales en lugar de semillas de prueba (regla desacople mocks).
+async function cargarEstricto<T>(
+  origen: () => Promise<T>,
+): Promise<CargaEstricta<T>> {
   try {
-    return { datos: await origen(), conFallback: false };
+    return { datos: await origen(), conError: false };
   } catch {
-    return { datos: await fallback(), conFallback: true };
+    return { datos: [] as unknown as T, conError: true };
   }
 }
 
-const sinCarga = (): { datos: never[]; conFallback: boolean } => ({
+const sinCarga = (): { datos: never[]; conError: boolean } => ({
   datos: [],
-  conFallback: false,
+  conError: false,
 });
 
 // Profesional de la sucursal vinculado al usuario autenticado (si es empleado)
@@ -140,7 +134,6 @@ export async function iniciarApp(): Promise<void> {
   const esAdmin = Boolean(sesion && sesion.usuario.rol !== "cliente");
 
   // 2. Resolver la sucursal: la del usuario si hay token, si no la primera del sistema.
-  //    Garantiza que el catálogo público y el panel usen datos reales en modo API.
   let sucursalId: string | null = null;
   try {
     const sucursal = await repositorios.sucursales.obtenerSucursalActiva();
@@ -150,74 +143,66 @@ export async function iniciarApp(): Promise<void> {
   }
 
   // 3. Catálogos base: siempre (servicios y profesionales de la sucursal)
-  const [servicios, profesionales] = await Promise.all([
-    cargarConFallback(
-      () => repositorios.servicios.listarServicios(sucursalId || undefined),
-      () => serviciosRepositorioMock.listarServicios(),
+  const [rServicios, rProfesionales] = await Promise.all([
+    cargarEstricto(() =>
+      repositorios.servicios.listarServicios(sucursalId || undefined),
     ),
-    cargarConFallback(
-      () =>
-        repositorios.profesionales.listarProfesionales(sucursalId || undefined),
-      () => profesionalesRepositorioMock.listarProfesionales(),
+    cargarEstricto(() =>
+      repositorios.profesionales.listarProfesionales(sucursalId || undefined),
     ),
   ]);
 
   // 4. Datos del panel admin: solo se cargan para cuentas de comercio
-  const turnos = esAdmin
-    ? await cargarConFallback(
-        () => repositorios.turnos.listarTurnos(),
-        () => turnosRepositorioMock.listarTurnos(),
+  const rTurnos = esAdmin
+    ? await cargarEstricto(() => repositorios.turnos.listarTurnos())
+    : sinCarga();
+
+  const rActividad = esAdmin
+    ? await cargarEstricto(() => repositorios.actividad.listarActividad())
+    : sinCarga();
+
+  const propioEmpleado = resolverProfesionalPropio(
+    rProfesionales.datos,
+    sesion,
+  );
+
+  const rEquipo = esAdmin
+    ? await cargarEstricto(() =>
+        propioEmpleado
+          ? repositorios.profesionales.obtenerHorarioSemanal(propioEmpleado.id)
+          : repositorios.disponibilidad.listarDisponibilidad(),
       )
     : sinCarga();
 
-  const actividad = esAdmin
-    ? await cargarConFallback(
-        () => repositorios.actividad.listarActividad(),
-        () => actividadRepositorioMock.listarActividad(),
-      )
+  const rAusencias = esAdmin
+    ? await cargarEstricto(() => repositorios.ausencias.listarAusencias())
     : sinCarga();
 
-  const propioEmpleado = resolverProfesionalPropio(profesionales.datos, sesion);
-
-  const equipo = esAdmin
-    ? await cargarConFallback(
-        () =>
-          propioEmpleado
-            ? repositorios.profesionales.obtenerHorarioSemanal(
-                propioEmpleado.id,
-              )
-            : repositorios.disponibilidad.listarDisponibilidad(),
-        () => disponibilidadRepositorioMock.listarDisponibilidad(),
-      )
-    : sinCarga();
-
-  const ausencias = esAdmin
-    ? await cargarConFallback(
-        () => repositorios.ausencias.listarAusencias(),
-        () => ausenciasRepositorioMock.listarAusencias(),
-      )
-    : sinCarga();
-
-  const conFallback = esAdmin
-    ? [servicios, profesionales, turnos, actividad, equipo, ausencias].some(
-        (r) => r.conFallback,
-      )
-    : false;
+  const conError = esAdmin
+    ? [
+        rServicios,
+        rProfesionales,
+        rTurnos,
+        rActividad,
+        rEquipo,
+        rAusencias,
+      ].some((r) => r.conError)
+    : [rServicios, rProfesionales].some((r) => r.conError);
 
   setEstado((e) => ({
     ...e,
     inicializado: true,
     cargando: false,
     sucursalId,
-    servicios: servicios.datos,
-    profesionales: profesionales.datos,
-    turnos: turnos.datos,
-    logs: actividad.datos,
-    equipo: equipo.datos,
+    servicios: rServicios.datos,
+    profesionales: rProfesionales.datos,
+    turnos: rTurnos.datos,
+    logs: rActividad.datos,
+    equipo: rEquipo.datos,
     sesion,
-    ausencias: ausencias.datos,
-    error: conFallback
-      ? "La API del backend no respondió. Mostrando datos de prueba."
+    ausencias: rAusencias.datos,
+    error: conError
+      ? "La API del backend no respondió. Revisá tu conexión e intentá de nuevo."
       : null,
   }));
 }
@@ -241,16 +226,11 @@ export async function refrescarDatosAdmin(): Promise<void> {
 
   if (sucursalId !== getEstado().sucursalId) {
     const [rServ, rProf] = await Promise.all([
-      cargarConFallback(
-        () => repositorios.servicios.listarServicios(sucursalId || undefined),
-        () => serviciosRepositorioMock.listarServicios(),
+      cargarEstricto(() =>
+        repositorios.servicios.listarServicios(sucursalId || undefined),
       ),
-      cargarConFallback(
-        () =>
-          repositorios.profesionales.listarProfesionales(
-            sucursalId || undefined,
-          ),
-        () => profesionalesRepositorioMock.listarProfesionales(),
+      cargarEstricto(() =>
+        repositorios.profesionales.listarProfesionales(sucursalId || undefined),
       ),
     ]);
     servicios = rServ.datos;
@@ -266,25 +246,14 @@ export async function refrescarDatosAdmin(): Promise<void> {
   if (esAdmin) {
     const propio = resolverProfesionalPropio(profesionales, sesion);
     const [rTurnos, rAct, rDisp, rAus] = await Promise.all([
-      cargarConFallback(
-        () => repositorios.turnos.listarTurnos(),
-        () => turnosRepositorioMock.listarTurnos(),
+      cargarEstricto(() => repositorios.turnos.listarTurnos()),
+      cargarEstricto(() => repositorios.actividad.listarActividad()),
+      cargarEstricto(() =>
+        propio
+          ? repositorios.profesionales.obtenerHorarioSemanal(propio.id)
+          : repositorios.disponibilidad.listarDisponibilidad(),
       ),
-      cargarConFallback(
-        () => repositorios.actividad.listarActividad(),
-        () => actividadRepositorioMock.listarActividad(),
-      ),
-      cargarConFallback(
-        () =>
-          propio
-            ? repositorios.profesionales.obtenerHorarioSemanal(propio.id)
-            : repositorios.disponibilidad.listarDisponibilidad(),
-        () => disponibilidadRepositorioMock.listarDisponibilidad(),
-      ),
-      cargarConFallback(
-        () => repositorios.ausencias.listarAusencias(),
-        () => ausenciasRepositorioMock.listarAusencias(),
-      ),
+      cargarEstricto(() => repositorios.ausencias.listarAusencias()),
     ]);
     turnos = rTurnos.datos;
     logs = rAct.datos;
@@ -449,18 +418,46 @@ export async function reservarTurno(
   return resultado;
 }
 
-export async function cancelarTurno(id: string): Promise<void> {
-  await repositorios.turnos.cancelarTurno(id);
-  setEstado((e) => {
-    const turno = e.turnos.find((t) => t.id === id);
-    return {
-      ...e,
-      turnos: e.turnos.filter((t) => t.id !== id),
-      logs: turno
-        ? [logDeTurno(turno, "Cita Cancelada"), ...e.logs].slice(0, 8)
-        : e.logs,
-    };
-  });
+export async function cancelarTurno(
+  id: string,
+  motivo?: string,
+): Promise<void> {
+  await repositorios.turnos.cancelarTurno(id, motivo);
+  await refrescarTurnos();
+}
+
+// El comercio cierra un turno (completado / no_asistio)
+export async function actualizarEstadoTurno(
+  id: string,
+  estado: "completado" | "no_asistio",
+): Promise<void> {
+  await repositorios.turnos.cambiarEstadoTurno(id, estado);
+  await refrescarTurnos();
+}
+
+// El comercio reagenda un turno a nueva fecha/hora
+export async function reagendarTurnoAdmin(
+  id: string,
+  nuevaFecha: string,
+  nuevaHoraInicio: string,
+): Promise<void> {
+  await repositorios.turnos.reagendarTurnoAdmin(
+    id,
+    nuevaFecha,
+    nuevaHoraInicio,
+  );
+  await refrescarTurnos();
+}
+
+// Recarga en frío la lista de turnos del panel (mantiene consistency con el
+// backend: reagendar marca el original como reagendado y crea un turno nuevo).
+async function refrescarTurnos(): Promise<void> {
+  try {
+    const turnos = await repositorios.turnos.listarTurnos();
+    setEstado((e) => ({ ...e, turnos }));
+  } catch {
+    setEstado((e) => ({ ...e }));
+  }
 }
 
 export async function guardarDisponibilidad(

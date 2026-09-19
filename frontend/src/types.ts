@@ -18,6 +18,16 @@ export interface BookingEvent {
   columnId: string; // "carlos", "elena" etc
   color: "primary" | "secondary" | "tertiary";
   icon: string;
+  // Datos extendidos del turno (desde la API): permiten filtrar por día/estado
+  // y nutrir el modal de edición desde el Calendario Maestro.
+  fecha?: string;
+  estado?: string;
+  precio?: number;
+  duracionMin?: number;
+  telefono?: string | null;
+  profesionalNombre?: string;
+  motivoCancelacion?: string | null;
+  canceladoPor?: string | null;
 }
 
 export interface ActivityLog {

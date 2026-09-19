@@ -1,36 +1,75 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
-  MessageSquare,
-  Edit2,
-  CalendarX,
-  Check,
   Search,
   Clock,
   DollarSign,
+  Check,
+  CalendarX,
+  Eye,
+  EyeOff,
   X,
 } from "lucide-react";
-import { BookingEvent } from "../types";
-import { cancelarTurno, useStore } from "../store";
-import { useToast } from "../contexts/toast";
-import { mensajeDeError } from "../api/dto";
+import type { BookingEvent } from "../types";
+import { useStore } from "../store";
+import ModalEditarCita from "./ModalEditarCita";
 
 type ViewMode = "diario" | "semanal" | "mensual";
+
+const HOURS = [
+  "08:00",
+  "09:00",
+  "10:00",
+  "11:00",
+  "12:00",
+  "13:00",
+  "14:00",
+  "15:00",
+  "16:00",
+  "17:00",
+];
+
+const INICIO_JORNADA = minutosDe(HOURS[0]);
+const PIXELES_POR_HORA = 96;
+const ALTURA_GRILLA = HOURS.length * PIXELES_POR_HORA;
+
+function minutosDe(hora: string): number {
+  const [h = 0, m = 0] = hora.split(":").map(Number);
+  return h * 60 + m;
+}
+
+function fechaISO(fecha: Date): string {
+  const y = fecha.getFullYear();
+  const mes = String(fecha.getMonth() + 1).padStart(2, "0");
+  const dia = String(fecha.getDate()).padStart(2, "0");
+  return `${y}-${mes}-${dia}`;
+}
+
+function duracionMin(b: BookingEvent): number {
+  const fin = minutosDe(b.timeEnd);
+  const ini = minutosDe(b.timeStart);
+  if (fin > ini) return fin - ini;
+  return b.duracionMin || 30;
+}
+
+function formatearMoneda(n: number): string {
+  return `$${n.toLocaleString("es-AR", { minimumFractionDigits: 2 })}`;
+}
 
 export default function AdminCalendar() {
   const bookings = useStore((s) => s.turnos);
   const profesionales = useStore((s) => s.profesionales);
-  const { mostrarToast } = useToast();
   const [selectedBooking, setSelectedBooking] = useState<BookingEvent | null>(
     null,
   );
 
   // ESTADOS DE CONTROL DEL CALENDARIO
-  const [currentDate, setCurrentDate] = useState<Date>(new Date(2026, 9, 24)); // Octubre 24, 2026
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
   const [viewMode, setViewMode] = useState<ViewMode>("diario");
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [mostrarCancelados, setMostrarCancelados] = useState<boolean>(false);
   const [showDatePickerModal, setShowDatePickerModal] =
     useState<boolean>(false);
 
@@ -38,19 +77,6 @@ export default function AdminCalendar() {
   const [tempDay, setTempDay] = useState<number>(currentDate.getDate());
   const [tempMonth, setTempMonth] = useState<number>(currentDate.getMonth());
   const [tempYear, setTempYear] = useState<number>(currentDate.getFullYear());
-
-  const hours = [
-    "08:00",
-    "09:00",
-    "10:00",
-    "11:00",
-    "12:00",
-    "13:00",
-    "14:00",
-    "15:00",
-    "16:00",
-    "17:00",
-  ];
 
   const columns = profesionales.slice(0, 5).map((p, i) => ({
     id: p.id,
@@ -60,20 +86,18 @@ export default function AdminCalendar() {
 
   // NAVEGACIÓN DE FECHA (ANTERIOR / SIGUIENTE)
   const handleNavigateDate = (direction: "prev" | "next") => {
-    const newDate = new Date(currentDate);
-    const multiplier = direction === "next" ? 1 : -1;
-
+    const nueva = new Date(currentDate);
+    const multiplicador = direction === "next" ? 1 : -1;
     if (viewMode === "diario") {
-      newDate.setDate(newDate.getDate() + 1 * multiplier);
+      nueva.setDate(nueva.getDate() + 1 * multiplicador);
     } else if (viewMode === "semanal") {
-      newDate.setDate(newDate.getDate() + 7 * multiplier);
-    } else if (viewMode === "mensual") {
-      newDate.setMonth(newDate.getMonth() + 1 * multiplier);
+      nueva.setDate(nueva.getDate() + 7 * multiplicador);
+    } else {
+      nueva.setMonth(nueva.getMonth() + 1 * multiplicador);
     }
-    setCurrentDate(newDate);
+    setCurrentDate(nueva);
   };
 
-  // APARTADO APLICAR SELECCIÓN DESDE EL MENÚ MODAL DE FECHA
   const handleApplyCustomDate = () => {
     setCurrentDate(new Date(tempYear, tempMonth, tempDay));
     setShowDatePickerModal(false);
@@ -85,53 +109,42 @@ export default function AdminCalendar() {
     year: "numeric",
   });
 
-  // FILTRADO DE RESERVAS POR BÚSQUEDA
-  const filteredBookings = bookings.filter((b) => {
+  // Turnos visibles: se ocultan los cancelados salvo que el toggle esté activo.
+  const turnosVisibles = bookings.filter(
+    (b) => mostrarCancelados || b.estado !== "cancelado",
+  );
+
+  const turnosBuscados = turnosVisibles.filter((b) => {
+    const termino = searchTerm.trim().toLowerCase();
+    if (!termino) return true;
     return (
-      b.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      b.serviceName.toLowerCase().includes(searchTerm.toLowerCase())
+      b.clientName.toLowerCase().includes(termino) ||
+      b.serviceName.toLowerCase().includes(termino)
     );
   });
 
-  const handleAction = (type: string) => {
-    if (!selectedBooking) return;
-    if (type === "send_whatsapp") {
-      mostrarToast(
-        `Recordatorio enviado a ${selectedBooking.clientName} correctamente.`,
-        "exito",
-      );
-    } else if (type === "cancel") {
-      cancelarTurno(selectedBooking.id)
-        .then(() => {
-          mostrarToast(
-            `Cita de ${selectedBooking.clientName} cancelada correctamente.`,
-            "exito",
-          );
-        })
-        .catch((err) => {
-          mostrarToast(
-            mensajeDeError(
-              err,
-              `No se pudo cancelar la cita de ${selectedBooking.clientName}.`,
-            ),
-            "error",
-          );
-        });
-    } else if (type === "modify") {
-      mostrarToast("Abriendo el editor de citas...", "info");
-    }
-    setSelectedBooking(null);
-  };
+  const turnosDelDia = (dia: Date): BookingEvent[] =>
+    turnosBuscados.filter((b) => b.fecha === fechaISO(dia));
 
-  // HELPER PARA VISTA SEMANAL (7 DÍAS A PARTIR DE LA FECHA ACTUAL)
+  const turnosHoy = turnosDelDia(currentDate);
+  const canceladosHoy = bookings.filter(
+    (b) => b.fecha === fechaISO(currentDate) && b.estado === "cancelado",
+  );
+  const pendientesHoy = turnosHoy.filter((b) => b.estado === "pendiente_pago");
+  const ingresosHoy = turnosHoy.reduce(
+    (total, b) => total + (b.precio || 0),
+    0,
+  );
+  const slotsHoy = Math.max(HOURS.length * columns.length, 1);
+
   const getWeekDays = () => {
     const startOfWeek = new Date(currentDate);
-    const dayOfWeek = startOfWeek.getDay();
+    const diaSemana = startOfWeek.getDay();
     const diffToMonday =
-      startOfWeek.getDate() - dayOfWeek + (dayOfWeek === 0 ? -6 : 1);
+      startOfWeek.getDate() - diaSemana + (diaSemana === 0 ? -6 : 1);
     startOfWeek.setDate(diffToMonday);
 
-    const week = [];
+    const week: Date[] = [];
     for (let i = 0; i < 7; i++) {
       const d = new Date(startOfWeek);
       d.setDate(startOfWeek.getDate() + i);
@@ -140,25 +153,19 @@ export default function AdminCalendar() {
     return week;
   };
 
-  // HELPER PARA VISTA MENSUAL (DÍAS DEL MES ACTIVO)
   const getMonthDays = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
     const firstDay = new Date(year, month, 1);
     const lastDay = new Date(year, month + 1, 0);
 
-    const days = [];
+    const days: (Date | null)[] = [];
     const startingDayOfWeek =
       firstDay.getDay() === 0 ? 6 : firstDay.getDay() - 1;
-
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null);
-    }
-
+    for (let i = 0; i < startingDayOfWeek; i++) days.push(null);
     for (let day = 1; day <= lastDay.getDate(); day++) {
       days.push(new Date(year, month, day));
     }
-
     return days;
   };
 
@@ -166,7 +173,6 @@ export default function AdminCalendar() {
     <div className="space-y-6 animate-fade-in text-slate-800 dark:text-slate-100 h-full flex flex-col relative transition-colors duration-200 overflow-y-auto pr-1">
       {/* Header controls for Calendar */}
       <div className="flex justify-between items-center bg-white dark:bg-slate-900/40 p-4 border border-border-subtle dark:border-slate-800 rounded-xl flex-wrap gap-4 shadow-sm dark:shadow-none transition-colors duration-200">
-        {/* Selector de Modos de Vista */}
         <div className="flex items-center gap-4 flex-wrap">
           <div className="flex bg-slate-100 dark:bg-slate-950 p-1 rounded-full border border-border-subtle dark:border-slate-800">
             <button
@@ -201,7 +207,6 @@ export default function AdminCalendar() {
             </button>
           </div>
 
-          {/* Campo de búsqueda */}
           <div className="relative flex items-center w-full sm:w-auto">
             <Search size={14} className="absolute left-3 text-slate-400" />
             <input
@@ -212,9 +217,22 @@ export default function AdminCalendar() {
               className="pl-8 pr-3 py-1.5 text-xs bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-lg focus:outline-none focus:border-indigo-500 w-full md:w-48 transition-all"
             />
           </div>
+
+          {/* Toggle mostrar cancelados */}
+          <button
+            onClick={() => setMostrarCancelados((v) => !v)}
+            aria-pressed={mostrarCancelados}
+            className={`flex items-center gap-2 px-3 py-1.5 text-xs font-bold rounded-lg border transition-all ${
+              mostrarCancelados
+                ? "bg-red-500/10 border-red-500/30 text-red-600 dark:text-red-400"
+                : "bg-slate-50 dark:bg-slate-950 border-border-subtle dark:border-slate-800 text-slate-500 dark:text-slate-400 hover:border-slate-300 dark:hover:border-slate-700"
+            }`}
+          >
+            {mostrarCancelados ? <Eye size={13} /> : <EyeOff size={13} />}
+            Mostrar cancelados
+          </button>
         </div>
 
-        {/* Control de Fechas con Menú Modal y Navegación */}
         <div className="flex items-center gap-4 justify-between w-full md:w-auto">
           <button
             onClick={() => {
@@ -238,12 +256,14 @@ export default function AdminCalendar() {
             <button
               onClick={() => handleNavigateDate("prev")}
               className="p-2 rounded bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
+              aria-label="Fecha anterior"
             >
               <ChevronLeft size={16} />
             </button>
             <button
               onClick={() => handleNavigateDate("next")}
               className="p-2 rounded bg-slate-50 dark:bg-slate-950 border border-border-subtle dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-200 transition-colors"
+              aria-label="Fecha siguiente"
             >
               <ChevronRight size={16} />
             </button>
@@ -254,86 +274,132 @@ export default function AdminCalendar() {
       {/* VISTA DIARIA */}
       {viewMode === "diario" && (
         <div className="border border-border-subtle dark:border-slate-800/80 rounded-xl overflow-hidden bg-white dark:bg-slate-950/90 shadow-sm dark:shadow-2xl flex-grow overflow-x-auto custom-scrollbar transition-colors duration-200">
-          <div className="min-w-[520px] md:min-w-[1000px] grid grid-cols-[70px_repeat(2,1fr)] md:grid-cols-[100px_repeat(5,1fr)]">
-            <div className="bg-slate-50 dark:bg-slate-950 h-14 border-b border-r border-border-subtle dark:border-slate-800/50 sticky top-0 z-30 flex items-center justify-center">
-              <Clock size={16} className="text-slate-400 dark:text-slate-500" />
-            </div>
-            {columns.map((col, i) => (
-              <div
-                key={col.id}
-                className={`bg-slate-50 dark:bg-slate-950 h-14 border-b border-r border-border-subtle dark:border-slate-800/50 sticky top-0 z-30 flex flex-col items-center justify-center p-2 text-center transition-all hover:bg-slate-100 dark:hover:bg-slate-900/60 ${
-                  i >= 2 ? "hidden md:flex" : ""
-                }`}
-              >
-                <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">
-                  {col.name}
-                </span>
-                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                  {col.staff}
-                </span>
+          <div className="min-w-[520px] md:min-w-[1000px]">
+            {/* Encabezado de columnas */}
+            <div className="grid grid-cols-[70px_repeat(2,1fr)] md:grid-cols-[100px_repeat(5,1fr)] sticky top-0 z-30">
+              <div className="bg-slate-50 dark:bg-slate-950 h-14 border-b border-r border-border-subtle dark:border-slate-800/50 flex items-center justify-center">
+                <Clock
+                  size={16}
+                  className="text-slate-400 dark:text-slate-500"
+                />
               </div>
-            ))}
-
-            {hours.map((hour) => (
-              <React.Fragment key={hour}>
-                <div className="h-24 border-b border-r border-border-subtle dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-950 flex items-start justify-end pr-3 pt-2 text-[10px] font-bold text-slate-400 dark:text-slate-500 font-mono">
-                  {hour}
+              {columns.map((col, i) => (
+                <div
+                  key={col.id}
+                  className={`bg-slate-50 dark:bg-slate-950 h-14 border-b border-r border-border-subtle dark:border-slate-800/50 flex flex-col items-center justify-center p-2 text-center transition-all hover:bg-slate-100 dark:hover:bg-slate-900/60 ${
+                    i >= 2 ? "hidden md:flex" : ""
+                  }`}
+                >
+                  <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">
+                    {col.name}
+                  </span>
+                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate max-w-full">
+                    {col.staff}
+                  </span>
                 </div>
+              ))}
+            </div>
 
-                {columns.map((col, i) => {
-                  const match = filteredBookings.find(
-                    (b) => b.timeStart === hour && b.columnId === col.id,
-                  );
-                  return (
-                    <div
-                      key={`${hour}-${col.id}`}
-                      className={`h-24 border-b border-r border-border-subtle/80 dark:border-slate-800/20 bg-white dark:bg-slate-950/30 p-2 relative group hover:bg-slate-50 dark:hover:bg-slate-900/10 transition-colors ${
-                        i >= 2 ? "hidden md:block" : ""
-                      }`}
-                    >
-                      {match ? (
+            {/* Cuerpo horario con posicionamiento proporcional */}
+            <div className="grid grid-cols-[70px_repeat(2,1fr)] md:grid-cols-[100px_repeat(5,1fr)]">
+              <div
+                className="relative border-r border-border-subtle dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-950"
+                style={{ height: ALTURA_GRILLA }}
+              >
+                {HOURS.map((hour, i) => (
+                  <div
+                    key={hour}
+                    className="absolute inset-x-0 border-b border-border-subtle dark:border-slate-800/50 text-[10px] font-bold text-slate-400 dark:text-slate-500 font-mono"
+                    style={{
+                      top: i * PIXELES_POR_HORA,
+                      height: PIXELES_POR_HORA,
+                    }}
+                  >
+                    <span className="absolute right-2 top-1.5">{hour}</span>
+                  </div>
+                ))}
+              </div>
+
+              {columns.map((col, i) => {
+                const citas = turnosHoy.filter((b) => b.columnId === col.id);
+                return (
+                  <div
+                    key={col.id}
+                    className={`relative border-r border-border-subtle/80 dark:border-slate-800/20 bg-white dark:bg-slate-950/30 ${
+                      i >= 2 ? "hidden md:block" : ""
+                    }`}
+                    style={{ height: ALTURA_GRILLA }}
+                  >
+                    {HOURS.map((hour, j) => (
+                      <div
+                        key={hour}
+                        className="absolute inset-x-0 border-b border-border-subtle/80 dark:border-slate-800/20"
+                        style={{ top: j * PIXELES_POR_HORA }}
+                      />
+                    ))}
+                    {citas.map((b) => {
+                      const alto = Math.max(
+                        (duracionMin(b) / 60) * PIXELES_POR_HORA,
+                        26,
+                      );
+                      const top = Math.max(
+                        ((minutosDe(b.timeStart) - INICIO_JORNADA) / 60) *
+                          PIXELES_POR_HORA,
+                        4,
+                      );
+                      return (
                         <div
-                          onClick={() => setSelectedBooking(match)}
-                          className={`absolute inset-x-2 top-2 h-[80px] z-10 rounded-xl p-3 border-l-4 text-left transition-all hover:scale-[1.03] cursor-pointer shadow-md dark:shadow-lg active:scale-100 ${
-                            match.color === "primary"
+                          key={b.id}
+                          onClick={() => setSelectedBooking(b)}
+                          className={`absolute left-1 right-1 z-10 rounded-xl p-2 border-l-4 text-left overflow-hidden transition-all hover:scale-[1.01] hover:z-20 cursor-pointer shadow-md dark:shadow-lg ${
+                            b.color === "primary"
                               ? "bg-indigo-50/90 dark:bg-indigo-600/15 border-indigo-500 text-indigo-950 dark:text-indigo-100 hover:bg-indigo-100/90 dark:hover:bg-indigo-600/25"
-                              : match.color === "secondary"
+                              : b.color === "secondary"
                                 ? "bg-emerald-50/90 dark:bg-emerald-500/15 border-emerald-500 text-emerald-950 dark:text-emerald-100 hover:bg-emerald-100/90 dark:hover:bg-emerald-500/25"
                                 : "bg-amber-50/90 dark:bg-amber-500/15 border-amber-500 text-amber-950 dark:text-amber-100 hover:bg-amber-100/90 dark:hover:bg-amber-500/25"
                           }`}
+                          style={{ top, height: alto }}
                         >
-                          <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
-                            <span
-                              className={
-                                match.color === "primary"
-                                  ? "text-indigo-600 dark:text-indigo-400"
-                                  : match.color === "secondary"
-                                    ? "text-emerald-600 dark:text-emerald-400"
-                                    : "text-amber-600 dark:text-amber-500"
-                              }
-                            >
-                              {match.serviceName}
-                            </span>
-                          </div>
-                          <h4 className="text-xs font-bold text-slate-900 dark:text-slate-100 mt-1 truncate">
-                            {match.clientName}
-                          </h4>
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono mt-0.5">
-                            {match.timeStart} - {match.timeEnd}
+                          <p
+                            className={`flex justify-between items-center text-[10px] font-bold uppercase tracking-wider truncate ${
+                              b.color === "primary"
+                                ? "text-indigo-600 dark:text-indigo-400"
+                                : b.color === "secondary"
+                                  ? "text-emerald-600 dark:text-emerald-400"
+                                  : "text-amber-600 dark:text-amber-500"
+                            }`}
+                          >
+                            {b.serviceName}
                           </p>
+                          <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                            {b.clientName}
+                          </p>
+                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate">
+                            {b.timeStart} - {b.timeEnd}
+                          </p>
+                          {b.estado === "cancelado" && (
+                            <p className="text-[10px] font-bold text-red-500 dark:text-red-400 uppercase tracking-wide">
+                              Cancelado
+                            </p>
+                          )}
                         </div>
-                      ) : (
-                        <div className="absolute inset-0 bg-transparent flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                          <span className="text-[9px] text-indigo-400/60 dark:text-indigo-500/40 uppercase font-bold tracking-widest font-mono">
-                            Disponible
-                          </span>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </React.Fragment>
-            ))}
+                      );
+                    })}
+                  </div>
+                );
+              })}
+
+              {columns.length === 0 && (
+                <div
+                  className="col-span-2 md:col-span-5 border-r border-border-subtle dark:border-slate-800/20"
+                  style={{ height: ALTURA_GRILLA }}
+                >
+                  <p className="p-4 text-center text-xs text-slate-400">
+                    No hay profesionales configurados todavía.
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
@@ -343,14 +409,15 @@ export default function AdminCalendar() {
         <div className="border border-border-subtle dark:border-slate-800 rounded-xl overflow-hidden bg-white dark:bg-slate-950/90 shadow-sm p-4 flex-grow">
           <div className="grid grid-cols-1 sm:grid-cols-3 lg:grid-cols-7 gap-2">
             {getWeekDays().map((dayDate, idx) => {
-              const isSelectedDay =
+              const esDiaSeleccionado =
                 dayDate.toDateString() === currentDate.toDateString();
+              const citas = turnosDelDia(dayDate);
               return (
                 <div
                   key={idx}
                   onClick={() => setCurrentDate(dayDate)}
                   className={`border rounded-xl p-3 min-h-[140px] sm:min-h-[350px] cursor-pointer transition-all flex flex-col justify-between ${
-                    isSelectedDay
+                    esDiaSeleccionado
                       ? "border-indigo-500 bg-indigo-50/30 dark:bg-indigo-950/20 shadow-md"
                       : "border-border-subtle dark:border-slate-800/80 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50/50 dark:bg-slate-900/30"
                   }`}
@@ -364,7 +431,7 @@ export default function AdminCalendar() {
                       </p>
                       <p
                         className={`text-lg font-bold ${
-                          isSelectedDay
+                          esDiaSeleccionado
                             ? "text-indigo-600 dark:text-indigo-400"
                             : "text-slate-800 dark:text-slate-200"
                         }`}
@@ -374,9 +441,9 @@ export default function AdminCalendar() {
                     </div>
 
                     <div className="mt-3 space-y-2">
-                      {filteredBookings.slice(0, 3).map((b, i) => (
+                      {citas.slice(0, 3).map((b) => (
                         <div
-                          key={i}
+                          key={b.id}
                           onClick={(e) => {
                             e.stopPropagation();
                             setSelectedBooking(b);
@@ -387,15 +454,20 @@ export default function AdminCalendar() {
                             {b.clientName}
                           </p>
                           <p className="text-slate-500 dark:text-slate-400">
-                            {b.timeStart}
+                            {b.timeStart} - {b.timeEnd}
                           </p>
                         </div>
                       ))}
+                      {citas.length === 0 && (
+                        <p className="text-center text-[10px] text-slate-300 dark:text-slate-600">
+                          Sin turnos
+                        </p>
+                      )}
                     </div>
                   </div>
 
                   <span className="text-[10px] text-center text-slate-400 block pt-2">
-                    {filteredBookings.length} turnos
+                    {citas.length} {citas.length === 1 ? "turno" : "turnos"}
                   </span>
                 </div>
               );
@@ -407,7 +479,6 @@ export default function AdminCalendar() {
       {/* VISTA MENSUAL */}
       {viewMode === "mensual" && (
         <div className="border border-border-subtle dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/90 shadow-sm p-4 flex-1 min-h-[420px] overflow-y-auto custom-scrollbar">
-          {/* Cabecera de días */}
           <div className="grid grid-cols-7 gap-2 text-center font-bold text-xs text-slate-400 uppercase tracking-wider mb-2 sticky top-0 bg-white dark:bg-slate-950 py-1 z-10">
             <div>Lun</div>
             <div>Mar</div>
@@ -418,7 +489,6 @@ export default function AdminCalendar() {
             <div>Dom</div>
           </div>
 
-          {/* Rejilla de días del mes */}
           <div className="grid grid-cols-7 gap-2">
             {getMonthDays().map((dayDate, idx) => {
               if (!dayDate) {
@@ -429,22 +499,23 @@ export default function AdminCalendar() {
                   />
                 );
               }
-              const isSelectedDay =
+              const esDiaSeleccionado =
                 dayDate.toDateString() === currentDate.toDateString();
+              const cantidad = turnosDelDia(dayDate).length;
 
               return (
                 <div
                   key={idx}
                   onClick={() => setCurrentDate(dayDate)}
                   className={`h-14 sm:h-16 p-1 border rounded-lg cursor-pointer transition-all flex flex-col justify-between ${
-                    isSelectedDay
+                    esDiaSeleccionado
                       ? "border-indigo-500 bg-indigo-50/40 dark:bg-indigo-950/30 shadow-sm"
                       : "border-border-subtle/80 dark:border-slate-800/60 bg-white dark:bg-slate-900/30 hover:border-slate-300 dark:hover:border-slate-700"
                   }`}
                 >
                   <span
                     className={`text-[10px] sm:text-xs font-bold ${
-                      isSelectedDay
+                      esDiaSeleccionado
                         ? "text-indigo-600 dark:text-indigo-400"
                         : "text-slate-700 dark:text-slate-300"
                     }`}
@@ -453,9 +524,11 @@ export default function AdminCalendar() {
                   </span>
 
                   <div className="mt-0.5">
-                    <span className="hidden sm:block text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 rounded py-0.5 px-1 text-center truncate">
-                      4 Citas
-                    </span>
+                    {cantidad > 0 && (
+                      <span className="hidden sm:block text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 rounded py-0.5 px-1 text-center truncate">
+                        {cantidad} Citas
+                      </span>
+                    )}
                   </div>
                 </div>
               );
@@ -464,7 +537,7 @@ export default function AdminCalendar() {
         </div>
       )}
 
-      {/* Bottom stats layout */}
+      {/* Métricas dinámicas */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-white dark:bg-slate-900 border border-border-subtle dark:border-slate-800 rounded-xl text-left shadow-sm dark:shadow-none select-none transition-colors duration-200">
         <div className="bg-slate-50 dark:bg-slate-950/80 p-3 rounded-lg border border-border-subtle/80 dark:border-slate-800/80 flex items-center gap-3">
           <div className="w-10 h-10 rounded-lg bg-indigo-500/10 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
@@ -475,7 +548,7 @@ export default function AdminCalendar() {
               Turnos diarios
             </p>
             <p className="text-lg font-bold text-slate-900 dark:text-slate-100 font-sans">
-              32 / 45
+              {turnosHoy.length} / {slotsHoy}
             </p>
           </div>
         </div>
@@ -489,7 +562,7 @@ export default function AdminCalendar() {
               Ingresos proyectados
             </p>
             <p className="text-lg font-bold text-slate-900 dark:text-slate-100 font-sans">
-              $1,450.00
+              {formatearMoneda(ingresosHoy)}
             </p>
           </div>
         </div>
@@ -503,7 +576,7 @@ export default function AdminCalendar() {
               Sin confirmar
             </p>
             <p className="text-lg font-bold text-slate-900 dark:text-slate-100 font-sans">
-              04
+              {String(pendientesHoy.length).padStart(2, "0")}
             </p>
           </div>
         </div>
@@ -517,7 +590,7 @@ export default function AdminCalendar() {
               Cancelaciones
             </p>
             <p className="text-lg font-bold text-slate-900 dark:text-slate-100 font-sans">
-              02
+              {String(canceladosHoy.length).padStart(2, "0")}
             </p>
           </div>
         </div>
@@ -541,7 +614,6 @@ export default function AdminCalendar() {
             </div>
 
             <div className="space-y-4">
-              {/* Selección de Día */}
               <div>
                 <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1">
                   Día
@@ -559,67 +631,6 @@ export default function AdminCalendar() {
                 </select>
               </div>
 
-              {/* VISTA MENSUAL */}
-              {viewMode === "mensual" && (
-                <div className="border border-border-subtle dark:border-slate-800 rounded-xl bg-white dark:bg-slate-950/90 shadow-sm p-3 w-full">
-                  {/* Días de la semana */}
-                  <div className="grid grid-cols-7 gap-1.5 text-center font-bold text-xs text-slate-400 uppercase tracking-wider mb-2">
-                    <div>Lun</div>
-                    <div>Mar</div>
-                    <div>Mié</div>
-                    <div>Jue</div>
-                    <div>Vie</div>
-                    <div>Sáb</div>
-                    <div>Dom</div>
-                  </div>
-
-                  {/* Grilla de días */}
-                  <div className="grid grid-cols-7 gap-1.5 auto-rows-fr">
-                    {getMonthDays().map((dayDate, idx) => {
-                      if (!dayDate) {
-                        return (
-                          <div
-                            key={idx}
-                            className="min-h-[50px] bg-slate-50/50 dark:bg-slate-900/10 rounded-md border border-slate-100/50 dark:border-slate-800/30"
-                          />
-                        );
-                      }
-                      const isSelectedDay =
-                        dayDate.toDateString() === currentDate.toDateString();
-
-                      return (
-                        <div
-                          key={idx}
-                          onClick={() => setCurrentDate(dayDate)}
-                          className={`min-h-[52px] p-1.5 border rounded-lg cursor-pointer transition-all flex flex-col justify-between ${
-                            isSelectedDay
-                              ? "border-indigo-500 bg-indigo-50/40 dark:bg-indigo-950/30 shadow-sm"
-                              : "border-border-subtle/80 dark:border-slate-800/60 bg-white dark:bg-slate-900/30 hover:border-slate-300 dark:hover:border-slate-700"
-                          }`}
-                        >
-                          <span
-                            className={`text-xs font-bold ${
-                              isSelectedDay
-                                ? "text-indigo-600 dark:text-indigo-400"
-                                : "text-slate-700 dark:text-slate-300"
-                            }`}
-                          >
-                            {dayDate.getDate()}
-                          </span>
-
-                          <div className="mt-1">
-                            <span className="block text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 rounded py-0.5 px-1 text-center truncate">
-                              4 Citas
-                            </span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Selección de Año */}
               <div>
                 <label className="text-[10px] uppercase font-bold text-slate-400 tracking-wider block mb-1">
                   Año
@@ -656,100 +667,12 @@ export default function AdminCalendar() {
         </div>
       )}
 
-      {/* Booking Context Management Modal */}
+      {/* Modal de edición del turno (acciones reales conectadas a la API) */}
       {selectedBooking && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center bg-slate-950/60 dark:bg-slate-950/80 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-white dark:bg-slate-950 border border-border-subtle dark:border-slate-800 rounded-2xl w-full max-w-md overflow-hidden shadow-2xl animate-scale-up">
-            <div className="p-6 border-b border-slate-100 dark:border-slate-900 flex justify-between items-center">
-              <div>
-                <h3 className="text-lg font-bold text-indigo-600 dark:text-indigo-400">
-                  Gestionar Cita
-                </h3>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  {selectedBooking.clientName} • Service Details
-                </p>
-              </div>
-              <button
-                onClick={() => setSelectedBooking(null)}
-                className="p-1 px-2 text-xs font-semibold text-slate-400 hover:text-slate-700 dark:hover:text-slate-100 hover:bg-slate-100 dark:hover:bg-slate-800/50 rounded-full transition-colors"
-              >
-                ✕
-              </button>
-            </div>
-
-            <div className="p-4 space-y-2">
-              <button
-                onClick={() => handleAction("modify")}
-                className="flex items-center gap-4 w-full p-4 rounded-xl hover:bg-indigo-50 dark:hover:bg-indigo-600/10 text-slate-700 dark:text-slate-200 text-left transition-all group"
-              >
-                <div className="p-2.5 bg-indigo-500/10 rounded-xl text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-500/20 transition-colors">
-                  <Edit2 size={16} />
-                </div>
-                <div>
-                  <span className="block font-bold text-xs text-slate-900 dark:text-slate-100">
-                    Modificar Cita
-                  </span>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5">
-                    Cambiar horario, servicio o profesional asignado.
-                  </span>
-                </div>
-              </button>
-
-              <button
-                onClick={() => handleAction("cancel")}
-                className="flex items-center gap-4 w-full p-4 rounded-xl hover:bg-rose-50 dark:hover:bg-red-950/20 text-slate-700 dark:text-slate-200 text-left transition-all group"
-              >
-                <div className="p-2.5 bg-red-500/10 rounded-xl text-red-600 dark:text-red-400 group-hover:bg-red-500/20 transition-colors">
-                  <CalendarX size={16} />
-                </div>
-                <div>
-                  <span className="block font-bold text-xs text-red-600 dark:text-red-400">
-                    Cancelar Turno
-                  </span>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5">
-                    Libera este espacio inmediatamente en la agenda.
-                  </span>
-                </div>
-              </button>
-
-              <button
-                onClick={() => handleAction("send_whatsapp")}
-                className="flex items-center gap-4 w-full p-4 rounded-xl hover:bg-emerald-50 dark:hover:bg-emerald-600/10 text-slate-700 dark:text-slate-200 text-left transition-all group"
-              >
-                <div className="p-2.5 bg-emerald-500/10 rounded-xl text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500/20 transition-colors">
-                  <MessageSquare size={16} />
-                </div>
-                <div>
-                  <span className="block font-bold text-xs text-emerald-600 dark:text-emerald-400">
-                    Enviar Recordatorio Manual
-                  </span>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 block mt-0.5">
-                    Notificar al cliente vía SMS/Whatsapp con Evolution Link.
-                  </span>
-                </div>
-              </button>
-            </div>
-
-            <div className="p-4 bg-slate-50 dark:bg-slate-900 flex gap-3 border-t border-border-subtle dark:border-slate-800">
-              <button
-                onClick={() => setSelectedBooking(null)}
-                className="flex-1 py-2 px-4 border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg text-xs font-semibold uppercase tracking-wider transition-colors"
-              >
-                Cerrar
-              </button>
-              {/* Cargando ficha del cliente */}
-              <button
-                onClick={() => {
-                  setSelectedBooking(null);
-                  mostrarToast("Cargando ficha del cliente...", "info");
-                }}
-                className="flex-1 py-2 px-4 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-semibold uppercase tracking-wider transition-all shadow-sm"
-              >
-                Ver Ficha
-              </button>
-            </div>
-          </div>
-        </div>
+        <ModalEditarCita
+          booking={selectedBooking}
+          onClose={() => setSelectedBooking(null)}
+        />
       )}
     </div>
   );

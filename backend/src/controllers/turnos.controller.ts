@@ -8,6 +8,7 @@ import {
   reagendarTurnoService,
   listarTurnosAdminService,
   cancelarTurnoAdminService,
+  cambiarEstadoTurnoAdminService,
   bloquearHorarioService,
 } from "../services/turnos.service.js";
 import { resolverSucursalDeUsuarioService } from "../services/negocios.service.js";
@@ -16,6 +17,7 @@ import {
   reservarTurnoSchema,
   disponibilidadSchema,
   reagendarTurnoSchema,
+  cambiarEstadoTurnoSchema,
   bloquearHorarioSchema,
 } from "../schemas/turnos.schemas";
 
@@ -111,6 +113,24 @@ export const bloquearHorarioHandler = async (
   const cuerpo = validarCuerpo(bloquearHorarioSchema, request.body);
   const resultado = await bloquearHorarioService(usuario.id, cuerpo);
   return reply.status(200).send(resultado);
+};
+
+export const cambiarEstadoTurnoHandler = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  const { id } = request.params as { id: string };
+  const usuario = request.usuario!;
+  const cuerpo = validarCuerpo(cambiarEstadoTurnoSchema, request.body);
+  const turno = await cambiarEstadoTurnoAdminService(
+    usuario.id,
+    id,
+    cuerpo.estado,
+  );
+  return reply.status(200).send({
+    message: "Turno actualizado con éxito.",
+    turno,
+  });
 };
 
 export const consultarDisponibilidadHandler = async (

@@ -471,6 +471,76 @@ export const cancelarTurnoAdminService = async (
   return actualizado;
 };
 
+// Cierra un turno desde el panel admin (completado / no_asistio).
+// Valida pertenencia a la sucursal del usuario logueado.
+export const cambiarEstadoTurnoAdminService = async (
+  usuarioId: string,
+  turnoId: string,
+  estado: "completado" | "no_asistio",
+) => {
+  const sucursal = await resolverSucursalDeUsuarioService(usuarioId);
+  if (!sucursal) {
+    throw {
+      status: 403,
+      message: "Tu cuenta no está vinculada a ninguna sucursal.",
+    };
+  }
+
+  const { data: turno, error: errorBusqueda } = await supabase
+    .from("turnos")
+    .select("id, estado, profesionales:profesional_id (id, sucursal_id)")
+    .eq("id", turnoId)
+    .single();
+
+  if (errorBusqueda || !turno) {
+    throw { status: 404, message: "El turno solicitado no existe." };
+  }
+
+  const profesional = Array.isArray(turno.profesionales)
+    ? turno.profesionales[0]
+    : turno.profesionales;
+
+  if (!profesional || profesional.sucursal_id !== sucursal.id) {
+    throw {
+      status: 403,
+      message: "No puedes modificar turnos de otra sucursal.",
+    };
+  }
+
+  if (turno.estado === "cancelado") {
+    throw {
+      status: 409,
+      message: "El turno está cancelado y no se puede cerrar.",
+    };
+  }
+
+  if (turno.estado === "completado" || turno.estado === "no_asistio") {
+    throw {
+      status: 409,
+      message: `El turno ya está marcado como ${turno.estado}.`,
+    };
+  }
+
+  const { data: actualizado, error } = await supabase
+    .from("turnos")
+    .update({ estado })
+    .eq("id", turnoId)
+    .select(
+      `
+        id, fecha, hora_inicio, hora_fin, estado,
+        motivo_cancelacion, cancelado_por,
+        servicios:servicio_id (nombre, precio, duracion_minutos),
+        profesionales:profesional_id (id, especialidad, usuarios:usuario_id (nombre))
+      `,
+    )
+    .single();
+
+  if (error) {
+    throw { status: 400, message: "No se pudo actualizar el turno." };
+  }
+  return actualizado;
+};
+
 export const bloquearHorarioService = async (
   usuarioId: string,
   datos: {

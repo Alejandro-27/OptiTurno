@@ -9,6 +9,7 @@ import {
   cancelarTurno as cancelarTurnoApi,
   reagendarTurno as reagendarTurnoApi,
   listarTurnosAdmin,
+  cambiarEstadoTurno as cambiarEstadoTurnoApi,
 } from "../../api/turnos.api";
 import { colorDesdeId, iconoDesdeNombre, turnoAdminDtoToUI } from "../mappers";
 
@@ -27,10 +28,18 @@ export interface ReservarTurnoResultado {
   turno: BookingEvent;
 }
 
+export type EstadoCierreComercio = "completado" | "no_asistio";
+
 export interface TurnosRepositorio {
   listarTurnos(): Promise<BookingEvent[]>;
   reservarTurno(input: ReservarTurnoInput): Promise<ReservarTurnoResultado>;
-  cancelarTurno(id: string): Promise<void>;
+  cancelarTurno(id: string, motivo?: string): Promise<void>;
+  cambiarEstadoTurno(id: string, estado: EstadoCierreComercio): Promise<void>;
+  reagendarTurnoAdmin(
+    id: string,
+    nuevaFecha: string,
+    nuevaHoraInicio: string,
+  ): Promise<void>;
   obtenerDisponibilidad(
     profesionalId: string,
     fecha: string,
@@ -46,8 +55,16 @@ export interface TurnosRepositorio {
 
 let cacheTurnos: BookingEvent[] | null = null;
 
+// Fechas relativas (modo de prueba): los turnos demo caen hoy/mismo día para
+// que el Calendario Maestro y sus filtros por día/estado sean visibles.
+const fechaHoy = () => new Date().toISOString().slice(0, 10);
+
 const semillaTurnos = (): BookingEvent[] =>
-  initialBookings.map((b) => ({ ...b }));
+  initialBookings.map((b, i) => ({
+    ...b,
+    fecha: fechaHoy(),
+    estado: i === 4 ? "cancelado" : i === 3 ? "pendiente_pago" : "confirmado",
+  }));
 
 let cacheMisTurnos: MisTurnoDTO[] | null = null;
 
@@ -107,12 +124,42 @@ export const turnosRepositorioMock: TurnosRepositorio = {
       columnId: input.profesional_id,
       color: colorDesdeId(input.profesional_id),
       icon: iconoDesdeNombre(input.servicio_nombre),
+      fecha: input.fecha,
+      estado: "pendiente_pago",
     };
     cacheTurnos = [nuevo, ...(cacheTurnos || semillaTurnos())];
     return { turno: nuevo };
   },
-  async cancelarTurno(id) {
-    cacheTurnos = (cacheTurnos || semillaTurnos()).filter((b) => b.id !== id);
+  async cancelarTurno(id, motivo) {
+    cacheTurnos = (cacheTurnos || semillaTurnos()).map((b) =>
+      b.id === id
+        ? {
+            ...b,
+            estado: "cancelado",
+            motivoCancelacion: motivo || null,
+            canceladoPor: "comercio",
+          }
+        : b,
+    );
+  },
+  async cambiarEstadoTurno(id, estado) {
+    cacheTurnos = (cacheTurnos || semillaTurnos()).map((b) =>
+      b.id === id ? { ...b, estado } : b,
+    );
+  },
+  async reagendarTurnoAdmin(id, nuevaFecha, nuevaHoraInicio) {
+    const base = cacheTurnos || semillaTurnos();
+    const original = base.find((b) => b.id === id);
+    if (!original) throw new Error("El turno no existe.");
+    cacheTurnos = base
+      .map((b) => (b.id === id ? { ...b, estado: "reagendado" } : b))
+      .concat({
+        ...original,
+        id: crypto.randomUUID(),
+        fecha: nuevaFecha,
+        timeStart: nuevaHoraInicio,
+        estado: "confirmado",
+      });
   },
   async obtenerDisponibilidad(profesionalId, fecha) {
     const horaCorta = (hora: string) => hora.slice(0, 5);
@@ -208,8 +255,14 @@ export const turnosRepositorioApi: TurnosRepositorio = {
     };
     return { turno: nuevo };
   },
-  async cancelarTurno(id) {
-    await cancelarTurnoApi(id);
+  async cancelarTurno(id, motivo) {
+    await cancelarTurnoApi(id, motivo);
+  },
+  async cambiarEstadoTurno(id, estado) {
+    await cambiarEstadoTurnoApi(id, estado);
+  },
+  async reagendarTurnoAdmin(id, nuevaFecha, nuevaHoraInicio) {
+    await reagendarTurnoApi(id, nuevaFecha, nuevaHoraInicio);
   },
   async obtenerDisponibilidad(profesionalId, fecha) {
     return obtenerDisponibilidad(profesionalId, fecha);

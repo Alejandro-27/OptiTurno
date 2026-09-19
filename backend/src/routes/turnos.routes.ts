@@ -8,6 +8,7 @@ import {
   reagendarTurnoHandler,
   listarTurnosAdminHandler,
   bloquearHorarioHandler,
+  cambiarEstadoTurnoHandler,
 } from "../controllers/turnos.controller";
 
 import {
@@ -66,6 +67,17 @@ export const turnosRouter = async (fastify: FastifyInstance) => {
       ],
     },
     reagendarTurnoHandler,
+  );
+
+  fastify.patch(
+    "/:id/estado",
+    {
+      preHandler: [
+        verificarAutenticacion,
+        permitirRoles(["superadmin", "admin_negocio"]),
+      ],
+    },
+    cambiarEstadoTurnoHandler,
   );
 
   fastify.post(

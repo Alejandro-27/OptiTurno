@@ -88,6 +88,14 @@ export function turnoAdminDtoToUI(dto: TurnoAdminDTO): BookingEvent {
     columnId: profesionalId,
     color: colorDesdeId(profesionalId),
     icon: iconoDesdeNombre(nombreServicio),
+    fecha: dto.fecha,
+    estado: dto.estado,
+    precio: dto.servicios?.precio,
+    duracionMin: dto.servicios?.duracion_minutos,
+    telefono: dto.clientes?.telefono,
+    profesionalNombre: dto.profesionales?.usuarios?.nombre,
+    motivoCancelacion: dto.motivo_cancelacion,
+    canceladoPor: dto.cancelado_por,
   };
 }
 
