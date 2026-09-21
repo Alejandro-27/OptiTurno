@@ -273,132 +273,134 @@ export default function AdminCalendar() {
 
       {/* VISTA DIARIA */}
       {viewMode === "diario" && (
-        <div className="border border-border-subtle dark:border-slate-800/80 rounded-xl overflow-hidden bg-white dark:bg-slate-950/90 shadow-sm dark:shadow-2xl flex-grow overflow-x-auto custom-scrollbar transition-colors duration-200">
-          <div className="min-w-[520px] md:min-w-[1000px]">
-            {/* Encabezado de columnas */}
-            <div className="grid grid-cols-[70px_repeat(2,1fr)] md:grid-cols-[100px_repeat(5,1fr)] sticky top-0 z-30">
-              <div className="bg-slate-50 dark:bg-slate-950 h-14 border-b border-r border-border-subtle dark:border-slate-800/50 flex items-center justify-center">
-                <Clock
-                  size={16}
-                  className="text-slate-400 dark:text-slate-500"
-                />
-              </div>
-              {columns.map((col, i) => (
-                <div
-                  key={col.id}
-                  className={`bg-slate-50 dark:bg-slate-950 h-14 border-b border-r border-border-subtle dark:border-slate-800/50 flex flex-col items-center justify-center p-2 text-center transition-all hover:bg-slate-100 dark:hover:bg-slate-900/60 ${
-                    i >= 2 ? "hidden md:flex" : ""
-                  }`}
-                >
-                  <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">
-                    {col.name}
-                  </span>
-                  <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate max-w-full">
-                    {col.staff}
-                  </span>
+        <div className="border border-border-subtle dark:border-slate-800/80 rounded-xl overflow-hidden bg-white dark:bg-slate-950/90 shadow-sm dark:shadow-2xl flex-grow flex flex-col transition-colors duration-200">
+          <div className="flex-1 min-h-0 overflow-x-auto overflow-y-auto custom-scrollbar">
+            <div className="min-w-[520px] md:min-w-[1000px]">
+              {/* Encabezado de columnas */}
+              <div className="grid grid-cols-[70px_repeat(2,1fr)] md:grid-cols-[100px_repeat(5,1fr)] sticky top-0 z-30">
+                <div className="bg-slate-50 dark:bg-slate-950 h-14 border-b border-r border-border-subtle dark:border-slate-800/50 flex items-center justify-center">
+                  <Clock
+                    size={16}
+                    className="text-slate-400 dark:text-slate-500"
+                  />
                 </div>
-              ))}
-            </div>
-
-            {/* Cuerpo horario con posicionamiento proporcional */}
-            <div className="grid grid-cols-[70px_repeat(2,1fr)] md:grid-cols-[100px_repeat(5,1fr)]">
-              <div
-                className="relative border-r border-border-subtle dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-950"
-                style={{ height: ALTURA_GRILLA }}
-              >
-                {HOURS.map((hour, i) => (
+                {columns.map((col, i) => (
                   <div
-                    key={hour}
-                    className="absolute inset-x-0 border-b border-border-subtle dark:border-slate-800/50 text-[10px] font-bold text-slate-400 dark:text-slate-500 font-mono"
-                    style={{
-                      top: i * PIXELES_POR_HORA,
-                      height: PIXELES_POR_HORA,
-                    }}
+                    key={col.id}
+                    className={`bg-slate-50 dark:bg-slate-950 h-14 border-b border-r border-border-subtle dark:border-slate-800/50 flex flex-col items-center justify-center p-2 text-center transition-all hover:bg-slate-100 dark:hover:bg-slate-900/60 ${
+                      i >= 2 ? "hidden md:flex" : ""
+                    }`}
                   >
-                    <span className="absolute right-2 top-1.5">{hour}</span>
+                    <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">
+                      {col.name}
+                    </span>
+                    <span className="text-[10px] text-slate-500 dark:text-slate-400 font-medium truncate max-w-full">
+                      {col.staff}
+                    </span>
                   </div>
                 ))}
               </div>
 
-              {columns.map((col, i) => {
-                const citas = turnosHoy.filter((b) => b.columnId === col.id);
-                return (
-                  <div
-                    key={col.id}
-                    className={`relative border-r border-border-subtle/80 dark:border-slate-800/20 bg-white dark:bg-slate-950/30 ${
-                      i >= 2 ? "hidden md:block" : ""
-                    }`}
-                    style={{ height: ALTURA_GRILLA }}
-                  >
-                    {HOURS.map((hour, j) => (
-                      <div
-                        key={hour}
-                        className="absolute inset-x-0 border-b border-border-subtle/80 dark:border-slate-800/20"
-                        style={{ top: j * PIXELES_POR_HORA }}
-                      />
-                    ))}
-                    {citas.map((b) => {
-                      const alto = Math.max(
-                        (duracionMin(b) / 60) * PIXELES_POR_HORA,
-                        26,
-                      );
-                      const top = Math.max(
-                        ((minutosDe(b.timeStart) - INICIO_JORNADA) / 60) *
-                          PIXELES_POR_HORA,
-                        4,
-                      );
-                      return (
-                        <div
-                          key={b.id}
-                          onClick={() => setSelectedBooking(b)}
-                          className={`absolute left-1 right-1 z-10 rounded-xl p-2 border-l-4 text-left overflow-hidden transition-all hover:scale-[1.01] hover:z-20 cursor-pointer shadow-md dark:shadow-lg ${
-                            b.color === "primary"
-                              ? "bg-indigo-50/90 dark:bg-indigo-600/15 border-indigo-500 text-indigo-950 dark:text-indigo-100 hover:bg-indigo-100/90 dark:hover:bg-indigo-600/25"
-                              : b.color === "secondary"
-                                ? "bg-emerald-50/90 dark:bg-emerald-500/15 border-emerald-500 text-emerald-950 dark:text-emerald-100 hover:bg-emerald-100/90 dark:hover:bg-emerald-500/25"
-                                : "bg-amber-50/90 dark:bg-amber-500/15 border-amber-500 text-amber-950 dark:text-amber-100 hover:bg-amber-100/90 dark:hover:bg-amber-500/25"
-                          }`}
-                          style={{ top, height: alto }}
-                        >
-                          <p
-                            className={`flex justify-between items-center text-[10px] font-bold uppercase tracking-wider truncate ${
-                              b.color === "primary"
-                                ? "text-indigo-600 dark:text-indigo-400"
-                                : b.color === "secondary"
-                                  ? "text-emerald-600 dark:text-emerald-400"
-                                  : "text-amber-600 dark:text-amber-500"
-                            }`}
-                          >
-                            {b.serviceName}
-                          </p>
-                          <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
-                            {b.clientName}
-                          </p>
-                          <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate">
-                            {b.timeStart} - {b.timeEnd}
-                          </p>
-                          {b.estado === "cancelado" && (
-                            <p className="text-[10px] font-bold text-red-500 dark:text-red-400 uppercase tracking-wide">
-                              Cancelado
-                            </p>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                );
-              })}
-
-              {columns.length === 0 && (
+              {/* Cuerpo horario con posicionamiento proporcional */}
+              <div className="grid grid-cols-[70px_repeat(2,1fr)] md:grid-cols-[100px_repeat(5,1fr)]">
                 <div
-                  className="col-span-2 md:col-span-5 border-r border-border-subtle dark:border-slate-800/20"
+                  className="relative border-r border-border-subtle dark:border-slate-800/50 bg-slate-50/50 dark:bg-slate-950"
                   style={{ height: ALTURA_GRILLA }}
                 >
-                  <p className="p-4 text-center text-xs text-slate-400">
-                    No hay profesionales configurados todavía.
-                  </p>
+                  {HOURS.map((hour, i) => (
+                    <div
+                      key={hour}
+                      className="absolute inset-x-0 border-b border-border-subtle dark:border-slate-800/50 text-[10px] font-bold text-slate-400 dark:text-slate-500 font-mono"
+                      style={{
+                        top: i * PIXELES_POR_HORA,
+                        height: PIXELES_POR_HORA,
+                      }}
+                    >
+                      <span className="absolute right-2 top-1.5">{hour}</span>
+                    </div>
+                  ))}
                 </div>
-              )}
+
+                {columns.map((col, i) => {
+                  const citas = turnosHoy.filter((b) => b.columnId === col.id);
+                  return (
+                    <div
+                      key={col.id}
+                      className={`relative border-r border-border-subtle/80 dark:border-slate-800/20 bg-white dark:bg-slate-950/30 ${
+                        i >= 2 ? "hidden md:block" : ""
+                      }`}
+                      style={{ height: ALTURA_GRILLA }}
+                    >
+                      {HOURS.map((hour, j) => (
+                        <div
+                          key={hour}
+                          className="absolute inset-x-0 border-b border-border-subtle/80 dark:border-slate-800/20"
+                          style={{ top: j * PIXELES_POR_HORA }}
+                        />
+                      ))}
+                      {citas.map((b) => {
+                        const alto = Math.max(
+                          (duracionMin(b) / 60) * PIXELES_POR_HORA,
+                          26,
+                        );
+                        const top = Math.max(
+                          ((minutosDe(b.timeStart) - INICIO_JORNADA) / 60) *
+                            PIXELES_POR_HORA,
+                          4,
+                        );
+                        return (
+                          <div
+                            key={b.id}
+                            onClick={() => setSelectedBooking(b)}
+                            className={`absolute left-1 right-1 z-10 rounded-xl p-2 border-l-4 text-left overflow-hidden transition-all hover:scale-[1.01] hover:z-20 cursor-pointer shadow-md dark:shadow-lg ${
+                              b.color === "primary"
+                                ? "bg-indigo-50/90 dark:bg-indigo-600/15 border-indigo-500 text-indigo-950 dark:text-indigo-100 hover:bg-indigo-100/90 dark:hover:bg-indigo-600/25"
+                                : b.color === "secondary"
+                                  ? "bg-emerald-50/90 dark:bg-emerald-500/15 border-emerald-500 text-emerald-950 dark:text-emerald-100 hover:bg-emerald-100/90 dark:hover:bg-emerald-500/25"
+                                  : "bg-amber-50/90 dark:bg-amber-500/15 border-amber-500 text-amber-950 dark:text-amber-100 hover:bg-amber-100/90 dark:hover:bg-amber-500/25"
+                            }`}
+                            style={{ top, height: alto }}
+                          >
+                            <p
+                              className={`flex justify-between items-center text-[10px] font-bold uppercase tracking-wider truncate ${
+                                b.color === "primary"
+                                  ? "text-indigo-600 dark:text-indigo-400"
+                                  : b.color === "secondary"
+                                    ? "text-emerald-600 dark:text-emerald-400"
+                                    : "text-amber-600 dark:text-amber-500"
+                              }`}
+                            >
+                              {b.serviceName}
+                            </p>
+                            <p className="text-xs font-bold text-slate-900 dark:text-slate-100 truncate">
+                              {b.clientName}
+                            </p>
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-mono truncate">
+                              {b.timeStart} - {b.timeEnd}
+                            </p>
+                            {b.estado === "cancelado" && (
+                              <p className="text-[10px] font-bold text-red-500 dark:text-red-400 uppercase tracking-wide">
+                                Cancelado
+                              </p>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+
+                {columns.length === 0 && (
+                  <div
+                    className="col-span-2 md:col-span-5 border-r border-border-subtle dark:border-slate-800/20"
+                    style={{ height: ALTURA_GRILLA }}
+                  >
+                    <p className="p-4 text-center text-xs text-slate-400">
+                      No hay profesionales configurados todavía.
+                    </p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
