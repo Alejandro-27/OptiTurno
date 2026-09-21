@@ -1,4 +1,5 @@
 import { supabase } from "../config/database";
+import { CLAVES, invalidar, leerConCache } from "../config/cache";
 
 export interface CrearAusenciaInput {
   profesional_id: string;
@@ -25,16 +26,18 @@ export const resolverProfesionalDeUsuarioService = async (
 };
 
 // Lista las ausencias de un profesional ordenadas por fecha (ascendente)
-export const listarAusenciasService = async (profesionalId: string) => {
-  const { data, error } = await supabase
-    .from("profesional_ausencias")
-    .select("*")
-    .eq("profesional_id", profesionalId)
-    .order("fecha", { ascending: true });
+// Caché 2 min por profesional; afecta además a la disponibilidad (CLAVES.dispGeneral).
+export const listarAusenciasService = async (profesionalId: string) =>
+  leerConCache(CLAVES.ausencias(profesionalId), 120, async () => {
+    const { data, error } = await supabase
+      .from("profesional_ausencias")
+      .select("*")
+      .eq("profesional_id", profesionalId)
+      .order("fecha", { ascending: true });
 
-  if (error) throw error;
-  return data || [];
-};
+    if (error) throw error;
+    return data || [];
+  });
 
 // Crea una o varias ausencias: una por día en el rango [fecha, fecha_hasta].
 // - Sin horas  -> día completo (el profesional no atiende).
@@ -96,6 +99,12 @@ export const crearAusenciasService = async (input: CrearAusenciaInput) => {
     throw error;
   }
 
+  // Las ausencias bloquean franjas en la disponibilidad y en la agenda.
+  await invalidar(CLAVES.ausenciasGeneral, CLAVES.dispGeneral);
+  if (input.profesional_id) {
+    await invalidar(CLAVES.ausencias(input.profesional_id));
+  }
+
   return data || [];
 };
 
@@ -130,5 +139,9 @@ export const eliminarAusenciaService = async (
     .eq("id", ausenciaId);
 
   if (error) throw error;
+
+  await invalidar(CLAVES.ausenciasGeneral, CLAVES.dispGeneral);
+  await invalidar(CLAVES.ausencias(ausencia.profesional_id));
+
   return { id: ausenciaId, eliminado: true };
 };

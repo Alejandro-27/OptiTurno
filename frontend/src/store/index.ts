@@ -332,23 +332,29 @@ export async function cancelarTurnoCliente(
 }
 
 // Reagendamiento de un turno propio del cliente
+// El backend marca el turno original como "reagendado" y crea uno nuevo con
+// estado "confirmado" (el que devuelve la API). El store refleja ambos: el
+// original pasa al historial y el nuevo queda activo con botones de acción.
 export async function reagendarTurnoCliente(
   id: string,
   nuevaFecha: string,
   nuevaHoraInicio: string,
 ): Promise<MisTurnoDTO> {
-  const turnoAnterior = await repositorios.turnos.reagendarTurnoCliente(
+  const nuevoTurno = await repositorios.turnos.reagendarTurnoCliente(
     id,
     nuevaFecha,
     nuevaHoraInicio,
   );
   setEstado((e) => ({
     ...e,
-    misTurnos: e.misTurnos.map((t) =>
-      t.id === id ? { ...turnoAnterior, estado: "reagendado" as const } : t,
-    ),
+    misTurnos: [
+      ...e.misTurnos.map((t) =>
+        t.id === id ? { ...t, estado: "reagendado" as const } : t,
+      ),
+      nuevoTurno,
+    ],
   }));
-  return turnoAnterior;
+  return nuevoTurno;
 }
 
 // Actualización del perfil propio (nombre/teléfono)
@@ -457,6 +463,31 @@ async function refrescarTurnos(): Promise<void> {
     setEstado((e) => ({ ...e, turnos }));
   } catch {
     setEstado((e) => ({ ...e }));
+  }
+}
+
+// Refresco silencioso (sin parpadeo de skeletons) para la suscripción
+// Realtime: se llama cuando la tabla turnos cambia en la base de datos.
+export async function refrescarTurnosAdmin(): Promise<void> {
+  try {
+    const turnos = await repositorios.turnos.listarTurnos();
+    setEstado((e) => ({ ...e, turnos }));
+  } catch {
+    // Sin sesión/admin rozado o red caída: se conserva el estado actual.
+  }
+}
+
+// Refresco silencioso de los turnos del cliente para Reactivity Realtime:
+// las cancelaciones/reagendamientos hechos desde el panel se reflejan al
+// instante sin tocar el flag misTurnosCargando.
+export async function refrescarMisTurnos(): Promise<void> {
+  const usuarioId = getEstado().sesion?.usuario.id;
+  if (!usuarioId) return;
+  try {
+    const turnos = await repositorios.turnos.listarMisTurnos(usuarioId);
+    setEstado((e) => ({ ...e, misTurnos: turnos }));
+  } catch {
+    // Red caída: se conserva el estado actual.
   }
 }
 

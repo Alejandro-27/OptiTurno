@@ -23,6 +23,7 @@ import NotFound from "./components/NotFound";
 import PaginaCliente from "./components/PaginaCliente";
 import AdminLayout from "./layouts/AdminLayout";
 import ToastContainer from "./components/ToastContainer";
+import RealtimeSync from "./components/RealtimeSync";
 import { ToastProvider } from "./contexts/toast";
 import { iniciarApp, useStore } from "./store";
 import { useSEO } from "./hooks/useSEO";
@@ -161,6 +162,7 @@ export default function App() {
       </Routes>
 
       <ToastContainer />
+      <RealtimeSync />
     </ToastProvider>
   );
 }

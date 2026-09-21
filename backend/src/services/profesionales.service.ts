@@ -1,4 +1,5 @@
 import { supabase } from "../config/database";
+import { CLAVES, invalidar, leerConCache } from "../config/cache";
 
 // Horarios por defecto aplicados al profesional recién creado
 const HORARIOS_DEFECTO = [
@@ -41,32 +42,34 @@ export const consultarPropietarioService = async (profesionalId: string) => {
 };
 
 // Semana laboral de un profesional puntual (panel del empleado)
-export const obtenerHorarioSemanalService = async (profesionalId: string) => {
-  const { data: horarios, error } = await supabase
-    .from("horarios_laborales")
-    .select("dia_semana, hora_inicio, hora_fin")
-    .eq("profesional_id", profesionalId);
+// Caché 10 min por profesional; se invalida al guardar horarios.
+export const obtenerHorarioSemanalService = async (profesionalId: string) =>
+  leerConCache(CLAVES.horarios(profesionalId), 600, async () => {
+    const { data: horarios, error } = await supabase
+      .from("horarios_laborales")
+      .select("dia_semana, hora_inicio, hora_fin")
+      .eq("profesional_id", profesionalId);
 
-  if (error) throw error;
+    if (error) throw error;
 
-  const filaVacia = (label: string) => ({
-    day: label,
-    enabled: false,
-    ...HORARIO_DEFECTO,
-  });
-
-  return DIAS_SEMANA.map((d) => {
-    const horario = (horarios || []).find((h) => h.dia_semana === d.numero);
-    if (!horario) return filaVacia(d.label);
-    return {
-      day: d.label,
-      enabled: true,
+    const filaVacia = (label: string) => ({
+      day: label,
+      enabled: false,
       ...HORARIO_DEFECTO,
-      openTime: horaCorta(horario.hora_inicio),
-      closeTime: horaCorta(horario.hora_fin),
-    };
+    });
+
+    return DIAS_SEMANA.map((d) => {
+      const horario = (horarios || []).find((h) => h.dia_semana === d.numero);
+      if (!horario) return filaVacia(d.label);
+      return {
+        day: d.label,
+        enabled: true,
+        ...HORARIO_DEFECTO,
+        openTime: horaCorta(horario.hora_inicio),
+        closeTime: horaCorta(horario.hora_fin),
+      };
+    });
   });
-};
 
 // Reemplaza la semana laboral completa de un profesional puntual
 export const guardarHorarioSemanalService = async (
@@ -107,6 +110,12 @@ export const guardarHorarioSemanalService = async (
       if (error) throw error;
     }
   }
+
+  await invalidar(
+    CLAVES.horariosGeneral,
+    CLAVES.dispGeneral,
+    CLAVES.dispSemanalGeneral,
+  );
 
   return obtenerHorarioSemanalService(profesionalId);
 };
@@ -212,6 +221,13 @@ export const profesionalesService = {
       };
     }
 
+    // Un profesional nuevo aparece en el catálogo público y en la disponibilidad.
+    await invalidar(
+      CLAVES.profesionalesSucursal,
+      CLAVES.dispSemanalGeneral,
+      CLAVES.dispGeneral,
+    );
+
     return {
       id: profesional.id,
       especialidad: profesional.especialidad,
@@ -280,6 +296,7 @@ export const profesionalesService = {
     if (finalError || !actualizado) {
       throw { status: 400, message: "No se pudo consultar el profesional." };
     }
+    await invalidar(CLAVES.profesionalesSucursal);
     return actualizado;
   },
 
@@ -313,6 +330,13 @@ export const profesionalesService = {
       .delete()
       .eq("id", profesional.usuario_id)
       .eq("rol", "empleado");
+
+    await invalidar(
+      CLAVES.profesionalesSucursal,
+      CLAVES.dispSemanalGeneral,
+      CLAVES.horariosGeneral,
+      CLAVES.dispGeneral,
+    );
 
     return { id, eliminado: true };
   },

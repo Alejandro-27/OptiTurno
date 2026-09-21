@@ -134,10 +134,7 @@ export default function MisTurnosView() {
   );
 
   const turnosActivos = misTurnos.filter(
-    (t) =>
-      t.estado !== "cancelado" &&
-      t.estado !== "reagendado" &&
-      t.estado !== "pendiente_reagendamiento",
+    (t) => t.estado === "pendiente_pago" || t.estado === "confirmado",
   );
 
   const turnosHistorial = misTurnos.filter(

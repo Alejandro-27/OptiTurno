@@ -506,7 +506,10 @@ export default function AdminCalendar() {
               return (
                 <div
                   key={idx}
-                  onClick={() => setCurrentDate(dayDate)}
+                  onClick={() => {
+                    setCurrentDate(dayDate);
+                    setViewMode("diario");
+                  }}
                   className={`h-14 sm:h-16 p-1 border rounded-lg cursor-pointer transition-all flex flex-col justify-between ${
                     esDiaSeleccionado
                       ? "border-indigo-500 bg-indigo-50/40 dark:bg-indigo-950/30 shadow-sm"

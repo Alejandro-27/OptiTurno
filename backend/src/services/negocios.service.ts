@@ -1,4 +1,5 @@
 import { supabase } from "../config/database";
+import { CLAVES, invalidar, leerConCache } from "../config/cache";
 
 // Días de la semana en el orden de la UI, con su índice en la BD
 // (mismo criterio que JS getDay(): 0=Domingo ... 6=Sábado)
@@ -22,91 +23,99 @@ const HORARIO_DEFECTO = {
 const horaCorta = (hora: string): string => hora.slice(0, 5);
 
 // Obtiene todos los servicios ofrecidos por una sucursal junto con su precio y duración
-export const obtenerServiciosPorSucursalService = async (
-  sucursalId: string,
-) => {
-  const { data, error } = await supabase
-    .from("servicios")
-    .select(
-      "id, nombre, descripcion, precio, duracion_minutos, sucursal_id, estado",
-    )
-    .eq("sucursal_id", sucursalId);
+// Caché: 10 min. Se invalida con CLAVES.serviciosSucursal al crear/editar/eliminar servicios.
+export const obtenerServiciosPorSucursalService = async (sucursalId: string) =>
+  leerConCache(CLAVES.servicios(sucursalId), 600, async () => {
+    const { data, error } = await supabase
+      .from("servicios")
+      .select(
+        "id, nombre, descripcion, precio, duracion_minutos, sucursal_id, estado",
+      )
+      .eq("sucursal_id", sucursalId);
 
-  if (error) throw error;
-  return data;
-};
+    if (error) throw error;
+    return data;
+  });
 
 // Obtiene la lista de profesionales que atienden en una sucursal específica.
 // El join a 'usuarios' trae nombre/email del profesional.
+// Caché: 10 min. Se invalida con CLAVES.profesionalesSucursal al crear/editar/eliminar profesionales.
 export const obtenerProfesionalesPorSucursalService = async (
   sucursalId: string,
-) => {
-  const { data, error } = await supabase
-    .from("profesionales")
-    .select(
-      `
-        id,
-        especialidad,
-        sucursal_id,
-        usuarios:usuario_id (id, nombre, email)
-      `,
-    )
-    .eq("sucursal_id", sucursalId);
+) =>
+  leerConCache(CLAVES.profesionales(sucursalId), 600, async () => {
+    const { data, error } = await supabase
+      .from("profesionales")
+      .select(
+        `
+          id,
+          especialidad,
+          sucursal_id,
+          usuarios:usuario_id (id, nombre, email)
+        `,
+      )
+      .eq("sucursal_id", sucursalId);
 
-  if (error) throw error;
-  return data;
-};
+    if (error) throw error;
+    return data;
+  });
 
 // Lista todas las sucursales del sistema (catálogo público)
-export const listarSucursalesService = async () => {
-  const { data, error } = await supabase
-    .from("sucursales")
-    .select(
-      "id, negocio_id, nombre, direccion, telefono, negocios:negocio_id (nombre)",
-    )
-    .order("nombre", { ascending: true });
+// Caché: 15 min. Cambia raramente (solo vía superadmin).
+export const listarSucursalesService = async () =>
+  leerConCache(CLAVES.sucursales, 900, async () => {
+    const { data, error } = await supabase
+      .from("sucursales")
+      .select(
+        "id, negocio_id, nombre, direccion, telefono, negocios:negocio_id (nombre)",
+      )
+      .order("nombre", { ascending: true });
 
-  if (error) throw error;
-  return data || [];
-};
+    if (error) throw error;
+    return data || [];
+  });
 
 // Devuelve una sucursal puntual por su id
-export const obtenerSucursalPorIdService = async (sucursalId: string) => {
-  const { data, error } = await supabase
-    .from("sucursales")
-    .select(
-      "id, negocio_id, nombre, direccion, telefono, negocios:negocio_id (nombre)",
-    )
-    .eq("id", sucursalId)
-    .maybeSingle();
+// Caché: 15 min.
+export const obtenerSucursalPorIdService = async (sucursalId: string) =>
+  leerConCache(CLAVES.sucursalPorId(sucursalId), 900, async () => {
+    const { data, error } = await supabase
+      .from("sucursales")
+      .select(
+        "id, negocio_id, nombre, direccion, telefono, negocios:negocio_id (nombre)",
+      )
+      .eq("id", sucursalId)
+      .maybeSingle();
 
-  if (error) throw error;
-  return data;
-};
+    if (error) throw error;
+    return data;
+  });
 
 // Resuelve la sucursal de un usuario: si es profesional/trabaja en una sucursal
 // se usa esa; en caso contrario se cae a la primera sucursal del sistema.
-export const resolverSucursalDeUsuarioService = async (usuarioId: string) => {
-  const { data: profesional } = await supabase
-    .from("profesionales")
-    .select("sucursal_id")
-    .eq("usuario_id", usuarioId)
-    .maybeSingle();
+// Caché: 5 min, por usuario (se usa como dependency de muchos endpoints admin).
+export const resolverSucursalDeUsuarioService = async (usuarioId: string) =>
+  leerConCache(CLAVES.sucursalDeUsuario(usuarioId), 300, async () => {
+    const { data: profesional } = await supabase
+      .from("profesionales")
+      .select("sucursal_id")
+      .eq("usuario_id", usuarioId)
+      .maybeSingle();
 
-  if (profesional?.sucursal_id) {
-    return obtenerSucursalPorIdService(profesional.sucursal_id);
-  }
+    if (profesional?.sucursal_id) {
+      return obtenerSucursalPorIdService(profesional.sucursal_id);
+    }
 
-  const { data: primera } = await supabase
-    .from("sucursales")
-    .select("id")
-    .order("nombre", { ascending: true })
-    .limit(1)
-    .maybeSingle();
+    const { data: primera } = await supabase
+      .from("sucursales")
+      .select("id")
+      .order("nombre", { ascending: true })
+      .limit(1)
+      .maybeSingle();
 
-  if (!primera) return null;
-  return obtenerSucursalPorIdService(primera.id);
-};
+    if (!primera) return null;
+    return obtenerSucursalPorIdService(primera.id);
+  });
 
 // Actualiza los datos editables de un servicio de la sucursal
 export const actualizarServicioService = async (
@@ -136,6 +145,7 @@ export const actualizarServicioService = async (
   if (!data) {
     throw { status: 404, message: "El servicio solicitado no existe." };
   }
+  await invalidar(CLAVES.serviciosSucursal);
   return data;
 };
 
@@ -161,119 +171,123 @@ export const eliminarServicioService = async (servicioId: string) => {
     .eq("id", servicioId);
 
   if (error) throw error;
+
+  await invalidar(CLAVES.serviciosSucursal);
 };
 
 // Últimos eventos de la sucursal, para el stream de actividad del panel admin
-export const listarActividadService = async (sucursalId: string) => {
-  const { data, error } = await supabase
-    .from("turnos")
-    .select(
-      `
-        id,
-        created_at,
-        estado,
-        profesionales:profesional_id (sucursal_id),
-        clientes:cliente_id (nombre),
-        servicios:servicio_id (nombre)
-      `,
-    )
-    .eq("profesionales.sucursal_id", sucursalId)
-    .order("created_at", { ascending: false })
-    .limit(8);
+// Caché: 45 seg. Se invalida con CLAVES.actividadGeneral en cada mutación de turnos.
+export const listarActividadService = async (sucursalId: string) =>
+  leerConCache(CLAVES.actividad(sucursalId), 45, async () => {
+    const { data, error } = await supabase
+      .from("turnos")
+      .select(
+        `
+          id,
+          created_at,
+          estado,
+          profesionales:profesional_id (sucursal_id),
+          clientes:cliente_id (nombre),
+          servicios:servicio_id (nombre)
+        `,
+      )
+      .eq("profesionales.sucursal_id", sucursalId)
+      .order("created_at", { ascending: false })
+      .limit(8);
 
-  if (error) throw error;
+    if (error) throw error;
 
-  interface TurnoActividad {
-    id: string;
-    created_at: string;
-    estado: string;
-    clientes?: Array<{ nombre: string }> | null;
-    servicios?: Array<{ nombre: string }> | null;
-  }
+    interface TurnoActividad {
+      id: string;
+      created_at: string;
+      estado: string;
+      clientes?: Array<{ nombre: string }> | null;
+      servicios?: Array<{ nombre: string }> | null;
+    }
 
-  const ver = (turno: TurnoActividad) => {
-    const cliente = turno.clientes?.[0]?.nombre || "Cliente";
-    const servicio = turno.servicios?.[0]?.nombre || "Servicio";
-    const minutos = Math.max(
-      1,
-      Math.round((Date.now() - new Date(turno.created_at).getTime()) / 60000),
-    );
-    const timeSpan = `Hace ${minutos}m`;
+    const ver = (turno: TurnoActividad) => {
+      const cliente = turno.clientes?.[0]?.nombre || "Cliente";
+      const servicio = turno.servicios?.[0]?.nombre || "Servicio";
+      const minutos = Math.max(
+        1,
+        Math.round((Date.now() - new Date(turno.created_at).getTime()) / 60000),
+      );
+      const timeSpan = `Hace ${minutos}m`;
 
-    if (turno.estado === "cancelado") {
+      if (turno.estado === "cancelado") {
+        return {
+          id: turno.id,
+          timeSpan,
+          icon: "alert-triangle",
+          iconColor: "text-amber-500",
+          title: "Cita Cancelada",
+          detail: `${cliente} - ${servicio}`,
+        };
+      }
+      if (turno.estado === "confirmado") {
+        return {
+          id: turno.id,
+          timeSpan,
+          icon: "check-circle",
+          iconColor: "text-emerald-500",
+          title: "Pago Procesado",
+          detail: `${cliente} - ${servicio}`,
+        };
+      }
       return {
         id: turno.id,
         timeSpan,
-        icon: "alert-triangle",
-        iconColor: "text-amber-500",
-        title: "Cita Cancelada",
+        icon: "clock",
+        iconColor: "text-indigo-400",
+        title: "Nueva Cita",
         detail: `${cliente} - ${servicio}`,
       };
-    }
-    if (turno.estado === "confirmado") {
-      return {
-        id: turno.id,
-        timeSpan,
-        icon: "check-circle",
-        iconColor: "text-emerald-500",
-        title: "Pago Procesado",
-        detail: `${cliente} - ${servicio}`,
-      };
-    }
-    return {
-      id: turno.id,
-      timeSpan,
-      icon: "clock",
-      iconColor: "text-indigo-400",
-      title: "Nueva Cita",
-      detail: `${cliente} - ${servicio}`,
     };
-  };
 
-  return (data || []).map(ver);
-};
+    return (data || []).map(ver);
+  });
 
 // Obtiene la primera tabla de disponibilidad semanal de la sucursal.
 // Sirve de base para el panel "Disponibilidad"; se aplica a todos sus profesionales.
-export const listarDisponibilidadSemanalService = async (
-  sucursalId: string,
-) => {
-  const { data: principal } = await supabase
-    .from("profesionales")
-    .select("id")
-    .eq("sucursal_id", sucursalId)
-    .limit(1)
-    .maybeSingle();
+// Caché: 10 min. Se invalida en guardarDisponibilidadSemanalService.
+export const listarDisponibilidadSemanalService = async (sucursalId: string) =>
+  leerConCache(CLAVES.disponibilidadSemanal(sucursalId), 600, async () => {
+    const { data: principal } = await supabase
+      .from("profesionales")
+      .select("id")
+      .eq("sucursal_id", sucursalId)
+      .limit(1)
+      .maybeSingle();
 
-  const filaVacia = (label: string) => ({
-    day: label,
-    enabled: false,
-    ...HORARIO_DEFECTO,
-  });
-
-  if (!principal) {
-    return DIAS_SEMANA.map((d) => filaVacia(d.label));
-  }
-
-  const { data: horarios, error } = await supabase
-    .from("horarios_laborales")
-    .select("dia_semana, hora_inicio, hora_fin")
-    .eq("profesional_id", principal.id);
-
-  if (error) throw error;
-
-  return DIAS_SEMANA.map((d) => {
-    const horario = (horarios || []).find((h) => h.dia_semana === d.numero);
-    if (!horario) return filaVacia(d.label);
-    return {
-      day: d.label,
-      enabled: true,
+    const filaVacia = (label: string) => ({
+      day: label,
+      enabled: false,
       ...HORARIO_DEFECTO,
-      openTime: horaCorta(horario.hora_inicio),
-      closeTime: horaCorta(horario.hora_fin),
-    };
+    });
+
+    if (!principal) {
+      return DIAS_SEMANA.map((d) => filaVacia(d.label));
+    }
+
+    const { data: horarios, error } = await supabase
+      .from("horarios_laborales")
+      .select("dia_semana, hora_inicio, hora_fin")
+      .eq("profesional_id", principal.id);
+
+    if (error) throw error;
+
+    return DIAS_SEMANA.map((d) => {
+      const horario = (horarios || []).find((h) => h.dia_semana === d.numero);
+      if (!horario) return filaVacia(d.label);
+      return {
+        day: d.label,
+        enabled: true,
+        ...HORARIO_DEFECTO,
+        openTime: horaCorta(horario.hora_inicio),
+        closeTime: horaCorta(horario.hora_fin),
+      };
+    });
   });
-};
 
 // Persiste la disponibilidad semanal a todos los profesionales de la sucursal.
 export const guardarDisponibilidadSemanalService = async (
@@ -331,6 +345,13 @@ export const guardarDisponibilidadSemanalService = async (
       }
     }
   }
+
+  // La disponibilidad semanal y los horarios individuales cambiaron: invalidar.
+  await invalidar(
+    CLAVES.dispSemanalGeneral,
+    CLAVES.horariosGeneral,
+    CLAVES.dispGeneral,
+  );
 
   return listarDisponibilidadSemanalService(sucursalId);
 };

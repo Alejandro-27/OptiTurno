@@ -222,10 +222,16 @@ export const turnosRepositorioMock: TurnosRepositorio = {
     if (turno.estado === "cancelado" || turno.estado === "reagendado") {
       throw new Error("No se puede reagendar este turno.");
     }
-    const anterior = { ...turno };
-    turno.fecha = nuevaFecha;
-    turno.hora_inicio = nuevaHoraInicio + ":00";
-    return anterior;
+    turno.estado = "reagendado";
+    const nuevo: MisTurnoDTO = {
+      ...turno,
+      id: crypto.randomUUID(),
+      fecha: nuevaFecha,
+      hora_inicio: `${nuevaHoraInicio}:00`,
+      estado: "confirmado",
+    };
+    cacheMisTurnos = [...turnos, nuevo];
+    return nuevo;
   },
 };
 

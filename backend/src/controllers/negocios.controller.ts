@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { supabase } from "../config/database.js";
 import { AppError } from "../errors/AppError";
 import { validarCuerpo } from "../schemas/validar";
+import { CLAVES, invalidar } from "../config/cache.js";
 import {
   crearUsuarioSchema,
   crearNegocioSchema,
@@ -52,6 +53,7 @@ export const crearNegocioHandler = async (
     .single();
 
   if (error) throw new AppError(400, "No se pudo crear el negocio.");
+  await invalidar(CLAVES.sucursales);
   return reply.status(201).send(data);
 };
 
@@ -71,6 +73,12 @@ export const crearSucursalHandler = async (
     .single();
 
   if (error) throw new AppError(400, "No se pudo crear la sucursal.");
+  // Una sucursal nueva puede cambiar la resolución "primera sucursal" del sistema.
+  await invalidar(
+    CLAVES.sucursales,
+    CLAVES.sucursalPorId(data.id),
+    "ot:sucursal:usr:*",
+  );
   return reply.status(201).send(data);
 };
 
@@ -94,6 +102,7 @@ export const crearServicioHandler = async (
     .single();
 
   if (error) throw new AppError(400, "No se pudo crear el servicio.");
+  await invalidar(CLAVES.serviciosSucursal);
   return reply.status(201).send(data);
 };
 
@@ -181,5 +190,16 @@ export const ejecutarSeederHandler = async (
   reply: FastifyReply,
 ) => {
   const resultado = await sembrarDatosInicialesService();
+  // El seeder crea negocio, sucursal, servicios, profesional y horarios:
+  // invalida caché de catálogos para que no queden datos viejos.
+  await invalidar(
+    CLAVES.sucursales,
+    CLAVES.serviciosSucursal,
+    CLAVES.profesionalesSucursal,
+    CLAVES.dispSemanalGeneral,
+    CLAVES.horariosGeneral,
+    CLAVES.dispGeneral,
+    "ot:sucursal:usr:*",
+  );
   return reply.status(201).send(resultado);
 };

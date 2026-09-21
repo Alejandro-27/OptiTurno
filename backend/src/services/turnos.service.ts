@@ -1,5 +1,17 @@
 import { supabase } from "../config/database.js";
 import { resolverSucursalDeUsuarioService } from "./negocios.service.js";
+import { CLAVES, invalidar, leerConCache } from "../config/cache.js";
+
+// Las mutaciones sobre turnos afectan: agenda admin, turnos de clientes,
+// disponibilidad (franjas libres/ocupadas) y el stream de actividad.
+const invalidarDatosTurnos = async (): Promise<void> => {
+  await invalidar(
+    CLAVES.turnosAdminGeneral,
+    CLAVES.turnosClienteGeneral,
+    CLAVES.dispGeneral,
+    CLAVES.actividadGeneral,
+  );
+};
 
 interface CrearTurnoInput {
   cliente_id: string;
@@ -91,6 +103,7 @@ export const crearTurnoService = async (datos: CrearTurnoInput) => {
     throw errorTurno;
   }
 
+  await invalidarDatosTurnos();
   return { ...nuevoTurno };
 };
 
@@ -110,6 +123,10 @@ export const limpiarTurnosExpiradosService = async (
 
   if (error) throw error;
 
+  if (count && count > 0) {
+    await invalidarDatosTurnos();
+  }
+
   return {
     mensaje: "Limpieza de agenda ejecutada con éxito.",
     turnosLiberados: count || data?.length || 0,
@@ -120,85 +137,102 @@ export const consultarDisponibilidadService = async (
   datos: ConsultarDisponibilidadInput,
 ) => {
   const { profesional_id, fecha } = datos;
-  const numeroDiaSemana = new Date(fecha.replace(/-/g, "/")).getDay();
 
-  const { data: horarioLaboral, error: errorHorario } = await supabase
-    .from("horarios_laborales")
-    .select("hora_inicio, hora_fin")
-    .eq("profesional_id", profesional_id)
-    .eq("dia_semana", numeroDiaSemana)
-    .single();
+  // Es la consulta más frecuente del PWA (cada cambio de fecha/profesional).
+  // Caché de 5 seg: suficiente para evitar el golpe a Supabase sin que la
+  // disponibilidad se vea vieja. Se invalida con CLAVES.dispGeneral en toda
+  // mutación de turnos/ausencias.
+  return leerConCache(
+    CLAVES.disponibilidad(profesional_id, fecha),
+    5,
+    async () => {
+      const numeroDiaSemana = new Date(fecha.replace(/-/g, "/")).getDay();
 
-  if (errorHorario || !horarioLaboral) {
-    return {
-      message:
-        "El profesional no atiende en la fecha y el horario seleccionado.",
-      horariosDisponibles: [],
-    };
-  }
+      const { data: horarioLaboral, error: errorHorario } = await supabase
+        .from("horarios_laborales")
+        .select("hora_inicio, hora_fin")
+        .eq("profesional_id", profesional_id)
+        .eq("dia_semana", numeroDiaSemana)
+        .single();
 
-  const { data: ausenciaDiaCompleto, error: errorAusencia } = await supabase
-    .from("profesional_ausencias")
-    .select("id")
-    .eq("profesional_id", profesional_id)
-    .eq("fecha", fecha)
-    .is("hora_inicio", null)
-    .maybeSingle();
+      if (errorHorario || !horarioLaboral) {
+        return {
+          message:
+            "El profesional no atiende en la fecha y el horario seleccionado.",
+          horariosDisponibles: [],
+        };
+      }
 
-  if (errorAusencia) throw errorAusencia;
+      const { data: ausenciaDiaCompleto, error: errorAusencia } = await supabase
+        .from("profesional_ausencias")
+        .select("id")
+        .eq("profesional_id", profesional_id)
+        .eq("fecha", fecha)
+        .is("hora_inicio", null)
+        .maybeSingle();
 
-  if (ausenciaDiaCompleto) {
-    return {
-      message: "El profesional no está disponible en esta fecha.",
-      horariosDisponibles: [],
-    };
-  }
+      if (errorAusencia) throw errorAusencia;
 
-  const { data: ausenciasParciales, error: errorAusParcial } = await supabase
-    .from("profesional_ausencias")
-    .select("hora_inicio, hora_fin")
-    .eq("profesional_id", profesional_id)
-    .eq("fecha", fecha)
-    .not("hora_inicio", "is", null);
+      if (ausenciaDiaCompleto) {
+        return {
+          message: "El profesional no está disponible en esta fecha.",
+          horariosDisponibles: [],
+        };
+      }
 
-  if (errorAusParcial) throw errorAusParcial;
+      const { data: ausenciasParciales, error: errorAusParcial } =
+        await supabase
+          .from("profesional_ausencias")
+          .select("hora_inicio, hora_fin")
+          .eq("profesional_id", profesional_id)
+          .eq("fecha", fecha)
+          .not("hora_inicio", "is", null);
 
-  const { data: turnosOcupados, error: errorTurnos } = await supabase
-    .from("turnos")
-    .select("hora_inicio, hora_fin")
-    .eq("profesional_id", profesional_id)
-    .eq("fecha", fecha)
-    .in("estado", ["confirmado", "pendiente_pago"]);
+      if (errorAusParcial) throw errorAusParcial;
 
-  if (errorTurnos) throw errorTurnos;
+      const { data: turnosOcupados, error: errorTurnos } = await supabase
+        .from("turnos")
+        .select("hora_inicio, hora_fin")
+        .eq("profesional_id", profesional_id)
+        .eq("fecha", fecha)
+        .in("estado", ["confirmado", "pendiente_pago"]);
 
-  return {
-    fecha,
-    jornadaLaboral: {
-      inicio: horarioLaboral.hora_inicio,
-      fin: horarioLaboral.hora_fin,
+      if (errorTurnos) throw errorTurnos;
+
+      return {
+        fecha,
+        jornadaLaboral: {
+          inicio: horarioLaboral.hora_inicio,
+          fin: horarioLaboral.hora_fin,
+        },
+        bloquesOcupados: [
+          ...(turnosOcupados || []),
+          ...(ausenciasParciales || []),
+        ],
+      };
     },
-    bloquesOcupados: [...(turnosOcupados || []), ...(ausenciasParciales || [])],
-  };
+  );
 };
-export const listarTurnosClienteService = async (usuarioId: string) => {
-  const { data: turnos, error } = await supabase
-    .from("turnos")
-    .select(
-      `
-        id, fecha, hora_inicio, hora_fin, estado,
-        motivo_cancelacion, cancelado_por, created_at,
-        servicios:servicio_id (nombre, precio, duracion_minutos),
-        profesionales:profesional_id (id, especialidad, usuarios:usuario_id (nombre))
-      `,
-    )
-    .eq("cliente_id", usuarioId)
-    .order("fecha", { ascending: false })
-    .order("hora_inicio", { ascending: false });
+export const listarTurnosClienteService = async (usuarioId: string) =>
+  // Caché por cliente 15 seg (junto a la invalidación en mutaciones).
+  leerConCache(CLAVES.turnosCliente(usuarioId), 15, async () => {
+    const { data: turnos, error } = await supabase
+      .from("turnos")
+      .select(
+        `
+          id, fecha, hora_inicio, hora_fin, estado,
+          motivo_cancelacion, cancelado_por, created_at,
+          servicios:servicio_id (nombre, precio, duracion_minutos),
+          profesionales:profesional_id (id, especialidad, usuarios:usuario_id (nombre))
+        `,
+      )
+      .eq("cliente_id", usuarioId)
+      .order("fecha", { ascending: false })
+      .order("hora_inicio", { ascending: false });
 
-  if (error) throw error;
-  return turnos || [];
-};
+    if (error) throw error;
+    return turnos || [];
+  });
 
 export const cancelarTurnoClienteService = async (
   usuarioId: string,
@@ -247,6 +281,7 @@ export const cancelarTurnoClienteService = async (
   if (error) {
     throw { status: 400, message: "No se pudo actualizar el turno." };
   }
+  await invalidarDatosTurnos();
   return actualizado;
 };
 
@@ -387,27 +422,32 @@ export const reagendarTurnoService = async (
     throw errIns;
   }
 
+  await invalidarDatosTurnos();
+
   return nuevoTurno;
 };
 
-export const listarTurnosAdminService = async (sucursalId: string) => {
-  const { data: turnos, error } = await supabase
-    .from("turnos")
-    .select(
-      `
+export const listarTurnosAdminService = async (sucursalId: string) =>
+  // Caché 30 seg por sucursal: la vista de calendario tolora un leve retraso y
+  // esta es la consulta más pesada (4 joins). Se invalida en cada mutación.
+  leerConCache(CLAVES.turnosAdmin(sucursalId), 30, async () => {
+    const { data: turnos, error } = await supabase
+      .from("turnos")
+      .select(
+        `
         id, fecha, hora_inicio, hora_fin, estado,
         motivo_cancelacion, cancelado_por, created_at,
         clientes:cliente_id (id, nombre, telefono),
         servicios:servicio_id (nombre, precio, duracion_minutos),
         profesionales:profesional_id (id, especialidad, sucursal_id, usuarios:usuario_id (nombre))
-      `,
-    )
-    .eq("profesionales.sucursal_id", sucursalId)
-    .order("hora_inicio", { ascending: true });
+        `,
+      )
+      .eq("profesionales.sucursal_id", sucursalId)
+      .order("hora_inicio", { ascending: true });
 
-  if (error) throw error;
-  return turnos || [];
-};
+    if (error) throw error;
+    return turnos || [];
+  });
 
 export const cancelarTurnoAdminService = async (
   usuarioId: string,
@@ -468,6 +508,7 @@ export const cancelarTurnoAdminService = async (
   if (error) {
     throw { status: 400, message: "No se pudo actualizar el turno." };
   }
+  await invalidarDatosTurnos();
   return actualizado;
 };
 
@@ -538,6 +579,7 @@ export const cambiarEstadoTurnoAdminService = async (
   if (error) {
     throw { status: 400, message: "No se pudo actualizar el turno." };
   }
+  await invalidarDatosTurnos();
   return actualizado;
 };
 
@@ -626,6 +668,9 @@ export const bloquearHorarioService = async (
       if (errInsert) throw errInsert;
     }
   }
+
+  await invalidarDatosTurnos();
+  await invalidar(CLAVES.ausenciasGeneral);
 
   return {
     mensaje: "Horario bloqueado correctamente.",
