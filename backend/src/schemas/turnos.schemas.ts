@@ -7,6 +7,10 @@ export const reservarTurnoSchema = z.object({
   servicio_id: uuidSchema,
   fecha: fechaSchema,
   hora_inicio: horaSchema,
+  // Consentimiento RGPD para el tratamiento de datos de la reserva.
+  acepto_condiciones: z
+    .boolean()
+    .refine((v) => v === true, "Debes aceptar la Política de Privacidad."),
 });
 
 // GET /turnos/disponibilidad — querystring

@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Mail,
   Lock,
@@ -33,6 +34,9 @@ export default function AccessAuth({
   const [showPassword, setShowPassword] = useState(false);
   // Honeypot anti-spam: campo oculto que los bots llenan por defecto.
   const [web, setWeb] = useState("");
+  // Consentimiento RGPD (obligatorio para crear la cuenta).
+  const [aceptoTerminos, setAceptoTerminos] = useState(false);
+  const [aceptoPrivacidad, setAceptoPrivacidad] = useState(false);
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
@@ -45,6 +49,12 @@ export default function AccessAuth({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorText(null);
+    if (modo === "registro" && (!aceptoTerminos || !aceptoPrivacidad)) {
+      setErrorText(
+        "Debes aceptar los Términos y la Política de Privacidad para continuar.",
+      );
+      return;
+    }
     setIsLoading(true);
     try {
       const sesion =
@@ -57,6 +67,8 @@ export default function AccessAuth({
               telefono: telefono.trim() || undefined,
               rol: "cliente",
               web,
+              acepto_terminos: aceptoTerminos,
+              acepto_privacidad: aceptoPrivacidad,
             });
       onAutenticado(sesion);
     } catch (err) {
@@ -232,6 +244,51 @@ export default function AccessAuth({
               </button>
             </div>
           </div>
+
+          {modo === "registro" && (
+            <div className="space-y-2 rounded-xl border border-border-subtle bg-slate-50 p-3 dark:bg-slate-900/60">
+              <label className="flex items-start gap-2.5 text-[11px] text-slate-600 dark:text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={aceptoTerminos}
+                  onChange={(e) => setAceptoTerminos(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 accent-indigo-600"
+                />
+                <span>
+                  Acepto los{" "}
+                  <Link
+                    to="/terminos"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-indigo-600 underline dark:text-indigo-400"
+                  >
+                    Términos y Condiciones
+                  </Link>
+                  .
+                </span>
+              </label>
+              <label className="flex items-start gap-2.5 text-[11px] text-slate-600 dark:text-slate-300">
+                <input
+                  type="checkbox"
+                  checked={aceptoPrivacidad}
+                  onChange={(e) => setAceptoPrivacidad(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 accent-indigo-600"
+                />
+                <span>
+                  Autorizo el tratamiento de mis datos conforme a la{" "}
+                  <Link
+                    to="/privacidad"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-indigo-600 underline dark:text-indigo-400"
+                  >
+                    Política de Privacidad
+                  </Link>
+                  .
+                </span>
+              </label>
+            </div>
+          )}
 
           <button
             type="submit"

@@ -32,6 +32,26 @@ const SEO_POR_RUTA: Record<string, MetadatosSEO> = {
     description:
       "Tu cita quedó reservada. Agregala a tu calendario o llevá el ticket digital por WhatsApp.",
   },
+  "/privacidad": {
+    title: "Política de Privacidad | OptiTurno",
+    description:
+      "Conocé cómo OptiTurno recopila, usa y protege tus datos personales.",
+  },
+  "/terminos": {
+    title: "Términos y Condiciones | OptiTurno",
+    description:
+      "Condiciones de uso de la plataforma de agendamiento OptiTurno.",
+  },
+  "/cookies": {
+    title: "Política de Cookies | OptiTurno",
+    description:
+      "Qué cookies usa OptiTurno y cómo podés aceptarlas o rechazarlas.",
+  },
+  "/aviso-legal": {
+    title: "Aviso Legal | OptiTurno",
+    description:
+      "Datos identificativos del responsable de la plataforma OptiTurno.",
+  },
   "/admin": {
     title: "Panel de Control | OptiTurno",
     description:

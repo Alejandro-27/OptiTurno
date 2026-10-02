@@ -22,6 +22,8 @@ export interface ReservarTurnoInput {
   cliente_nombre: string;
   servicio_nombre: string;
   servicio_precio?: number;
+  // Consentimiento RGPD exigido por el backend.
+  acepto_condiciones?: boolean;
 }
 
 export interface ReservarTurnoResultado {
@@ -247,6 +249,7 @@ export const turnosRepositorioApi: TurnosRepositorio = {
       servicio_id: input.servicio_id,
       fecha: input.fecha,
       hora_inicio: input.hora_inicio,
+      acepto_condiciones: input.acepto_condiciones,
     });
     const turnoBackend = resp.turno;
     const nuevo: BookingEvent = {

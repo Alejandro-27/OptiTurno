@@ -188,7 +188,38 @@ export default function Landing() {
             )}
           </nav>
         </div>
-        <p className="mx-auto mt-8 max-w-6xl border-t border-border-subtle pt-4 text-[10px] text-slate-400 dark:text-slate-500">
+        <div className="mx-auto mt-6 max-w-6xl">
+          <nav
+            aria-label="Legal"
+            className="flex flex-wrap gap-x-6 gap-y-2 border-t border-border-subtle pt-4 text-[10px] font-semibold text-slate-400 dark:text-slate-500"
+          >
+            <Link
+              to="/privacidad"
+              className="transition-colors hover:text-indigo-600 dark:hover:text-indigo-400"
+            >
+              Privacidad
+            </Link>
+            <Link
+              to="/terminos"
+              className="transition-colors hover:text-indigo-600 dark:hover:text-indigo-400"
+            >
+              Términos
+            </Link>
+            <Link
+              to="/cookies"
+              className="transition-colors hover:text-indigo-600 dark:hover:text-indigo-400"
+            >
+              Cookies
+            </Link>
+            <Link
+              to="/aviso-legal"
+              className="transition-colors hover:text-indigo-600 dark:hover:text-indigo-400"
+            >
+              Aviso Legal
+            </Link>
+          </nav>
+        </div>
+        <p className="mx-auto mt-4 max-w-6xl text-[10px] text-slate-400 dark:text-slate-500">
           © {new Date().getFullYear()} OptiTurno — SaaS de agendamiento
           {MODO_PRUEBA && " · Datos de prueba."}
         </p>

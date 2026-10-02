@@ -19,6 +19,9 @@ interface CrearTurnoInput {
   servicio_id: string;
   fecha: string;
   hora_inicio: string;
+  // El schema exige true: la reserva registra que el titular consintió
+  // el tratamiento de sus datos para gestionar la cita (RGPD).
+  acepto_condiciones: boolean;
 }
 
 interface ConsultarDisponibilidadInput {
@@ -85,6 +88,7 @@ export const crearTurnoService = async (datos: CrearTurnoInput) => {
         hora_inicio,
         hora_fin,
         estado: "confirmado",
+        consentimiento_hecho: true,
       },
     ])
     .select()

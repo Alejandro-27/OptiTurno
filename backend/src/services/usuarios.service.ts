@@ -70,6 +70,9 @@ export const usuariosService = {
           email: datos.email,
           telefono: datos.telefono || null,
           rol,
+          // El schema exige true: consentimiento RGPD registrado como provable.
+          acepto_terminos: true,
+          acepto_privacidad: true,
         },
       ])
       .select();

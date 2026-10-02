@@ -20,11 +20,14 @@ import MiPerfilView from "./components/MiPerfilView";
 import ConfirmacionView from "./components/ConfirmacionView";
 import Landing from "./components/Landing";
 import NotFound from "./components/NotFound";
+import PaginaLegal from "./components/PaginaLegal";
+import CookieBanner from "./components/CookieBanner";
 import PaginaCliente from "./components/PaginaCliente";
 import AdminLayout from "./layouts/AdminLayout";
 import ToastContainer from "./components/ToastContainer";
 import RealtimeSync from "./components/RealtimeSync";
 import { ToastProvider } from "./contexts/toast";
+import { PRIVACIDAD, TERMINOS, COOKIES, AVISO_LEGAL } from "./data/legal";
 import { iniciarApp, useStore } from "./store";
 import { useSEO } from "./hooks/useSEO";
 import { initAnalytics, trackPageView } from "./utils/analytics";
@@ -78,6 +81,21 @@ export default function App() {
     <ToastProvider>
       <Routes>
         <Route path="/" element={<Landing />} />
+
+        {/* Páginas legales (son públicas: fuera de los shells con Auth) */}
+        <Route
+          path="/privacidad"
+          element={<PaginaLegal contenido={PRIVACIDAD} />}
+        />
+        <Route
+          path="/terminos"
+          element={<PaginaLegal contenido={TERMINOS} />}
+        />
+        <Route path="/cookies" element={<PaginaLegal contenido={COOKIES} />} />
+        <Route
+          path="/aviso-legal"
+          element={<PaginaLegal contenido={AVISO_LEGAL} />}
+        />
 
         {/* PWA Cliente */}
         <Route element={<ClientShell />}>
@@ -163,6 +181,7 @@ export default function App() {
 
       <ToastContainer />
       <RealtimeSync />
+      <CookieBanner />
     </ToastProvider>
   );
 }

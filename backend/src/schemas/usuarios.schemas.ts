@@ -41,6 +41,13 @@ export const registrarUsuarioSchema = z.object({
   rol: ROL_REGISTRO.optional(),
   // Honeypot anti-spam: campo oculto que los bots suelen completar.
   web: z.string().max(500).optional(),
+  // Consentimiento RGPD: obligatorio para crear la cuenta. Sin aceptación hay 400.
+  acepto_terminos: z
+    .boolean()
+    .refine((v) => v === true, "Debes aceptar los Términos y Condiciones."),
+  acepto_privacidad: z
+    .boolean()
+    .refine((v) => v === true, "Debes aceptar la Política de Privacidad."),
 });
 
 export const loginSchema = z.object({

@@ -170,6 +170,8 @@ export interface ReservarTurnoInputDTO {
   servicio_id: string;
   fecha: string;
   hora_inicio: string;
+  // Consentimiento RGPD: el backend lo exige true (400 en caso contrario).
+  acepto_condiciones?: boolean;
 }
 
 export interface MisTurnoDTO {
@@ -233,6 +235,9 @@ export interface RegistrarUsuarioInput {
   rol?: Rol;
   // Honeypot anti-spam: campo oculto que los bots rellenan. El backend lo ignora.
   web?: string;
+  // Consentimiento RGPD: el backend los exige true (400 en caso contrario).
+  acepto_terminos?: boolean;
+  acepto_privacidad?: boolean;
 }
 
 export interface SeederResponseDTO {

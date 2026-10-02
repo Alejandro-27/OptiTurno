@@ -21,6 +21,9 @@ export interface RegistrarCuentaInput {
   rol?: Rol;
   // Honeypot anti-spam: campo oculto que los bots rellenan. El backend lo ignora.
   web?: string;
+  // Consentimiento RGPD: el backend los exige true (400 en caso contrario).
+  acepto_terminos?: boolean;
+  acepto_privacidad?: boolean;
 }
 
 export interface AuthRepositorio {
@@ -203,6 +206,9 @@ export const authRepositorioApi: AuthRepositorio = {
       nombre: datos.nombre,
       telefono: datos.telefono,
       rol: datos.rol || "cliente",
+      web: datos.web,
+      acepto_terminos: datos.acepto_terminos,
+      acepto_privacidad: datos.acepto_privacidad,
     });
     // El registro entra automáticamente (login implícito)
     const sesion = await loginUsuario({

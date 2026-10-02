@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink, Outlet, useNavigate } from "react-router-dom";
+import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
   CalendarPlus,
   History,
@@ -132,6 +132,29 @@ export default function ClientShell() {
           <LogOut size={16} />
           Cerrar Sesión
         </button>
+        <nav
+          aria-label="Enlaces legales"
+          className="flex flex-wrap gap-x-3 gap-y-1 border-t border-border-subtle px-2 pt-3 text-[10px] font-semibold text-slate-400 dark:text-slate-500"
+        >
+          <Link
+            to="/privacidad"
+            className="transition-colors hover:text-indigo-500"
+          >
+            Privacidad
+          </Link>
+          <Link
+            to="/terminos"
+            className="transition-colors hover:text-indigo-500"
+          >
+            Términos
+          </Link>
+          <Link
+            to="/cookies"
+            className="transition-colors hover:text-indigo-500"
+          >
+            Cookies
+          </Link>
+        </nav>
       </div>
     </nav>
   );

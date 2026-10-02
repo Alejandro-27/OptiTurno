@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import {
   AlertTriangle,
   ArrowLeft,
@@ -86,6 +86,8 @@ export default function ClientPwa() {
   const [disponibilidadCargando, setDisponibilidadCargando] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Consentimiento RGPD para el tratamiento de datos de la reserva.
+  const [aceptoCondiciones, setAceptoCondiciones] = useState(false);
 
   // Fechas de los próximos 14 días
   const fechas = Array.from({ length: 14 }, (_, i) => fechaDesdeOffset(i));
@@ -165,6 +167,7 @@ export default function ClientPwa() {
         cliente_nombre: sesion?.usuario.nombre || "Cliente",
         servicio_nombre: selectedService!.name,
         servicio_precio: selectedService!.price,
+        acepto_condiciones: aceptoCondiciones,
       });
       guardarUltimoTurno({
         servicioNombre: selectedService.name,
@@ -345,27 +348,52 @@ export default function ClientPwa() {
                 }}
                 onSelectHora={setSelectedHour}
               />
-              <div className="mt-auto flex items-center justify-between border-t border-slate-200 pt-4 dark:border-slate-800/80">
-                <div className="label-overline">
-                  <span className="block">Total</span>
-                  <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
-                    ${selectedService.price.toLocaleString("es-CO")}
+              <div className="mt-auto space-y-3 border-t border-slate-200 pt-4 dark:border-slate-800/80">
+                <label className="flex items-start gap-2.5 text-[11px] text-slate-600 dark:text-slate-300">
+                  <input
+                    type="checkbox"
+                    checked={aceptoCondiciones}
+                    onChange={(e) => setAceptoCondiciones(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 accent-indigo-600"
+                  />
+                  <span>
+                    Autorizo el tratamiento de mis datos para gestionar esta
+                    reserva conforme a la{" "}
+                    <Link
+                      to="/privacidad"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="font-semibold text-indigo-600 underline dark:text-indigo-400"
+                    >
+                      Política de Privacidad
+                    </Link>
+                    .
                   </span>
+                </label>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="label-overline">
+                    <span className="block">Total</span>
+                    <span className="font-mono font-bold text-slate-900 dark:text-slate-100">
+                      ${selectedService.price.toLocaleString("es-CO")}
+                    </span>
+                  </div>
+                  <button
+                    onClick={handleElegirHora}
+                    disabled={
+                      isSubmitting || !selectedHour || !aceptoCondiciones
+                    }
+                    className="btn btn-primary py-2 px-4"
+                  >
+                    {isSubmitting ? (
+                      <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
+                    ) : (
+                      <>
+                        Continuar
+                        <ArrowRight size={12} />
+                      </>
+                    )}
+                  </button>
                 </div>
-                <button
-                  onClick={handleElegirHora}
-                  disabled={isSubmitting || !selectedHour}
-                  className="btn btn-primary py-2 px-4"
-                >
-                  {isSubmitting ? (
-                    <span className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></span>
-                  ) : (
-                    <>
-                      Continuar
-                      <ArrowRight size={12} />
-                    </>
-                  )}
-                </button>
               </div>
             </div>
           )}
