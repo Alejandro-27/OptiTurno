@@ -202,7 +202,10 @@ export default function ClientShell() {
           <ThemeToggle />
         </header>
 
-        <main className="custom-scrollbar flex-1 overflow-y-auto p-4 pb-28 md:p-8 md:pb-8">
+        <main
+          id="contenido"
+          className="custom-scrollbar flex-1 overflow-y-auto p-4 pb-28 md:p-8 md:pb-8"
+        >
           <div className="mx-auto max-w-3xl">
             <Outlet />
           </div>

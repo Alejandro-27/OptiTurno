@@ -136,8 +136,10 @@ export default function Landing() {
         </div>
       </section>
 
-      <ComoFuncionaSection />
-      <BeneficiosSection />
+      <main id="contenido" className="flex-1">
+        <ComoFuncionaSection />
+        <BeneficiosSection />
+      </main>
 
       <footer className="border-t border-border-subtle bg-surface px-4 py-10 md:px-6">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 md:flex-row md:items-start md:justify-between">

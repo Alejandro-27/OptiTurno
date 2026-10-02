@@ -217,7 +217,10 @@ export default function ModalEditarCita({ booking, onClose }: Props) {
         </div>
 
         {error && (
-          <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-[11px] font-semibold text-red-600 dark:text-red-400">
+          <div
+            role="alert"
+            className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-[11px] font-semibold text-red-600 dark:text-red-400"
+          >
             <AlertCircle size={14} />
             {error}
           </div>
@@ -238,6 +241,7 @@ export default function ModalEditarCita({ booking, onClose }: Props) {
                   }
                   disabled={Boolean(ocupada)}
                   className="input flex-1 text-[11px]"
+                  aria-label="Estado del turno"
                 >
                   <option value="completado">Completado</option>
                   <option value="no_asistio">No asistió</option>

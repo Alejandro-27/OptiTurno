@@ -18,7 +18,10 @@ export default function NotFound() {
         <ThemeToggle />
       </header>
 
-      <main className="flex flex-1 items-center justify-center p-6">
+      <main
+        id="contenido"
+        className="flex flex-1 items-center justify-center p-6"
+      >
         <div className="animate-scale-up mx-auto max-w-sm text-center">
           <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-600/10 text-indigo-600 shadow-lg shadow-indigo-600/10 dark:text-indigo-400">
             <Compass size={30} />

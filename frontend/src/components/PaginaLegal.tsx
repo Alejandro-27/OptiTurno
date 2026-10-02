@@ -34,7 +34,7 @@ export default function PaginaLegal({
 }) {
   return (
     <div className="min-h-screen bg-slate-50 px-4 py-12 text-slate-800 dark:bg-slate-950 dark:text-slate-100 md:px-6">
-      <div className="mx-auto max-w-3xl">
+      <main id="contenido" className="mx-auto max-w-3xl">
         <Link
           to="/"
           className="label-overline mb-6 inline-block text-indigo-600 transition-colors hover:text-indigo-800 dark:text-indigo-400 dark:hover:text-indigo-300"
@@ -77,7 +77,7 @@ export default function PaginaLegal({
             OptiTurno · {dato("RAZÓN SOCIAL")} · {dato("NIT")} · {dato("EMAIL")}
           </p>
         </footer>
-      </div>
+      </main>
     </div>
   );
 }

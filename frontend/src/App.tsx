@@ -79,6 +79,12 @@ export default function App() {
 
   return (
     <ToastProvider>
+      <a
+        href="#contenido"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-indigo-600 focus:px-4 focus:py-2 focus:text-xs focus:font-bold focus:text-white"
+      >
+        Saltar al contenido
+      </a>
       <Routes>
         <Route path="/" element={<Landing />} />
 

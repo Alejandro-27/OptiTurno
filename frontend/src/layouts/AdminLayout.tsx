@@ -276,7 +276,10 @@ export default function AdminLayout() {
             </div>
           )}
 
-          <main className="custom-scrollbar flex-grow overflow-y-auto p-4 max-h-[calc(100dvh-64px)] md:max-h-[calc(100vh-73px)] md:p-6 lg:p-8">
+          <main
+            id="contenido"
+            className="custom-scrollbar flex-grow overflow-y-auto p-4 max-h-[calc(100dvh-64px)] md:max-h-[calc(100vh-73px)] md:p-6 lg:p-8"
+          >
             <div className="mb-5 space-y-1 text-left">
               <Breadcrumbs />
             </div>

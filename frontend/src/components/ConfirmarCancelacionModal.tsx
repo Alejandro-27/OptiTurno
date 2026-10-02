@@ -91,8 +91,11 @@ export default function ConfirmarCancelacionModal({
         </div>
 
         <div>
-          <label className="label-overline mb-1 block">Motivo (opcional)</label>
+          <label className="label-overline mb-1 block" htmlFor="cc-motivo">
+            Motivo (opcional)
+          </label>
           <textarea
+            id="cc-motivo"
             value={motivo}
             onChange={(e) => onMotivoChange(e.target.value)}
             placeholder="Ejemplo: Cambio de planes..."
@@ -103,7 +106,10 @@ export default function ConfirmarCancelacionModal({
         </div>
 
         {error && (
-          <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-[11px] font-semibold text-red-600 dark:text-red-400">
+          <div
+            role="alert"
+            className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-[11px] font-semibold text-red-600 dark:text-red-400"
+          >
             <AlertCircle size={14} />
             {error}
           </div>

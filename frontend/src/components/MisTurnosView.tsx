@@ -148,7 +148,10 @@ export default function MisTurnosView() {
   return (
     <div className="space-y-4">
       {error && (
-        <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-[11px] text-red-600 dark:text-red-400">
+        <div
+          role="alert"
+          className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-[11px] text-red-600 dark:text-red-400"
+        >
           <AlertCircle size={14} className="flex-shrink-0" />
           <p className="font-semibold leading-snug">{error}</p>
           <button
@@ -450,8 +453,11 @@ function ReagendarModal({
 
         <div className="space-y-3">
           <div>
-            <label className="label-overline mb-1 block">Nueva fecha</label>
+            <label className="label-overline mb-1 block" htmlFor="re-fecha">
+              Nueva fecha
+            </label>
             <input
+              id="re-fecha"
               type="date"
               value={fecha}
               onChange={(e) => setFecha(e.target.value)}
@@ -460,8 +466,11 @@ function ReagendarModal({
             />
           </div>
           <div>
-            <label className="label-overline mb-1 block">Nueva hora</label>
+            <label className="label-overline mb-1 block" htmlFor="re-hora">
+              Nueva hora
+            </label>
             <input
+              id="re-hora"
               type="time"
               value={hora}
               onChange={(e) => setHora(e.target.value)}
@@ -471,7 +480,10 @@ function ReagendarModal({
         </div>
 
         {error && (
-          <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-[11px] font-semibold text-red-600 dark:text-red-400">
+          <div
+            role="alert"
+            className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-3 py-2 text-[11px] font-semibold text-red-600 dark:text-red-400"
+          >
             <AlertCircle size={14} />
             {error}
           </div>

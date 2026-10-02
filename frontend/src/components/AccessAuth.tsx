@@ -140,7 +140,10 @@ export default function AccessAuth({
         </div>
 
         {errorText && (
-          <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-[11px] text-red-600 dark:text-red-400">
+          <div
+            role="alert"
+            className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-[11px] text-red-600 dark:text-red-400"
+          >
             <AlertCircle size={14} className="flex-shrink-0" />
             <p className="font-semibold leading-snug">{errorText}</p>
           </div>
@@ -164,12 +167,15 @@ export default function AccessAuth({
           {modo === "registro" && (
             <>
               <div className="space-y-1.5">
-                <label className="label-overline block">Nombre Completo</label>
+                <label className="label-overline block" htmlFor="fa-nombre">
+                  Nombre Completo
+                </label>
                 <div className="relative">
                   <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 dark:text-slate-500">
                     <User size={13} />
                   </span>
                   <input
+                    id="fa-nombre"
                     type="text"
                     required
                     value={nombre}
@@ -181,7 +187,7 @@ export default function AccessAuth({
               </div>
 
               <div className="space-y-1.5">
-                <label className="label-overline block">
+                <label className="label-overline block" htmlFor="fa-telefono">
                   Teléfono (opcional)
                 </label>
                 <div className="relative">
@@ -189,6 +195,7 @@ export default function AccessAuth({
                     <Phone size={13} />
                   </span>
                   <input
+                    id="fa-telefono"
                     type="text"
                     value={telefono}
                     onChange={(e) => setTelefono(e.target.value)}
@@ -201,12 +208,15 @@ export default function AccessAuth({
           )}
 
           <div className="space-y-1.5">
-            <label className="label-overline block">Correo Electrónico</label>
+            <label className="label-overline block" htmlFor="fa-email">
+              Correo Electrónico
+            </label>
             <div className="relative">
               <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 dark:text-slate-500">
                 <Mail size={13} />
               </span>
               <input
+                id="fa-email"
                 type="email"
                 required
                 value={email}
@@ -218,12 +228,15 @@ export default function AccessAuth({
           </div>
 
           <div className="space-y-1.5">
-            <label className="label-overline block">Contraseña</label>
+            <label className="label-overline block" htmlFor="fa-password">
+              Contraseña
+            </label>
             <div className="relative">
               <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 dark:text-slate-500">
                 <Lock size={13} />
               </span>
               <input
+                id="fa-password"
                 type={showPassword ? "text" : "password"}
                 required
                 minLength={6}

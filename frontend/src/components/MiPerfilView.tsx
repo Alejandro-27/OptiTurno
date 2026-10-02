@@ -34,7 +34,10 @@ export default function MiPerfilView() {
   return (
     <div className="max-w-md space-y-4">
       {errorText && (
-        <div className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-[11px] text-red-600 dark:text-red-400">
+        <div
+          role="alert"
+          className="flex items-center gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-[11px] text-red-600 dark:text-red-400"
+        >
           <AlertCircle size={14} className="flex-shrink-0" />
           <p className="font-semibold leading-snug">{errorText}</p>
         </div>
@@ -42,12 +45,15 @@ export default function MiPerfilView() {
 
       <form onSubmit={guardar} className="card space-y-4 p-5 shadow-sm">
         <div className="space-y-1.5">
-          <label className="label-overline block">Nombre Completo</label>
+          <label className="label-overline block" htmlFor="mp-nombre">
+            Nombre Completo
+          </label>
           <div className="relative">
             <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 dark:text-slate-500">
               <User size={13} />
             </span>
             <input
+              id="mp-nombre"
               type="text"
               required
               value={nombre}
@@ -58,12 +64,15 @@ export default function MiPerfilView() {
         </div>
 
         <div className="space-y-1.5">
-          <label className="label-overline block">Número WhatsApp</label>
+          <label className="label-overline block" htmlFor="mp-telefono">
+            Número WhatsApp
+          </label>
           <div className="relative">
             <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 dark:text-slate-500">
               <Phone size={13} />
             </span>
             <input
+              id="mp-telefono"
               type="text"
               value={telefono}
               onChange={(e) => setTelefono(e.target.value)}
@@ -74,12 +83,15 @@ export default function MiPerfilView() {
         </div>
 
         <div className="space-y-1.5">
-          <label className="label-overline block">Correo Electrónico</label>
+          <label className="label-overline block" htmlFor="mp-email">
+            Correo Electrónico
+          </label>
           <div className="relative">
             <span className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400 dark:text-slate-500">
               <Mail size={13} />
             </span>
             <input
+              id="mp-email"
               type="email"
               disabled
               value={sesion?.usuario.email || ""}

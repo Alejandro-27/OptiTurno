@@ -118,8 +118,11 @@ export default function PendingRescheduleBanner({
           </p>
           <div className="flex gap-3">
             <div className="flex-1">
-              <label className="label-overline mb-1 block">Fecha</label>
+              <label className="label-overline mb-1 block" htmlFor="pr-fecha">
+                Fecha
+              </label>
               <input
+                id="pr-fecha"
                 type="date"
                 value={fecha}
                 onChange={(e) => setFecha(e.target.value)}
@@ -128,8 +131,11 @@ export default function PendingRescheduleBanner({
               />
             </div>
             <div className="flex-1">
-              <label className="label-overline mb-1 block">Hora</label>
+              <label className="label-overline mb-1 block" htmlFor="pr-hora">
+                Hora
+              </label>
               <input
+                id="pr-hora"
                 type="time"
                 value={hora}
                 onChange={(e) => setHora(e.target.value)}

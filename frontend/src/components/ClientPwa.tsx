@@ -245,7 +245,10 @@ export default function ClientPwa() {
           </div>
 
           {error && (
-            <div className="mx-4 mt-3 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-red-600 dark:text-red-400">
+            <div
+              role="alert"
+              className="mx-4 mt-3 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 p-3 text-red-600 dark:text-red-400"
+            >
               <AlertTriangle size={14} className="mt-0.5 flex-shrink-0" />
               <p className="text-[11px] font-semibold leading-relaxed">
                 {error}
