@@ -19,6 +19,8 @@ export interface RegistrarCuentaInput {
   nombre: string;
   telefono?: string;
   rol?: Rol;
+  // Honeypot anti-spam: campo oculto que los bots rellenan. El backend lo ignora.
+  web?: string;
 }
 
 export interface AuthRepositorio {

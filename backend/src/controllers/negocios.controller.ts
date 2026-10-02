@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { supabase } from "../config/database.js";
 import { AppError } from "../errors/AppError";
-import { validarCuerpo } from "../schemas/validar";
+import { validarCuerpo, validarParams } from "../schemas/validar";
 import { CLAVES, invalidar } from "../config/cache.js";
 import {
   crearUsuarioSchema,
@@ -17,9 +17,12 @@ import {
   listarSucursalesService,
   obtenerSucursalPorIdService,
   resolverSucursalDeUsuarioService,
+  verificarPertenenciaSucursalService,
+  verificarRecursoDeSucursalService,
   actualizarServicioService,
   eliminarServicioService,
 } from "../services/negocios.service.js";
+import { idParamsSchema, sucursalParamsSchema } from "../schemas/common.js";
 
 // Crear usuarios
 export const crearUsuarioHandler = async (
@@ -88,6 +91,12 @@ export const crearServicioHandler = async (
   reply: FastifyReply,
 ) => {
   const datos = validarCuerpo(crearServicioSchema, request.body);
+  // Multi-tenant: el admin solo puede crear servicios en SU sucursal.
+  await verificarPertenenciaSucursalService(
+    request.usuario!.id,
+    request.usuario!.rol,
+    datos.sucursal_id,
+  );
   const { data, error } = await supabase
     .from("servicios")
     .insert({
@@ -111,7 +120,13 @@ export const actualizarServicioHandler = async (
   request: FastifyRequest,
   reply: FastifyReply,
 ) => {
-  const { id } = request.params as { id: string };
+  const { id } = validarParams(idParamsSchema, request.params);
+  await verificarRecursoDeSucursalService(
+    "servicios",
+    id,
+    request.usuario!.id,
+    request.usuario!.rol,
+  );
   const campos = validarCuerpo(actualizarServicioSchema, request.body);
   const actualizado = await actualizarServicioService(id, campos);
   return reply.status(200).send(actualizado);
@@ -122,7 +137,13 @@ export const eliminarServicioHandler = async (
   request: FastifyRequest,
   reply: FastifyReply,
 ) => {
-  const { id } = request.params as { id: string };
+  const { id } = validarParams(idParamsSchema, request.params);
+  await verificarRecursoDeSucursalService(
+    "servicios",
+    id,
+    request.usuario!.id,
+    request.usuario!.rol,
+  );
   await eliminarServicioService(id);
   return reply.status(200).send({ message: "Servicio eliminado con éxito." });
 };
@@ -138,10 +159,10 @@ export const listarSucursalesHandler = async (
 
 // Devuelve una sucursal puntual
 export const obtenerSucursalHandler = async (
-  request: FastifyRequest<{ Params: { sucursalId: string } }>,
+  request: FastifyRequest,
   reply: FastifyReply,
 ) => {
-  const { sucursalId } = request.params;
+  const { sucursalId } = validarParams(sucursalParamsSchema, request.params);
   const sucursal = await obtenerSucursalPorIdService(sucursalId);
   if (!sucursal) {
     return reply.status(404).send({ error: "La sucursal no existe." });
@@ -165,20 +186,20 @@ export const obtenerMiSucursalHandler = async (
 
 // Listar todos los servicios
 export const listarServiciosHandler = async (
-  request: FastifyRequest<{ Params: { sucursalId: string } }>,
+  request: FastifyRequest,
   reply: FastifyReply,
 ) => {
-  const { sucursalId } = request.params;
+  const { sucursalId } = validarParams(sucursalParamsSchema, request.params);
   const servicios = await obtenerServiciosPorSucursalService(sucursalId);
   return reply.status(200).send(servicios);
 };
 
 // Listar todos los profesionales
 export const listarProfesionalesHandler = async (
-  request: FastifyRequest<{ Params: { sucursalId: string } }>,
+  request: FastifyRequest,
   reply: FastifyReply,
 ) => {
-  const { sucursalId } = request.params;
+  const { sucursalId } = validarParams(sucursalParamsSchema, request.params);
   const profesionales =
     await obtenerProfesionalesPorSucursalService(sucursalId);
   return reply.status(200).send(profesionales);

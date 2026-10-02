@@ -1,8 +1,10 @@
 import { z } from "zod";
 
 // Roles que un usuario puede solicitar en el registro público.
-// superadmin/empleado NUNCA se aceptan del body (los asigna la lógica admin).
-export const ROL_REGISTRO = z.enum(["cliente", "admin_negocio"]);
+// Decisión de producto: el registro público es SOLO de clientes.
+// Los comercios (admin_negocio) y empleados los crea un superadmin (PATCH /api/usuarios/:id,
+// POST /api/negocios/...). superadmin/empleado NUNCA se aceptan del body.
+export const ROL_REGISTRO = z.enum(["cliente"]);
 export const ROL_SISTEMA = z.enum([
   "cliente",
   "admin_negocio",
@@ -18,14 +20,27 @@ const emailOpcional = z
   .pipe(z.email())
   .optional();
 
+// Teléfono: dígitos/espacios/guiones/paréntesis, con '+' opcional.
+const telefonoOpcional = z
+  .union([
+    z.literal(""),
+    z
+      .string()
+      .trim()
+      .regex(/^\+?[0-9\s()-]{6,20}$/),
+  ])
+  .optional();
+
 export const registrarUsuarioSchema = z.object({
   email: emailObligatorio,
   password: z
     .string()
     .min(6, "La contraseña debe tener al menos 6 caracteres."),
   nombre: z.string().trim().min(2, "El nombre es obligatorio."),
-  telefono: z.string().trim().optional(),
+  telefono: telefonoOpcional,
   rol: ROL_REGISTRO.optional(),
+  // Honeypot anti-spam: campo oculto que los bots suelen completar.
+  web: z.string().max(500).optional(),
 });
 
 export const loginSchema = z.object({

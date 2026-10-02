@@ -12,10 +12,12 @@ import {
   bloquearHorarioService,
 } from "../services/turnos.service.js";
 import { resolverSucursalDeUsuarioService } from "../services/negocios.service.js";
-import { validarCuerpo } from "../schemas/validar";
+import { validarCuerpo, validarParams } from "../schemas/validar";
+import { idParamsSchema } from "../schemas/common";
 import {
   reservarTurnoSchema,
   disponibilidadSchema,
+  cancelarTurnoSchema,
   reagendarTurnoSchema,
   cambiarEstadoTurnoSchema,
   bloquearHorarioSchema,
@@ -71,14 +73,14 @@ export const cancelarTurnoHandler = async (
   request: FastifyRequest,
   reply: FastifyReply,
 ) => {
-  const { id } = request.params as { id: string };
+  const { id } = validarParams(idParamsSchema, request.params);
   const usuario = request.usuario!;
-  const body = request.body as Record<string, unknown> | undefined;
-  const motivo = body?.motivo as string | undefined;
+  // Estado de cancelación validado aquí (motivo acotado a 500 chars).
+  const body = validarCuerpo(cancelarTurnoSchema, request.body);
   const esCliente = usuario.rol === "cliente";
   const turno = esCliente
-    ? await cancelarTurnoClienteService(usuario.id, id, motivo)
-    : await cancelarTurnoAdminService(usuario.id, id, motivo);
+    ? await cancelarTurnoClienteService(usuario.id, id, body.motivo)
+    : await cancelarTurnoAdminService(usuario.id, id, body.motivo);
   return reply.status(200).send({
     message: "Turno cancelado con éxito.",
     turno,
@@ -89,7 +91,7 @@ export const reagendarTurnoHandler = async (
   request: FastifyRequest,
   reply: FastifyReply,
 ) => {
-  const { id } = request.params as { id: string };
+  const { id } = validarParams(idParamsSchema, request.params);
   const usuario = request.usuario!;
   const cuerpo = validarCuerpo(reagendarTurnoSchema, request.body);
   const turno = await reagendarTurnoService(
@@ -119,7 +121,7 @@ export const cambiarEstadoTurnoHandler = async (
   request: FastifyRequest,
   reply: FastifyReply,
 ) => {
-  const { id } = request.params as { id: string };
+  const { id } = validarParams(idParamsSchema, request.params);
   const usuario = request.usuario!;
   const cuerpo = validarCuerpo(cambiarEstadoTurnoSchema, request.body);
   const turno = await cambiarEstadoTurnoAdminService(

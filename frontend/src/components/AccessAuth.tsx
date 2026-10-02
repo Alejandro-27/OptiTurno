@@ -8,42 +8,31 @@ import {
   User,
   Phone,
   UserPlus,
-  Store,
-  UserCircle2,
   LogIn,
 } from "lucide-react";
 import { login, registrar } from "../store";
 import type { SesionDTO } from "../api/dto";
-import type { Rol } from "../types/enums";
-
-export type TipoCuenta = "cliente" | "comercio";
 
 interface AccessAuthProps {
-  tipoInicial?: TipoCuenta;
   modoInicial?: "login" | "registro";
   onAutenticado: (sesion: SesionDTO) => void;
 }
 
-const ROL_POR_TIPO: Record<TipoCuenta, Rol> = {
-  cliente: "cliente",
-  comercio: "admin_negocio",
-};
-
 const inputClase = "input";
 
 export default function AccessAuth({
-  tipoInicial = "cliente",
   modoInicial = "registro",
   onAutenticado,
 }: AccessAuthProps) {
   const [modo, setModo] = useState<"login" | "registro">(modoInicial);
-  const [tipoCuenta, setTipoCuenta] = useState<TipoCuenta>(tipoInicial);
 
   const [nombre, setNombre] = useState("");
   const [telefono, setTelefono] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  // Honeypot anti-spam: campo oculto que los bots llenan por defecto.
+  const [web, setWeb] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
   const [errorText, setErrorText] = useState<string | null>(null);
@@ -66,7 +55,8 @@ export default function AccessAuth({
               email: email.trim(),
               password,
               telefono: telefono.trim() || undefined,
-              rol: ROL_POR_TIPO[tipoCuenta],
+              rol: "cliente",
+              web,
             });
       onAutenticado(sesion);
     } catch (err) {
@@ -133,7 +123,7 @@ export default function AccessAuth({
           <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
             {modo === "login"
               ? "Ingresa tus credenciales para continuar."
-              : "Te redirigiremos a tu vista según el tipo de cuenta."}
+              : "Tu cuenta de cliente para reservar tus citas."}
           </p>
         </div>
 
@@ -145,80 +135,22 @@ export default function AccessAuth({
         )}
 
         <form onSubmit={handleSubmit} className="space-y-3.5">
+          {/* Honeypot anti-spam: invisibles para humanos, atractivos para bots */}
+          <div className="hidden" aria-hidden="true">
+            <label htmlFor="web">Tu sitio web (no llenes este campo)</label>
+            <input
+              id="web"
+              type="text"
+              name="web"
+              tabIndex={-1}
+              autoComplete="off"
+              value={web}
+              onChange={(e) => setWeb(e.target.value)}
+            />
+          </div>
+
           {modo === "registro" && (
             <>
-              <div className="space-y-1.5">
-                <label className="label-overline block">Tipo de cuenta</label>
-                <div className="grid grid-cols-2 gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setTipoCuenta("cliente")}
-                    aria-pressed={tipoCuenta === "cliente"}
-                    className={`flex cursor-pointer items-center gap-2 rounded-xl border-2 p-2.5 text-left transition-all ${
-                      tipoCuenta === "cliente"
-                        ? "border-indigo-600 bg-indigo-50 dark:border-indigo-500 dark:bg-indigo-600/10"
-                        : "border-border-subtle hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700"
-                    }`}
-                  >
-                    <UserCircle2
-                      size={16}
-                      className={
-                        tipoCuenta === "cliente"
-                          ? "text-indigo-600 dark:text-indigo-400"
-                          : "text-slate-400"
-                      }
-                    />
-                    <span>
-                      <span
-                        className={`block text-[11px] font-bold ${
-                          tipoCuenta === "cliente"
-                            ? "text-indigo-700 dark:text-indigo-300"
-                            : "text-slate-600 dark:text-slate-400"
-                        }`}
-                      >
-                        Cliente
-                      </span>
-                      <span className="block text-[9px] text-slate-500 dark:text-slate-500">
-                        Reservar citas
-                      </span>
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTipoCuenta("comercio")}
-                    aria-pressed={tipoCuenta === "comercio"}
-                    className={`flex cursor-pointer items-center gap-2 rounded-xl border-2 p-2.5 text-left transition-all ${
-                      tipoCuenta === "comercio"
-                        ? "border-indigo-600 bg-indigo-50 dark:border-indigo-500 dark:bg-indigo-600/10"
-                        : "border-border-subtle hover:border-slate-300 dark:border-slate-800 dark:hover:border-slate-700"
-                    }`}
-                  >
-                    <Store
-                      size={16}
-                      className={
-                        tipoCuenta === "comercio"
-                          ? "text-indigo-600 dark:text-indigo-400"
-                          : "text-slate-400"
-                      }
-                    />
-                    <span>
-                      <span
-                        className={`block text-[11px] font-bold ${
-                          tipoCuenta === "comercio"
-                            ? "text-indigo-700 dark:text-indigo-300"
-                            : "text-slate-600 dark:text-slate-400"
-                        }`}
-                      >
-                        Comercio
-                      </span>
-                      <span className="block text-[9px] text-slate-500 dark:text-slate-500">
-                        Gestionar turnos
-                      </span>
-                    </span>
-                  </button>
-                </div>
-              </div>
-
               <div className="space-y-1.5">
                 <label className="label-overline block">Nombre Completo</label>
                 <div className="relative">
@@ -231,7 +163,7 @@ export default function AccessAuth({
                     value={nombre}
                     onChange={(e) => setNombre(e.target.value)}
                     className={inputClase}
-                    placeholder="Tu nombre o el de tu comercio"
+                    placeholder="Tu nombre completo"
                   />
                 </div>
               </div>
@@ -317,7 +249,7 @@ export default function AccessAuth({
               ? "Procesando..."
               : modo === "login"
                 ? "Iniciar Sesión"
-                : `Crear Cuenta ${tipoCuenta === "cliente" ? "Cliente" : "Comercio"}`}
+                : "Crear Cuenta de Cliente"}
           </button>
         </form>
       </div>

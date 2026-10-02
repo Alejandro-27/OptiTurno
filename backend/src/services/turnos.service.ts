@@ -116,7 +116,11 @@ export const limpiarTurnosExpiradosService = async (
 
   const { data, error, count } = await supabase
     .from("turnos")
-    .update({ estado: "expirado" })
+    .update({
+      estado: "cancelado",
+      cancelado_por: "sistema",
+      motivo_cancelacion: "Expirada: no se completó el pago pendiente.",
+    })
     .eq("estado", "pendiente_pago")
     .lt("created_at", tiempoLimiteISO)
     .select("id");

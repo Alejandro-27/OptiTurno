@@ -1,5 +1,7 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
+import helmet from "@fastify/helmet";
+import rateLimit from "@fastify/rate-limit";
 import dotenv from "dotenv";
 import { turnosRouter } from "./routes/turnos.routes.js";
 import { negociosRoutes } from "./routes/negocios.routes.js";
@@ -14,6 +16,10 @@ dotenv.config();
 
 const fastify = Fastify({
   logger: true,
+  // render.com y proxies confiables reenvían X-Forwarded-For: de verdad.
+  // Necesario para que rate-limit y el registro de IP del consentimiento
+  // funcionen detrás de proxy sin contarlos como "primera petición".
+  trustProxy: true,
 });
 
 fastify.setErrorHandler(errorHandler);
@@ -34,6 +40,22 @@ const start = async () => {
     await fastify.register(cors, {
       origin: corsOrigins,
       methods: ["GET", "HEAD", "PUT", "POST", "PATCH", "DELETE"],
+    });
+
+    // Headers de seguridad (HSTS, X-Content-Type-Options, etc.)
+    await fastify.register(helmet, {
+      contentSecurityPolicy: false, // SPA; el CSP se gestiona en Vercel/index.html
+    });
+
+    // Rate limit global (protección básica de fuerza bruta y abuso).
+    // Los endpoints de auth tienen límites más estrictos (ver rutas).
+    await fastify.register(rateLimit, {
+      max: 300,
+      timeWindow: "1 minute",
+      allowList: ["127.0.0.1", "::1"],
+      errorResponseBuilder: () => ({
+        error: "Demasiadas solicitudes. Intenta de nuevo en un momento.",
+      }),
     });
 
     // Registro de Módulos de Rutas de la API

@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { diaHorarioSchema } from "./common";
+import { diaHorarioSchema, uuidSchema } from "./common";
 
 export const crearProfesionalSchema = z.object({
-  sucursal_id: z.string().min(1),
+  sucursal_id: uuidSchema,
   nombre: z.string().trim().min(2),
   email: z.string().trim().toLowerCase().pipe(z.email()).optional(),
   especialidad: z.string().trim().optional(),

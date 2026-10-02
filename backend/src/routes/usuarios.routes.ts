@@ -6,11 +6,21 @@ import {
 } from "../middlewares/auth.middleware";
 
 export default async function usuariosRoutes(fastify: FastifyInstance) {
-  // Registro: crea el usuario en Supabase Auth + perfil espejo en 'usuarios'
-  fastify.post("/registrar", usuariosController.registrar);
+  // Registro: crea el usuario en Supabase Auth + perfil espejo en 'usuarios'.
+  // Límite estricto: abuso de registro (spam de cuentas) se corta acá.
+  fastify.post(
+    "/registrar",
+    { config: { rateLimit: { max: 10, timeWindow: "10 minutes" } } },
+    usuariosController.registrar,
+  );
 
-  // Login de clientes (PWA) y demás roles: devuelve token JWT + perfil
-  fastify.post("/login", usuariosController.login);
+  // Login de clientes (PWA) y demás roles: devuelve token JWT + perfil.
+  // Límite estricto: anti fuerza bruta sobre credenciales.
+  fastify.post(
+    "/login",
+    { config: { rateLimit: { max: 20, timeWindow: "10 minutes" } } },
+    usuariosController.login,
+  );
 
   // Perfil del usuario autenticado
   fastify.get(

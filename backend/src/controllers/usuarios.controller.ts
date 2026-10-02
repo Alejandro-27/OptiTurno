@@ -1,6 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import { usuariosService } from "../services/usuarios.service";
-import { validarCuerpo } from "../schemas/validar";
+import { validarCuerpo, validarParams } from "../schemas/validar";
+import { idParamsSchema } from "../schemas/common";
 import {
   registrarUsuarioSchema,
   loginSchema,
@@ -46,7 +47,7 @@ export const usuariosController = {
 
   // Edita correo (único) y/o rol de un usuario (solo superadmin)
   async editarUsuario(request: FastifyRequest, reply: FastifyReply) {
-    const { id } = request.params as { id: string };
+    const { id } = validarParams(idParamsSchema, request.params);
     const datos = validarCuerpo(editarUsuarioSchema, request.body);
     const actualizado = await usuariosService.editarUsuario(
       id,

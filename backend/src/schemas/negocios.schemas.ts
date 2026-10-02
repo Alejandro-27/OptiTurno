@@ -1,8 +1,8 @@
 import { z } from "zod";
-import { diaHorarioSchema } from "./common";
+import { diaHorarioSchema, uuidSchema } from "./common";
 
 export const crearUsuarioSchema = z.object({
-  id: z.string().optional(),
+  id: uuidSchema.optional(),
   nombre: z.string().trim().min(2),
   email: z.string().trim().toLowerCase().pipe(z.email()),
   telefono: z.string().trim().optional(),
@@ -14,14 +14,14 @@ export const crearNegocioSchema = z.object({
 });
 
 export const crearSucursalSchema = z.object({
-  negocio_id: z.string().min(1),
+  negocio_id: uuidSchema,
   nombre: z.string().trim().min(2),
   direccion: z.string().trim().min(1),
   telefono: z.string().trim().min(1),
 });
 
 export const crearServicioSchema = z.object({
-  sucursal_id: z.string().min(1),
+  sucursal_id: uuidSchema,
   nombre: z.string().trim().min(2),
   descripcion: z.string().trim().optional(),
   precio: z.number().positive(),

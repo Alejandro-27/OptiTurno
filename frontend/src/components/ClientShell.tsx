@@ -47,7 +47,6 @@ export default function ClientShell() {
       <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
         <div className="w-full max-w-md animate-scale-up">
           <AccessAuth
-            tipoInicial="cliente"
             modoInicial="registro"
             onAutenticado={(s) =>
               navigate(s.usuario.rol === "cliente" ? "/reservar" : "/admin")

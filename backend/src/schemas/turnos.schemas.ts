@@ -1,17 +1,17 @@
 import { z } from "zod";
-import { fechaSchema, horaSchema } from "./common";
+import { fechaSchema, horaSchema, uuidSchema } from "./common";
 
 // POST /turnos/reservar — el cliente_id sale del JWT, no del body
 export const reservarTurnoSchema = z.object({
-  profesional_id: z.string().min(1),
-  servicio_id: z.string().min(1),
+  profesional_id: uuidSchema,
+  servicio_id: uuidSchema,
   fecha: fechaSchema,
   hora_inicio: horaSchema,
 });
 
 // GET /turnos/disponibilidad — querystring
 export const disponibilidadSchema = z.object({
-  profesional_id: z.string().min(1),
+  profesional_id: uuidSchema,
   fecha: fechaSchema,
 });
 
@@ -34,7 +34,7 @@ export const cambiarEstadoTurnoSchema = z.object({
 
 // POST /comercio/bloquear-horario — el comercio bloquea un rango
 export const bloquearHorarioSchema = z.object({
-  profesional_id: z.string().min(1),
+  profesional_id: uuidSchema,
   fecha_inicio: fechaSchema,
   fecha_fin: fechaSchema,
   hora_inicio: horaSchema.nullable().optional(),

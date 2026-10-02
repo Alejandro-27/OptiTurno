@@ -38,7 +38,8 @@ export const obtenerServiciosPorSucursalService = async (sucursalId: string) =>
   });
 
 // Obtiene la lista de profesionales que atienden en una sucursal específica.
-// El join a 'usuarios' trae nombre/email del profesional.
+// El join a 'usuarios' trae solo nombre (sin email): el catálogo es público y
+// el email de los profesionales es dato personal y no debe exponerse.
 // Caché: 10 min. Se invalida con CLAVES.profesionalesSucursal al crear/editar/eliminar profesionales.
 export const obtenerProfesionalesPorSucursalService = async (
   sucursalId: string,
@@ -51,7 +52,7 @@ export const obtenerProfesionalesPorSucursalService = async (
           id,
           especialidad,
           sucursal_id,
-          usuarios:usuario_id (id, nombre, email)
+          usuarios:usuario_id (id, nombre)
         `,
       )
       .eq("sucursal_id", sucursalId);
@@ -116,6 +117,57 @@ export const resolverSucursalDeUsuarioService = async (usuarioId: string) =>
     if (!primera) return null;
     return obtenerSucursalPorIdService(primera.id);
   });
+
+// Verifica que el actor tiene acceso a la sucursal indicada.
+// - superadmin: acceso total (plataforma).
+// - admin_negocio/empleado: deben operar sobre SU sucursal.
+// Lanza 403 si no coincide (defensa BOLA/multi-tenant).
+export const verificarPertenenciaSucursalService = async (
+  usuarioId: string,
+  rol: string,
+  sucursalId: string,
+) => {
+  if (rol === "superadmin") return;
+  const sucursal = await resolverSucursalDeUsuarioService(usuarioId);
+  if (!sucursal) {
+    throw {
+      status: 403,
+      message: "Tu cuenta no está vinculada a una sucursal.",
+    };
+  }
+  if (sucursal.id !== sucursalId) {
+    throw {
+      status: 403,
+      message: "No tienes acceso a los datos de esa sucursal.",
+    };
+  }
+};
+
+// Lee la sucursal_id de un recurso (servicio/profesional) y valida el acceso
+// del actor contra ella. Devuelve el id en caso de éxito.
+export const verificarRecursoDeSucursalService = async (
+  tabla: "servicios" | "profesionales",
+  recursoId: string,
+  usuarioId: string,
+  rol: string,
+): Promise<string> => {
+  const { data: recurso, error } = await supabase
+    .from(tabla)
+    .select("id, sucursal_id")
+    .eq("id", recursoId)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!recurso) {
+    throw { status: 404, message: "El recurso solicitado no existe." };
+  }
+  await verificarPertenenciaSucursalService(
+    usuarioId,
+    rol,
+    recurso.sucursal_id,
+  );
+  return recurso.id;
+};
 
 // Actualiza los datos editables de un servicio de la sucursal
 export const actualizarServicioService = async (

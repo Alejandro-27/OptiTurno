@@ -14,6 +14,8 @@ export default tseslint.config(
       // El backend emite .js obsoletos al lado del .ts (restos de compilación antigua)
       "backend/src/**/*.js",
       "Collections/**",
+      // Herramientas locales de skills/agentes (no son código del proyecto)
+      ".agents/**",
     ],
   },
   js.configs.recommended,

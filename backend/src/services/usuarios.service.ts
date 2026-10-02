@@ -1,8 +1,9 @@
 import { supabase, supabaseAuth } from "../config/database";
 
 // Roles que un usuario puede solicitar en el registro público.
-// NUNCA incluir 'superadmin': ese rol solo debe asignarse manualmente en la BD.
-const ROLES_REGISTRO_PERMITIDOS = ["cliente", "admin_negocio"] as const;
+// Registro restringido a clientes: los comercios los crea un superadmin.
+// NUNCA incluir 'superadmin'/'empleado'/'admin_negocio': los asigna la lógica admin.
+const ROLES_REGISTRO_PERMITIDOS = ["cliente"] as const;
 
 // Roles editables por el superadmin en la gestión de usuarios
 const ROLES_SISTEMA = [
@@ -18,10 +19,23 @@ interface RegistrarDatos {
   nombre: string;
   telefono?: string;
   rol?: string;
+  web?: string;
 }
 
 export const usuariosService = {
   async registrar(datos: RegistrarDatos) {
+    // Honeypot anti-spam: si el campo oculto 'web' trae contenido, es un bot.
+    // Devolvemos un éxito falso sin crear la cuenta ni tocar Supabase.
+    if (datos.web) {
+      return {
+        id: "00000000-0000-0000-0000-000000000000",
+        nombre: datos.nombre,
+        email: datos.email,
+        telefono: null,
+        rol: "cliente",
+      };
+    }
+
     const rol =
       datos.rol &&
       (ROLES_REGISTRO_PERMITIDOS as readonly string[]).includes(datos.rol)

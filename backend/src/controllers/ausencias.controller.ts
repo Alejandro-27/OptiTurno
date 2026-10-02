@@ -5,8 +5,9 @@ import {
   eliminarAusenciaService,
   resolverProfesionalDeUsuarioService,
 } from "../services/ausencias.service";
-import { validarCuerpo } from "../schemas/validar";
+import { validarCuerpo, validarParams } from "../schemas/validar";
 import { crearAusenciaSchema } from "../schemas/ausencias.schemas";
+import { idParamsSchema } from "../schemas/common";
 
 // GET /api/ausencias — ausencias del profesional vinculado al usuario autenticado
 export const listarAusenciasHandler = async (
@@ -54,7 +55,7 @@ export const eliminarAusenciaHandler = async (
   request: FastifyRequest,
   reply: FastifyReply,
 ) => {
-  const { id } = request.params as { id: string };
+  const { id } = validarParams(idParamsSchema, request.params);
   const resultado = await eliminarAusenciaService(
     id,
     request.usuario!.id,

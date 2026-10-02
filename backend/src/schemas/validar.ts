@@ -10,3 +10,12 @@ export const validarCuerpo = <T>(schema: ZodType<T>, datos: unknown): T => {
   }
   return resultado.data;
 };
+
+// Idem para parámetros de ruta (ej. :id — exige UUID válido, no strings libres).
+export const validarParams = <T>(schema: ZodType<T>, datos: unknown): T => {
+  const resultado = schema.safeParse(datos);
+  if (!resultado.success) {
+    throw new AppError(400, "Identificador inválido.");
+  }
+  return resultado.data;
+};
