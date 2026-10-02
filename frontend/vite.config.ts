@@ -9,6 +9,16 @@ export default defineConfig(() => {
     build: {
       outDir: "dist",
       emptyOutDir: true,
+      rollupOptions: {
+        output: {
+          manualChunks: {
+            router: ["react-router-dom"],
+            supabase: ["@supabase/supabase-js"],
+            http: ["axios"],
+            icons: ["lucide-react"],
+          },
+        },
+      },
     },
     resolve: {
       alias: {

@@ -1,4 +1,4 @@
-import { useEffect, type ReactNode } from "react";
+import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import {
   Navigate,
   Route,
@@ -6,31 +6,32 @@ import {
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import AdminDashboard from "./components/AdminDashboard";
-import AdminCalendar from "./components/AdminCalendar";
-import AdminCatalog from "./components/AdminCatalog";
-import AdminAvailability from "./components/AdminAvailability";
-import AdminProfile from "./components/AdminProfile";
-import AdminTeam from "./components/AdminTeam";
-import AdminUsers from "./components/AdminUsers";
-import ClientShell from "./components/ClientShell";
-import ClientPwa from "./components/ClientPwa";
-import MisTurnosView from "./components/MisTurnosView";
-import MiPerfilView from "./components/MiPerfilView";
-import ConfirmacionView from "./components/ConfirmacionView";
-import Landing from "./components/Landing";
-import NotFound from "./components/NotFound";
-import PaginaLegal from "./components/PaginaLegal";
-import CookieBanner from "./components/CookieBanner";
-import PaginaCliente from "./components/PaginaCliente";
-import AdminLayout from "./layouts/AdminLayout";
 import ToastContainer from "./components/ToastContainer";
 import RealtimeSync from "./components/RealtimeSync";
+import NotFound from "./components/NotFound";
 import { ToastProvider } from "./contexts/toast";
 import { PRIVACIDAD, TERMINOS, COOKIES, AVISO_LEGAL } from "./data/legal";
 import { iniciarApp, useStore } from "./store";
 import { useSEO } from "./hooks/useSEO";
 import { initAnalytics, trackPageView } from "./utils/analytics";
+
+const Landing = lazy(() => import("./components/Landing"));
+const PaginaLegal = lazy(() => import("./components/PaginaLegal"));
+const CookieBanner = lazy(() => import("./components/CookieBanner"));
+const ClientShell = lazy(() => import("./components/ClientShell"));
+const ClientPwa = lazy(() => import("./components/ClientPwa"));
+const MisTurnosView = lazy(() => import("./components/MisTurnosView"));
+const MiPerfilView = lazy(() => import("./components/MiPerfilView"));
+const ConfirmacionView = lazy(() => import("./components/ConfirmacionView"));
+const PaginaCliente = lazy(() => import("./components/PaginaCliente"));
+const AdminLayout = lazy(() => import("./layouts/AdminLayout"));
+const AdminDashboard = lazy(() => import("./components/AdminDashboard"));
+const AdminCalendar = lazy(() => import("./components/AdminCalendar"));
+const AdminCatalog = lazy(() => import("./components/AdminCatalog"));
+const AdminAvailability = lazy(() => import("./components/AdminAvailability"));
+const AdminProfile = lazy(() => import("./components/AdminProfile"));
+const AdminTeam = lazy(() => import("./components/AdminTeam"));
+const AdminUsers = lazy(() => import("./components/AdminUsers"));
 
 const RUTA_DE_TAB: Record<string, string> = {
   dashboard: "/admin",
@@ -85,105 +86,121 @@ export default function App() {
       >
         Saltar al contenido
       </a>
-      <Routes>
-        <Route path="/" element={<Landing />} />
+      <Suspense
+        fallback={
+          <div className="flex min-h-dvh items-center justify-center bg-slate-50 dark:bg-slate-950">
+            <div className="flex flex-col items-center gap-3">
+              <div className="h-10 w-10 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
+              <p className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                Cargando OptiTurno...
+              </p>
+            </div>
+          </div>
+        }
+      >
+        <Routes>
+          <Route path="/" element={<Landing />} />
 
-        {/* Páginas legales (son públicas: fuera de los shells con Auth) */}
-        <Route
-          path="/privacidad"
-          element={<PaginaLegal contenido={PRIVACIDAD} />}
-        />
-        <Route
-          path="/terminos"
-          element={<PaginaLegal contenido={TERMINOS} />}
-        />
-        <Route path="/cookies" element={<PaginaLegal contenido={COOKIES} />} />
-        <Route
-          path="/aviso-legal"
-          element={<PaginaLegal contenido={AVISO_LEGAL} />}
-        />
+          {/* Páginas legales (son públicas: fuera de los shells con Auth) */}
+          <Route
+            path="/privacidad"
+            element={<PaginaLegal contenido={PRIVACIDAD} />}
+          />
+          <Route
+            path="/terminos"
+            element={<PaginaLegal contenido={TERMINOS} />}
+          />
+          <Route
+            path="/cookies"
+            element={<PaginaLegal contenido={COOKIES} />}
+          />
+          <Route
+            path="/aviso-legal"
+            element={<PaginaLegal contenido={AVISO_LEGAL} />}
+          />
 
-        {/* PWA Cliente */}
-        <Route element={<ClientShell />}>
-          <Route
-            path="/reservar"
-            element={
-              <PaginaCliente
-                titulo="Reservar una Cita"
-                subtitulo="Explora los servicios disponibles y agenda tu horario preferido."
-              >
-                <ClientPwa />
-              </PaginaCliente>
-            }
-          />
-          <Route
-            path="/turnos"
-            element={
-              <PaginaCliente
-                titulo="Mis Turnos"
-                subtitulo="Historial de tus reservas y cancelaciones."
-              >
-                <MisTurnosView />
-              </PaginaCliente>
-            }
-          />
-          <Route
-            path="/perfil"
-            element={
-              <PaginaCliente
-                titulo="Mi Perfil"
-                subtitulo="Actualiza tus datos de contacto para recibir tus recordatorios."
-              >
-                <MiPerfilView />
-              </PaginaCliente>
-            }
-          />
-          <Route path="/confirmacion" element={<ConfirmacionView />} />
-        </Route>
+          {/* PWA Cliente */}
+          <Route element={<ClientShell />}>
+            <Route
+              path="/reservar"
+              element={
+                <PaginaCliente
+                  titulo="Reservar una Cita"
+                  subtitulo="Explora los servicios disponibles y agenda tu horario preferido."
+                >
+                  <ClientPwa />
+                </PaginaCliente>
+              }
+            />
+            <Route
+              path="/turnos"
+              element={
+                <PaginaCliente
+                  titulo="Mis Turnos"
+                  subtitulo="Historial de tus reservas y cancelaciones."
+                >
+                  <MisTurnosView />
+                </PaginaCliente>
+              }
+            />
+            <Route
+              path="/perfil"
+              element={
+                <PaginaCliente
+                  titulo="Mi Perfil"
+                  subtitulo="Actualiza tus datos de contacto para recibir tus recordatorios."
+                >
+                  <MiPerfilView />
+                </PaginaCliente>
+              }
+            />
+            <Route path="/confirmacion" element={<ConfirmacionView />} />
+          </Route>
 
-        {/* Panel Admin */}
-        <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<DashboardAdmin />} />
-          <Route path="calendario" element={<AdminCalendar />} />
-          <Route
-            path="catalogo"
-            element={
-              <SoloNoEmpleado>
-                <AdminCatalog />
-              </SoloNoEmpleado>
-            }
-          />
-          <Route
-            path="equipo"
-            element={
-              <SoloNoEmpleado>
-                <AdminTeam />
-              </SoloNoEmpleado>
-            }
-          />
-          <Route
-            path="usuarios"
-            element={
-              <SoloSuperadmin>
-                <AdminUsers />
-              </SoloSuperadmin>
-            }
-          />
-          <Route path="disponibilidad" element={<AdminAvailability />} />
-          <Route
-            path="perfil"
-            element={
-              <SoloNoEmpleado>
-                <AdminProfile />
-              </SoloNoEmpleado>
-            }
-          />
-          <Route path="*" element={<Navigate to="/admin" replace />} />
-        </Route>
+          {/* Panel Admin */}
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<DashboardAdmin />} />
+            <Route path="calendario" element={<AdminCalendar />} />
+            <Route
+              path="catalogo"
+              element={
+                <SoloNoEmpleado>
+                  <AdminCatalog />
+                </SoloNoEmpleado>
+              }
+            />
+            <Route
+              path="equipo"
+              element={
+                <SoloNoEmpleado>
+                  <AdminTeam />
+                </SoloNoEmpleado>
+              }
+            />
+            <Route
+              path="usuarios"
+              element={
+                <SoloSuperadmin>
+                  <AdminUsers />
+                </SoloSuperadmin>
+              }
+            />
+            <Route path="disponibilidad" element={<AdminAvailability />} />
+            <Route
+              path="perfil"
+              element={
+                <SoloNoEmpleado>
+                  <AdminProfile />
+                </SoloNoEmpleado>
+              }
+            />
+            <Route path="*" element={<Navigate to="/admin" replace />} />
+          </Route>
 
-        {/* 404 */}
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+          {/* 404 */}
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      </Suspense>
 
       <ToastContainer />
       <RealtimeSync />
