@@ -30,7 +30,7 @@
 
 **Estado de deployment pendiente (confirmar con el usuario):**
 
-- Aplicar en el SQL editor de Supabase prod las migraciones **00005, 00006, 00007** (y futuras). Se hicieron localmente; la aplicación a prod quedó a cargo del usuario (vía SQL editor). Verificar que `/api/turnos` y `/api/turnos/mios` ya no devuelvan 500.
+- Aplicar en el SQL editor de Supabase prod las migraciones **00005, 00006, 00007, 00008 y 00009** (y futuras, empezando por `00010`). Se hicieron localmente; la aplicación a prod quedó a cargo del usuario (vía SQL editor). Verificar que `/api/turnos` y `/api/turnos/mios` ya no devuelvan 500.
 - **Redis NO está provisionado**: `REDIS_URL` vacío → el backend usa caché en memoria (fallback). Recomendado: Upstash free tier; luego setear `REDIS_URL` en Render.
 
 ## Trabajo reciente (commits)
@@ -42,6 +42,12 @@
 | `144622b` | feat: sincronización Realtime de turnos (Cliente↔Admin) + caché Redis backend con fallback en memoria               |
 | `5eb38f3` | fix: calendario maestro + desacople de mocks del panel admin                                                        |
 | `38b322b` | feat: sistema de reagendamientos y cancelaciones con motivo                                                         |
+| `758f9d5` | fix: quita contrasena expuesta y endurece RLS de produccion (F0 auditoría integral)                                 |
+| `8649d21` | fix: endurece seguridad backend, registro solo cliente y headers web (F1, 25 archivos)                              |
+| `c2b3499` | feat: agrega paginas legales, banner de cookies y consentimiento rgpd (F2, 19 archivos)                             |
+| `ae26bcd` | refactor: dashboard admin con metricas reales y sin data inventada (F3)                                             |
+| `7d702da` | fix: accesibilidad wcag en formularios, banners de error y skip link (F4)                                           |
+| `f78eb9b` | feat: code-splitting por rutas, vendor chunks y assets seo (F5)                                                     |
 
 ### Mejoras previas ya hechas (no repetir)
 
@@ -52,19 +58,40 @@
 
 ## En curso / Próximo plan
 
-1. **Recordatorios por WhatsApp** — plan aprobado por el usuario, **pendiente de implementar**. Decisiones tomadas:
+1. **Registro de novedades**: la **auditoría integral (F0–F6) está COMPLETA** (ver sección abajo). Pendientes de acción manual: aplicar migraciones 00005–00009 en Supabase prod, rotar la contraseña expuesta en commits viejos y decidir reescritura de historial git.
+2. **Recordatorios por WhatsApp** — plan aprobado por el usuario, **pendiente de implementar**. Decisiones tomadas:
    - Proveedor: **Meta WhatsApp Cloud API** (oficial).
    - Ventanas: **24h + 2h antes** del turno (configurable `RECORDATORIOS_HORAS=24,2`).
    - Destinatario: **solo el cliente** (`turnos.cliente_id → usuarios.telefono`).
    - Seguimiento: **tabla `notificaciones` + logs** (sin UI; fase 2 agregará vista admin con repo mock+API).
    - Diseño clave: `UNIQUE(turno_id, ventana_horas)` para idempotencia; ventanas calculadas como timestamps naive en `TZONA_HORARIA` (`America/Bogota`); plugin `setInterval` + endpoint `POST /api/recordatorios/procesar` (`x-cron-secret` o JWT admin); interfaz `ProveedorWhatsApp` con `MetaCloudApiProvider` (fetch, sin libs nuevas) + `LogProvider` dev (dry-run). Prerrequisitos manuales de Meta (WABA, token, plantilla `recordatorio_turno`) documentados en el plan.
-   - Archivos previstos: `migration 00008_notificaciones.sql`, `config/whatsapp.ts`, `services/whatsapp.service.ts`, `services/recordatorios.service.ts`, controller+routes+plugin `recordatorios`, cambios en `app.ts` y `.env.example`, commit `feat:`.
-2. **Fase 2 (posterior, no iniciada)**: vista admin de historial de notificaciones (repo mock+API), toggle por comercio, mensaje de confirmación al reservar, recordatorio al profesional, cancelación/reagendamiento al cliente.
+   - Archivos previstos: **migración `00010_notificaciones.sql`** (NOTA: 00008 = hardening RLS y 00009 = consentimientos RGPD ya están ocupadas), `config/whatsapp.ts`, `services/whatsapp.service.ts`, `services/recordatorios.service.ts`, controller+routes+plugin `recordatorios`, cambios en `app.ts` y `.env.example`, commit `feat:`.
+3. **Fase 2 (posterior, no iniciada)**: vista admin de historial de notificaciones (repo mock+API), toggle por comercio, mensaje de confirmación al reservar, recordatorio al profesional, cancelación/reagendamiento al cliente.
+
+## Auditoría integral (F0–F6) — COMPLETADA
+
+Ejecutada en fases con commits en español; cada fase verificada con `tsc --noEmit` (backend y frontend), `pnpm lint`, `pnpm exec prettier --check .` y builds.
+
+- **F0 — RLS/secretos**: placeholder en `setup_produccion.sql` (`REEMPLAZAR_CONTRASENA_INICIAL`) + migración `00008_hardening_rls_produccion.sql` (revoca privilegios a anon/authenticated y elimina políticas dev). La contraseña `GomezFlorez27!` quedó en commits viejos → **rotación pendiente**.
+- **F1 — Seguridad backend**: helmeta+rate-limit (`app.ts`), honeypot anti-spam + registro solo `cliente`, campos `web`, validación `z.uuid()` en IDs y happy multi-tenant (servicios/profesionales/turnos con `verificarPertenenciaSucursalService`/`verificarRecursoDeSucursalService`), fix `limpiarTurnosExpiradosService` (→ `cancelado`, `cancelado_por: "sistema"`), headers de seguridad en `vercel.json`, `eslint.config.mjs` ignora `.agents/**`.
+- **F2 — Legal/RGPD**: páginas `/privacidad`, `/terminos`, `/cookies`, `/aviso-legal` (placeholders de razón social/NIT/email en `data/legal.ts`), `CookieBanner` con `localStorage("optiturno_consentimiento")`, GA4 solo con consentimiento `"aceptadas"` (`utils/analytics.ts`), consentimiento obligatorio en registro y reserva (backend exige `true`, migración `00009_consentimientos_rgpd.sql`).
+- **F3 — Contenido/confianza**: `AdminDashboard.tsx` reescrito con métricas reales del store (ingresos del mes, reservas activas, citas de hoy, % cancelaciones, actividad real); **eliminados** KPIs falsos ($14.2M, 48 citas, 18.4%…), gráficos `picos7D/30D`, logs simulados cada 12s, banner "Inteligencia Predictiva" y rating falso "5.0 (250 reseñas)" del catálogo cliente.
+- **F4 — Accesibilidad WCAG**: skip link + landmarks `main id="contenido"` en todas las rutas (incluye Landing, PaginaLegal), `role="alert"` en 7 banners de error, `htmlFor`/`id` en labels de AccessAuth, MiPerfil, reagendamiento y modales, `aria-label` en selects/inputs del admin. Ya existían `lang="es"`, `:focus-visible` y `prefers-reduced-motion`.
+- **F5 — Rendimiento/SEO**: `React.lazy` por ruta + `manualChunks` (router/supabase/http/icons) → chunk principal **745 kB → 237 kB** (gzip 74 kB), sin warning >500 kB. Assets en `frontend/public/`: `favicon.svg`, `apple-touch-icon.svg`, `og-image.svg`, `robots.txt`, `sitemap.xml` (dominio `https://optiturno.com` — **verificar dominio en Vercel**). Se eliminaron deps muertas `motion` y `@google/genai` (eran del simulador F3).
+- **F6 — Informe final**: nota de riesgo restante actualizará `AGENTS.md` si se decide (2.4.11 elegible vía sticky bars + `scroll-margin-top` ya aplicado en anclas).
+
+**Riesgos residuales (documentados, no bloqueantes):**
+
+1. Contraseña inicial expuesta en historial git + `SUPABASE_ANON_KEY` legacy: **rotar password de BD y decidir reescritura de historial**.
+2. Backend usa `service_role` (bypasa RLS) — RLS es defensa en profundidad; migraciones 00005–00009 **sin aplicar en prod** (acción manual en SQL editor).
+3. `crearNegocio`/`crearSucursal` todavía permiten `admin_negocio` (onboarding lo necesita; supuesto monotenant MVP — reevaluar en multi-tenant real).
+4. Redis sin provisionar (`REDIS_URL` vacío → caché en memoria).
+5. Sin tests automatizados (lint/formato/typecheck cubiertos por CI + Husky).
 
 ## Hallazgos / deuda técnica
 
-- **Bug `limpiarTurnosExpiradosService`** (`backend/src/services/turnos.service.ts:119`): escribe `estado: "expirado"` que NO está en el CHECK de `00006` → el update falla contra BD migrada. Fix propuesto: mapear a `cancelado` + `cancelado_por: "sistema"` + `motivo_cancelacion` (commit `fix:` separado, aprobado implícitamente en plan).
-- Dashboard y calendario admin usan datos hardcodeados de visualización (KPIs, "4 Citas") — no son datos reales.
+- **RESUELTO (F1)**: bug `limpiarTurnosExpiradosService` — ahora escribe `estado: "cancelado"` + `cancelado_por: "sistema"` + `motivo_cancelacion` (compatible con el CHECK de `00006`).
+- **RESUELTO (F3)**: el dashboard admin usaba datos hardcodeados (KPIs, "4 Citas", logs simulados) — ahora usa métricas reales del store.
 - No hay tests automatizados (hoja de ruta de calidad: lint/format/typecheck cubiertos por CI + Husky).
 - `backend/src/**/*.js` gitignoreado = restos de compilación obsoleta; NUNCA editar. Pendiente: fijar `outDir` a `dist/`.
 - Frontend: `dist/` no se commitea; Vercel build vía `pnpm build:frontend`.
