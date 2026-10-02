@@ -1,550 +1,259 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo } from "react";
 import {
   DollarSign,
   Calendar,
   AlertCircle,
-  UserPlus,
-  Sparkles,
-  Clock,
   CheckCircle,
+  ArrowRight,
+  Clock,
   AlertTriangle,
   Mail,
-  ArrowRight,
+  Inbox,
 } from "lucide-react";
-import { ActivityLog } from "../types";
-import { agregarLog, useStore } from "../store";
+import { useStore } from "../store";
+
+const HOY_ISO = new Date().toISOString().slice(0, 10);
+const MES_ACTUAL = HOY_ISO.slice(0, 7);
+
+const ACTIVOS = new Set(["confirmado", "pendiente_pago"]);
 
 export default function AdminDashboard({
   onNavigate,
 }: {
   onNavigate: (tab: string) => void;
 }) {
+  const turnos = useStore((s) => s.turnos);
   const logs = useStore((s) => s.logs);
-  const [animateHeartbeat, setAnimateHeartbeat] = useState<boolean>(false);
-  const [rango, setRango] = useState<"7D" | "30D">("7D");
 
-  const picos7D = {
-    valores: [30, 45, 38, 62, 80, 92, 55, 70, 85, 60, 40, 28, 20, 15],
-    labels: ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
-    metrica: {
-      diaPico: "Sábado",
-      carga: "84%",
-      espera: "12 min",
-      eficiencia: "91.5%",
-    },
-  };
+  // Métricas calculadas sobre datos reales (no hardcodeadas).
+  const metricas = useMemo(() => {
+    const completados = turnos.filter((t) => t.estado === "completado");
+    const ingresosMes = completados
+      .filter((t) => (t.fecha || "").startsWith(MES_ACTUAL))
+      .reduce((suma, t) => suma + (t.precio ?? 0), 0);
+    const activas = turnos.filter((t) => ACTIVOS.has(t.estado || ""));
+    const citasHoy = turnos.filter(
+      (t) => t.fecha === HOY_ISO && ACTIVOS.has(t.estado || ""),
+    );
+    const canceladas = turnos.filter((t) => t.estado === "cancelado").length;
+    const inasistencia = turnos.length
+      ? Math.round((canceladas / turnos.length) * 100)
+      : 0;
+    return {
+      ingresosMes,
+      activas: activas.length,
+      citasHoy: citasHoy.length,
+      inasistencia,
+      total: turnos.length,
+    };
+  }, [turnos]);
 
-  const picos30D = {
-    valores: [
-      25, 32, 28, 41, 55, 70, 62, 48, 36, 44, 58, 74, 88, 92, 80, 66, 52, 45,
-      60, 75, 90, 96, 84, 68, 54, 47, 63, 78, 92, 86,
-    ],
-    labels: ["Sem 1", "Sem 2", "Sem 3", "Sem 4"],
-    metrica: {
-      diaPico: "Viernes",
-      carga: "76%",
-      espera: "9 min",
-      eficiencia: "93.2%",
-    },
-  };
-
-  const datosPico = rango === "7D" ? picos7D : picos30D;
-
-  // Genera path suave (Catmull-Rom → bezier cúbica) para la línea del gráfico
-  const trazoSuave = (valores: number[]): string => {
-    const n = valores.length;
-    const puntos: [number, number][] = valores.map((v, i) => [
-      (i * 800) / (n - 1),
-      200 - v * 1.5,
-    ]);
-    if (puntos.length < 2) return "";
-    let d = `M${puntos[0][0]},${puntos[0][1]}`;
-    for (let i = 0; i < puntos.length - 1; i++) {
-      const p0 = puntos[i - 1] || puntos[i];
-      const p1 = puntos[i];
-      const p2 = puntos[i + 1];
-      const p3 = puntos[i + 2] || p2;
-      d += ` C${p1[0] + (p2[0] - p0[0]) / 6},${p1[1] + (p2[1] - p0[1]) / 6} ${p2[0] - (p3[0] - p1[0]) / 6},${p2[1] - (p3[1] - p1[1]) / 6} ${p2[0]},${p2[1]}`;
-    }
-    return d;
-  };
-
-  const linea = trazoSuave(datosPico.valores);
-  const area = `${linea} L800,200 L0,200 Z`;
-  const metrica = datosPico.metrica;
-
-  // Auto log emitter ticker simulation (every 12 seconds adding a new randomized activity stream)
-  useEffect(() => {
-    const names = [
-      "Andrés M.",
-      "Camila R.",
-      "Sofía V.",
-      "Santiago G.",
-      "Mariana L.",
-    ];
-    const services = [
-      "Corte de Autor + Lavado",
-      "Coloración y Mechas",
-      "Limpieza Facial Detox",
-      "Perfilado de Barba",
-    ];
-    const actions = [
-      { title: "Nueva Cita", detail: " agendó corte.", icon: "clock" },
-      {
-        title: "Pago Procesado",
-        detail: " pagó $55.000 COP.",
-        icon: "check-circle",
-      },
-      {
-        title: "Contacto WhatsApp",
-        detail: " solicitó recordatorio.",
-        icon: "user-plus",
-      },
-    ];
-
-    const interval = setInterval(() => {
-      const randomName = names[Math.floor(Math.random() * names.length)];
-      const randomService =
-        services[Math.floor(Math.random() * services.length)];
-      const randomAction = actions[Math.floor(Math.random() * actions.length)];
-
-      const newLog: ActivityLog = {
-        id: Math.random().toString(),
-        timeSpan: "Justo ahora",
-        icon: randomAction.icon,
-        iconColor:
-          randomAction.icon === "check-circle"
-            ? "text-emerald-500 dark:text-emerald-400"
-            : "text-indigo-600 dark:text-indigo-400",
-        title: randomAction.title,
-        detail: `${randomName} - ${randomService}`,
-      };
-
-      agregarLog(newLog);
-      // Brief heartbeat trigger for live light
-      setAnimateHeartbeat(true);
-      setTimeout(() => setAnimateHeartbeat(false), 2000);
-    }, 12000);
-
-    return () => clearInterval(interval);
-  }, []);
+  const sinDatos = metricas.total === 0;
 
   return (
-    <div className="space-y-6 animate-fade-in text-slate-800 dark:text-slate-100 transition-colors duration-200">
-      {/* KPI Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        {/* KPI 1: Ingresos mensuales */}
-        <div className="bg-white dark:bg-slate-900 border border-border-subtle dark:border-slate-800 p-6 rounded-xl hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-sm dark:shadow-xl relative overflow-hidden group">
-          <div className="flex justify-between items-start">
-            <span className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
-              Ingresos mensuales
+    <div className="animate-fade-in space-y-6 text-slate-800 transition-colors duration-200 dark:text-slate-100">
+      {/* KPI Grid — todos derivados del calendario real */}
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+        {/* KPI 1: Ingresos del mes (turnos completados) */}
+        <div className="group relative overflow-hidden rounded-xl border border-border-subtle bg-white p-6 shadow-sm transition-all hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:shadow-xl dark:hover:border-slate-700">
+          <div className="flex items-start justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Ingresos del mes
             </span>
-            <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-600 dark:text-emerald-400">
+            <div className="rounded-lg bg-emerald-500/10 p-2 text-emerald-600 dark:text-emerald-400">
               <DollarSign size={18} />
             </div>
           </div>
-          <div className="mt-4">
-            <span className="text-3xl font-bold text-emerald-600 dark:text-emerald-400 font-sans">
-              $14.2M
-            </span>
-            <span className="block text-emerald-600 dark:text-emerald-400 text-xs font-medium mt-1">
-              +12,5% respecto al mes pasado
-            </span>
-          </div>
-          <div className="w-full h-1 bg-slate-100 dark:bg-slate-800 rounded-full mt-4 overflow-hidden">
-            <div className="h-full bg-emerald-500 rounded-full w-3/4 transition-all duration-1000"></div>
-          </div>
+          <p className="mt-4 text-3xl font-bold text-emerald-600 dark:text-emerald-400">
+            ${metricas.ingresosMes.toLocaleString("es-CO")}
+          </p>
+          <span className="mt-1 block text-xs text-slate-500 dark:text-slate-400">
+            {sinDatos
+              ? "Sin turnos aún"
+              : `de ${metricas.total} turnos registrados`}
+          </span>
         </div>
 
         {/* KPI 2: Reservas activas */}
-        <div className="bg-white dark:bg-slate-900 border border-border-subtle dark:border-slate-800 p-6 rounded-xl hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-sm dark:shadow-xl relative overflow-hidden group">
-          <div className="flex justify-between items-start">
-            <span className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
+        <div className="group relative overflow-hidden rounded-xl border border-border-subtle bg-white p-6 shadow-sm transition-all hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:shadow-xl dark:hover:border-slate-700">
+          <div className="flex items-start justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Reservas activas
             </span>
-            <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-600 dark:text-indigo-400">
+            <div className="rounded-lg bg-indigo-500/10 p-2 text-indigo-600 dark:text-indigo-400">
               <Calendar size={18} />
             </div>
           </div>
-          <div className="mt-4">
-            <span className="text-3xl font-bold text-indigo-600 dark:text-indigo-300 font-sans">
-              842
-            </span>
-            <span className="block text-slate-500 dark:text-slate-400 text-xs mt-1">
-              48 citas hoy
-            </span>
-          </div>
-          <div className="flex -space-x-2 mt-4 items-center">
-            <span className="w-6 h-6 rounded-full border border-white dark:border-slate-800 bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 flex items-center justify-center text-[9px] font-bold">
-              AK
-            </span>
-            <span className="w-6 h-6 rounded-full border border-white dark:border-slate-800 bg-indigo-100 dark:bg-indigo-900 text-indigo-700 dark:text-indigo-200 flex items-center justify-center text-[9px] font-bold">
-              MR
-            </span>
-            <span className="w-6 h-6 rounded-full border border-white dark:border-slate-800 bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 flex items-center justify-center text-[9px] font-bold">
-              SB
-            </span>
-            <span className="text-[10px] text-slate-500 dark:text-slate-400 pl-2 font-medium">
-              +45 más
-            </span>
-          </div>
+          <p className="mt-4 text-3xl font-bold text-indigo-600 dark:text-indigo-300">
+            {metricas.activas}
+          </p>
+          <span className="mt-1 block text-xs text-slate-500 dark:text-slate-400">
+            {metricas.citasHoy === 0
+              ? "Sin citas para hoy"
+              : `${metricas.citasHoy} citas para hoy`}
+          </span>
         </div>
 
-        {/* KPI 3: Tasa de inasistencia */}
-        <div className="bg-white dark:bg-slate-900 border border-border-subtle dark:border-slate-800 p-6 rounded-xl hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-sm dark:shadow-xl relative overflow-hidden group">
-          <div className="flex justify-between items-start">
-            <span className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
-              Tasa de inasistencia
+        {/* KPI 3: Citas para hoy */}
+        <div className="group relative overflow-hidden rounded-xl border border-border-subtle bg-white p-6 shadow-sm transition-all hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:shadow-xl dark:hover:border-slate-700">
+          <div className="flex items-start justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Citas hoy
             </span>
-            <div className="p-2 bg-amber-500/10 rounded-lg text-amber-600 dark:text-amber-500">
+            <div className="rounded-lg bg-emerald-500/10 p-2 text-emerald-600 dark:text-emerald-400">
+              <CheckCircle size={18} />
+            </div>
+          </div>
+          <p className="mt-4 text-3xl font-bold text-emerald-600 dark:text-emerald-400">
+            {metricas.citasHoy}
+          </p>
+          <span className="mt-1 block text-xs text-slate-500 dark:text-slate-400">
+            turnos confirmados o pendientes
+          </span>
+        </div>
+
+        {/* KPI 4: Tasa de cancelación */}
+        <div className="group relative overflow-hidden rounded-xl border border-border-subtle bg-white p-6 shadow-sm transition-all hover:border-slate-300 dark:border-slate-800 dark:bg-slate-900 dark:shadow-xl dark:hover:border-slate-700">
+          <div className="flex items-start justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+              Cancelaciones
+            </span>
+            <div className="rounded-lg bg-amber-500/10 p-2 text-amber-600 dark:text-amber-500">
               <AlertCircle size={18} />
             </div>
           </div>
-          <div className="mt-4">
-            <span className="text-3xl font-bold text-amber-600 dark:text-amber-500 font-sans">
-              18.4%
-            </span>
-            <div className="flex items-center gap-1.5 mt-1">
-              <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-              <span className="text-amber-600 dark:text-amber-500 text-xs font-semibold">
-                Alerta: por encima del objetivo
-              </span>
-            </div>
-          </div>
-          <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-3 italic leading-tight">
-            Recomendación: Enviar recordatorios por SMS 2 horas antes.
+          <p className="mt-4 text-3xl font-bold text-amber-600 dark:text-amber-500">
+            {metricas.inasistencia}%
           </p>
-        </div>
-
-        {/* KPI 4: Nuevos clientes */}
-        <div className="bg-white dark:bg-slate-900 border border-border-subtle dark:border-slate-800 p-6 rounded-xl hover:border-slate-300 dark:hover:border-slate-700 transition-all shadow-sm dark:shadow-xl relative overflow-hidden group">
-          <div className="flex justify-between items-start">
-            <span className="text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
-              Nuevos clientes
-            </span>
-            <div className="p-2 bg-indigo-500/10 rounded-lg text-indigo-600 dark:text-indigo-400">
-              <UserPlus size={18} />
-            </div>
-          </div>
-          <div className="mt-4">
-            <span className="text-3xl font-bold text-slate-900 dark:text-slate-100 font-sans">
-              124
-            </span>
-            <span className="block text-emerald-600 dark:text-emerald-400 text-xs font-semibold mt-1">
-              +8% WoW
-            </span>
-          </div>
-          <div className="mt-3 flex items-end gap-[3px] h-8">
-            <div className="w-2.5 bg-indigo-500/20 h-3 rounded-sm"></div>
-            <div className="w-2.5 bg-indigo-500/40 h-5 rounded-sm"></div>
-            <div className="w-2.5 bg-indigo-500/60 h-4 rounded-sm"></div>
-            <div className="w-2.5 bg-indigo-500/80 h-7 rounded-sm"></div>
-            <div className="w-2.5 bg-indigo-600 h-8 rounded-sm"></div>
-            <div className="w-2.5 bg-emerald-500 dark:bg-emerald-400 h-6 rounded-sm"></div>
-          </div>
+          <span className="mt-1 block text-xs text-slate-500 dark:text-slate-400">
+            de los turnos fueron cancelados
+          </span>
         </div>
       </div>
 
-      {/* Main Charts & Stream */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Picos semanales */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 border border-border-subtle dark:border-slate-800 rounded-xl p-6 flex flex-col justify-between shadow-sm dark:shadow-xl transition-colors duration-200">
-          <div className="flex justify-between items-center">
+      <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+        {/* Resumen del día / calendario */}
+        <div className="flex flex-col justify-between rounded-xl border border-border-subtle bg-white p-6 shadow-sm transition-colors duration-200 dark:border-slate-800 dark:bg-slate-900 dark:shadow-xl lg:col-span-2">
+          <div className="flex items-center justify-between">
             <div>
               <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100">
-                Picos semanales
+                Agenda de hoy
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Intensidad de demanda por franja horaria
+              <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
+                Citas confirmadas y pendientes para este día
               </p>
             </div>
-            <div className="flex gap-1 bg-slate-100 dark:bg-slate-950 p-1 rounded-lg">
-              <button
-                onClick={() => setRango("7D")}
-                className={`px-3 py-1 font-bold text-[10px] rounded transition-colors cursor-pointer ${
-                  rango === "7D"
-                    ? "bg-indigo-600 text-white dark:bg-indigo-600/15 dark:text-indigo-400 shadow-sm"
-                    : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                }`}
-              >
-                7D
-              </button>
-              <button
-                onClick={() => setRango("30D")}
-                className={`px-3 py-1 font-bold text-[10px] rounded transition-colors cursor-pointer ${
-                  rango === "30D"
-                    ? "bg-indigo-600 text-white dark:bg-indigo-600/15 dark:text-indigo-400 shadow-sm"
-                    : "text-slate-500 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-200"
-                }`}
-              >
-                30D
-              </button>
-            </div>
+            {metricas.citasHoy > 0 && (
+              <span className="rounded-full border border-indigo-200 bg-indigo-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-indigo-600 dark:border-indigo-500/20 dark:bg-indigo-500/15 dark:text-indigo-400">
+                {metricas.citasHoy} citas
+              </span>
+            )}
           </div>
 
-          {/* SVG Chart Area */}
-          <div className="relative w-full h-56 my-6">
-            <svg
-              className="w-full h-full"
-              preserveAspectRatio="none"
-              viewBox="0 0 800 200"
-            >
-              <defs>
-                <linearGradient
-                  id="gradient-area-fill"
-                  x1="0"
-                  x2="0"
-                  y1="0"
-                  y2="1"
-                >
-                  <stop offset="0%" stopColor="#4f46e5" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="#4f46e5" stopOpacity="0" />
-                </linearGradient>
-                <linearGradient
-                  id="gradient-line-accent"
-                  x1="0"
-                  x2="1"
-                  y1="0"
-                  y2="0"
-                >
-                  <stop offset="0%" stopColor="#4f46e5" />
-                  <stop offset="50%" stopColor="#10b981" />
-                  <stop offset="100%" stopColor="#4f46e5" />
-                </linearGradient>
-              </defs>
-              {/* Grid Lines */}
-              <line
-                className="stroke-border-subtle"
-                strokeDasharray="4"
-                x1="0"
-                x2="800"
-                y1="50"
-                y2="50"
-              />
-              <line
-                className="stroke-border-subtle"
-                strokeDasharray="4"
-                x1="0"
-                x2="800"
-                y1="100"
-                y2="100"
-              />
-              <line
-                className="stroke-border-subtle"
-                strokeDasharray="4"
-                x1="0"
-                x2="800"
-                y1="150"
-                y2="150"
-              />
-              {/* Area */}
-              <path d={area} fill="url(#gradient-area-fill)"></path>
-              {/* Neon Line */}
-              <path
-                d={linea}
-                fill="none"
-                stroke="url(#gradient-line-accent)"
-                strokeWidth="3"
-              ></path>
-            </svg>
-            <div className="absolute inset-x-0 bottom-0 flex justify-between text-[10px] text-slate-500 dark:text-slate-400 px-2 font-medium">
-              {datosPico.labels.map((l) => (
-                <span key={l}>{l}</span>
-              ))}
+          {metricas.citasHoy === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-2 py-10 text-center text-slate-400 dark:text-slate-500">
+              <Inbox size={28} />
+              <p className="text-xs font-semibold">
+                No tenés citas agendadas para hoy.
+              </p>
+              <p className="text-[11px]">
+                Las reservas de tus clientes aparecerán aquí.
+              </p>
             </div>
-          </div>
+          ) : (
+            <div className="mt-4 space-y-2">
+              {turnos
+                .filter(
+                  (t) => t.fecha === HOY_ISO && ACTIVOS.has(t.estado || ""),
+                )
+                .slice(0, 5)
+                .map((t) => (
+                  <div
+                    key={t.id}
+                    className="flex items-center gap-3 rounded-xl border border-border-subtle bg-slate-50 px-4 py-2.5 dark:border-slate-800 dark:bg-slate-950"
+                  >
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-indigo-500/10 text-indigo-600 dark:text-indigo-400">
+                      <Clock size={14} />
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-xs font-bold text-slate-900 dark:text-slate-100">
+                        {t.clientName} · {t.serviceName}
+                      </p>
+                      <p className="text-[10px] text-slate-500 dark:text-slate-400">
+                        {t.timeStart}–{t.timeEnd} ·{" "}
+                        {t.profesionalNombre || "Sin asignar"}
+                      </p>
+                    </div>
+                    <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
+                      {t.estado}
+                    </span>
+                  </div>
+                ))}
+            </div>
+          )}
 
-          {/* Graph metadata metrics row */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-slate-100 dark:border-slate-800 text-center md:text-left">
-            <div>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">
-                Día pico
-              </p>
-              <p className="text-base font-bold text-slate-900 dark:text-slate-100 mt-1">
-                {metrica.diaPico}
-              </p>
-            </div>
-            <div>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">
-                Carga diaria promedio
-              </p>
-              <p className="text-base font-bold text-emerald-600 dark:text-emerald-400 mt-1">
-                {metrica.carga}
-              </p>
-            </div>
-            <div>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">
-                Tiempo de espera
-              </p>
-              <p className="text-base font-bold text-slate-900 dark:text-slate-100 mt-1">
-                {metrica.espera}
-              </p>
-            </div>
-            <div>
-              <p className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold uppercase tracking-wider">
-                Eficiencia
-              </p>
-              <p className="text-base font-bold text-indigo-600 dark:text-indigo-400 mt-1">
-                {metrica.eficiencia}
-              </p>
-            </div>
-          </div>
+          <button
+            onClick={() => onNavigate("calendar")}
+            className="mt-6 flex items-center justify-center gap-1 text-[10px] font-bold uppercase tracking-wider text-indigo-600 hover:underline dark:text-indigo-400"
+          >
+            Ver Calendario Maestro
+            <ArrowRight size={10} />
+          </button>
         </div>
 
-        {/* Real-time Web Socket events stream log */}
-        <div className="bg-white dark:bg-slate-900 border border-border-subtle dark:border-slate-800 rounded-xl flex flex-col justify-between shadow-sm dark:shadow-xl overflow-hidden transition-colors duration-200">
-          <div className="p-4 bg-slate-50 dark:bg-slate-900/60 border-b border-border-subtle dark:border-slate-800 flex justify-between items-center">
-            <h3 className="text-xs uppercase tracking-wider font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
-              <span
-                className={`w-2.5 h-2.5 rounded-full bg-emerald-500 ${animateHeartbeat ? "scale-125" : ""} transition-all duration-300 animate-pulse`}
-              ></span>
-              Actividad en Tiempo Real
+        {/* Flujo de actividad en tiempo real (logs reales del store) */}
+        <div className="flex flex-col overflow-hidden rounded-xl border border-border-subtle bg-white shadow-sm transition-colors duration-200 dark:border-slate-800 dark:bg-slate-900 dark:shadow-xl">
+          <div className="flex items-center justify-between border-b border-border-subtle bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900/60">
+            <h3 className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+              Actividad reciente
             </h3>
-            <span className="text-[9px] font-mono font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">
-              WS: CONECTADO
+            <span className="rounded border border-emerald-500/20 bg-emerald-500/10 px-2 py-0.5 font-mono text-[9px] font-bold text-emerald-600 dark:text-emerald-400">
+              EN VIVO
             </span>
           </div>
 
-          <div className="p-4 flex-grow overflow-y-auto max-h-[300px] space-y-4 custom-scrollbar">
-            {logs.map((log) => (
-              <div key={log.id} className="flex gap-3 group animate-slide-in">
-                <div className="mt-0.5 p-1 bg-slate-100 dark:bg-slate-950 rounded-lg text-slate-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                  {log.icon === "clock" && (
-                    <Clock
-                      size={14}
-                      className="text-indigo-600 dark:text-indigo-400"
-                    />
-                  )}
-                  {log.icon === "check-circle" && (
-                    <CheckCircle
-                      size={14}
-                      className="text-emerald-600 dark:text-emerald-400"
-                    />
-                  )}
-                  {log.icon === "check-circle-2" && (
-                    <CheckCircle
-                      size={14}
-                      className="text-emerald-600 dark:text-emerald-400"
-                    />
-                  )}
-                  {log.icon === "alert-triangle" && (
-                    <AlertTriangle size={14} className="text-amber-500" />
-                  )}
-                  {log.icon === "user-plus" && (
-                    <UserPlus
-                      size={14}
-                      className="text-indigo-600 dark:text-indigo-400"
-                    />
-                  )}
-                  {log.icon === "mail" && (
-                    <Mail size={14} className="text-slate-400" />
-                  )}
+          <div className="max-h-[320px] flex-grow space-y-4 overflow-y-auto p-4 custom-scrollbar">
+            {logs.length === 0 ? (
+              <p className="py-8 text-center text-[11px] text-slate-400 dark:text-slate-500">
+                Sin actividad todavía. Los turnos nuevos aparecerán aquí.
+              </p>
+            ) : (
+              logs.map((log) => (
+                <div key={log.id} className="flex gap-3">
+                  <div className="mt-0.5 rounded-lg bg-slate-100 p-1 text-slate-500 dark:bg-slate-950">
+                    {log.icon === "clock" && (
+                      <Clock
+                        size={14}
+                        className="text-indigo-600 dark:text-indigo-400"
+                      />
+                    )}
+                    {log.icon === "check-circle" && (
+                      <CheckCircle
+                        size={14}
+                        className="text-emerald-600 dark:text-emerald-400"
+                      />
+                    )}
+                    {log.icon === "alert-triangle" && (
+                      <AlertTriangle size={14} className="text-amber-500" />
+                    )}
+                    {log.icon === "mail" && (
+                      <Mail size={14} className="text-slate-400" />
+                    )}
+                  </div>
+                  <div className="flex-1 border-l border-border-subtle pl-3 dark:border-slate-800">
+                    <p className="text-[10px] font-medium text-slate-500 dark:text-slate-400">
+                      {log.timeSpan}
+                    </p>
+                    <p className="mt-0.5 text-xs font-semibold text-slate-900 dark:text-slate-100">
+                      {log.title}
+                    </p>
+                    <p className="mt-0.5 text-[11px] text-slate-500 dark:text-slate-400">
+                      {log.detail}
+                    </p>
+                  </div>
                 </div>
-                <div className="flex-1 border-l border-border-subtle dark:border-slate-800 pl-3">
-                  <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium">
-                    {log.timeSpan}
-                  </p>
-                  <p className="text-xs font-semibold text-slate-900 dark:text-slate-100 mt-0.5">
-                    {log.title}
-                  </p>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
-                    {log.detail}
-                  </p>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          <div className="p-3 bg-slate-50 dark:bg-slate-900/40 text-center border-t border-border-subtle dark:border-slate-800/50">
-            <button
-              onClick={() => onNavigate("calendar")}
-              className="text-[10px] uppercase tracking-wider font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center justify-center gap-1 mx-auto"
-            >
-              Ver Historial Completo
-              <ArrowRight size={10} />
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Dynamic Bento */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* Rendimiento por Categoría */}
-        <div className="bg-white dark:bg-slate-900 border border-border-subtle dark:border-slate-800 p-6 rounded-xl md:col-span-2 space-y-4 shadow-sm dark:shadow-xl transition-colors duration-200">
-          <div className="flex justify-between items-center">
-            <h4 className="text-base font-bold text-slate-900 dark:text-slate-100">
-              Rendimiento por Categoría de Agendamiento
-            </h4>
-            <span className="text-xs bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 px-2 py-0.5 rounded font-bold uppercase tracking-wider">
-              Métricas
-            </span>
-          </div>
-
-          <div className="space-y-4">
-            {/* Class 1 */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
-                <span>Peluquería & Estética</span>
-                <span>65%</span>
-              </div>
-              <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-indigo-600 dark:bg-indigo-500 rounded-full shadow-sm"
-                  style={{ width: "65%" }}
-                ></div>
-              </div>
-            </div>
-
-            {/* Class 2 */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
-                <span>Tratamientos Faciales</span>
-                <span>22%</span>
-              </div>
-              <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-emerald-500 dark:bg-emerald-400 rounded-full shadow-sm"
-                  style={{ width: "22%" }}
-                ></div>
-              </div>
-            </div>
-
-            {/* Class 3 */}
-            <div className="space-y-1">
-              <div className="flex justify-between text-xs font-bold text-slate-700 dark:text-slate-300">
-                <span>Venta de Productos</span>
-                <span>13%</span>
-              </div>
-              <div className="h-2 bg-slate-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-amber-500 rounded-full shadow-sm"
-                  style={{ width: "13%" }}
-                ></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Predictive AI Banner */}
-        <div className="relative rounded-xl overflow-hidden border border-border-subtle dark:border-slate-800 bg-gradient-to-br from-indigo-50/80 via-white to-slate-50 dark:from-slate-900 dark:via-slate-900/90 dark:to-slate-950 shadow-sm dark:shadow-xl min-h-[160px] flex flex-col justify-end p-6 group cursor-pointer hover:border-indigo-500 transition-all duration-200">
-          {/* Atmospheric background neon colors */}
-          <div className="absolute -top-12 -right-12 w-32 h-32 bg-indigo-500/10 dark:bg-indigo-500/20 rounded-full blur-2xl group-hover:bg-indigo-500/20 dark:group-hover:bg-indigo-500/30 transition-all duration-500"></div>
-
-          <div className="relative z-20">
-            <span className="bg-indigo-600 text-white px-2.5 py-0.5 text-[9px] font-bold rounded-full mb-2.5 inline-block uppercase tracking-wider shadow-sm">
-              Característica profesional
-            </span>
-            <h5 className="text-base font-bold text-indigo-950 dark:text-indigo-200 flex items-center gap-1.5 leading-snug">
-              Inteligencia Predictiva
-              <Sparkles
-                size={14}
-                className="text-indigo-600 dark:text-indigo-400 animate-pulse"
-              />
-            </h5>
-            <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-              Habilita sugerencias de turnos basadas en análisis climático,
-              eventos locales y tendencias de no-show.
-            </p>
+              ))
+            )}
           </div>
         </div>
       </div>

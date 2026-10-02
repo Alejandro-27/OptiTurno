@@ -1,12 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import {
-  AlertTriangle,
-  ArrowLeft,
-  ArrowRight,
-  MapPin,
-  Star,
-} from "lucide-react";
+import { AlertTriangle, ArrowLeft, ArrowRight, MapPin } from "lucide-react";
 import { initialServices } from "../data";
 import { repositorios, turnosRepositorioMock } from "../data/index";
 import type { Service, Profesional } from "../types";
@@ -270,15 +264,14 @@ export default function ClientPwa() {
                 <div className="relative flex h-28 flex-col justify-end overflow-hidden rounded-2xl border border-indigo-400/20 bg-gradient-to-r from-indigo-600 to-purple-600 p-4 shadow-sm dark:border-slate-800 dark:from-purple-900 dark:to-slate-950">
                   <div className="relative z-20 space-y-1">
                     <div className="flex items-center">
-                      {[0, 1, 2, 3, 4].map((i) => (
-                        <Star
-                          key={i}
-                          size={11}
-                          className="fill-amber-400 text-amber-400"
-                        />
-                      ))}
-                      <span className="pl-1 text-[9px] font-bold text-white/90">
-                        5.0 (250 reseñas)
+                      <span className="rounded-full bg-white/15 px-2 py-0.5 text-[9px] font-bold text-white">
+                        {servicios.length > 0
+                          ? servicios.length
+                          : initialServices.length}{" "}
+                        servicios disponibles
+                      </span>
+                      <span className="pl-2 text-[9px] font-bold text-white/90">
+                        Agenda en tiempo real
                       </span>
                     </div>
                     <h3 className="font-display text-sm font-semibold leading-none text-white">
