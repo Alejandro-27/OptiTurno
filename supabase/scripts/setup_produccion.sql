@@ -18,11 +18,21 @@
 -- ==============================
 -- 0. CONTRASEÑA DE LOS USUARIOS INICIALES
 -- ==============================
--- Reemplazá 'REEMPLAZAR_CONTRASENA_INICIAL' por una contraseña segura.
+-- Reemplazá 'REEMPLAZAR_CONTRASENA_INICIAL' por una contraseña segura
+-- (mín. 12 caracteres, mayúsculas, minúsculas, números y símbolos).
+-- El script aborta si se ejecuta sin reemplazarla.
 
 DROP TABLE IF EXISTS tmp_contrasena_inicial;
 CREATE TEMP TABLE tmp_contrasena_inicial (valor text);
-INSERT INTO tmp_contrasena_inicial VALUES ('GomezFlorez27!');
+INSERT INTO tmp_contrasena_inicial VALUES ('REEMPLAZAR_CONTRASENA_INICIAL');
+
+DO $$
+BEGIN
+  IF (SELECT valor FROM tmp_contrasena_inicial LIMIT 1) = 'REEMPLAZAR_CONTRASENA_INICIAL' THEN
+    RAISE EXCEPTION 'Debes reemplazar la contraseña inicial en la sección 0 antes de ejecutar este script.';
+  END IF;
+END
+$$;
 
 -- ==============================
 -- 1. EXTENSIONES
@@ -136,7 +146,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS uq_ausencia_dia_completo
   WHERE hora_inicio IS NULL;
 
 -- ==============================
--- 3. RLS (habilitado y permisivo: el acceso lo controla el backend con service_role)
+-- 3. RLS (habilitado: el acceso a datos lo controla el backend con service_role)
 -- ==============================
 ALTER TABLE usuarios              ENABLE ROW LEVEL SECURITY;
 ALTER TABLE negocios              ENABLE ROW LEVEL SECURITY;
@@ -147,34 +157,26 @@ ALTER TABLE horarios_laborales    ENABLE ROW LEVEL SECURITY;
 ALTER TABLE turnos                ENABLE ROW LEVEL SECURITY;
 ALTER TABLE profesional_ausencias ENABLE ROW LEVEL SECURITY;
 
-DO $$
-BEGIN
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'dev_allow_all' AND tablename = 'usuarios') THEN
-    CREATE POLICY "dev_allow_all" ON usuarios FOR ALL USING (true);
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'dev_allow_all' AND tablename = 'negocios') THEN
-    CREATE POLICY "dev_allow_all" ON negocios FOR ALL USING (true);
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'dev_allow_all' AND tablename = 'sucursales') THEN
-    CREATE POLICY "dev_allow_all" ON sucursales FOR ALL USING (true);
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'dev_allow_all' AND tablename = 'servicios') THEN
-    CREATE POLICY "dev_allow_all" ON servicios FOR ALL USING (true);
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'dev_allow_all' AND tablename = 'profesionales') THEN
-    CREATE POLICY "dev_allow_all" ON profesionales FOR ALL USING (true);
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'dev_allow_all' AND tablename = 'horarios_laborales') THEN
-    CREATE POLICY "dev_allow_all" ON horarios_laborales FOR ALL USING (true);
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'dev_allow_all' AND tablename = 'turnos') THEN
-    CREATE POLICY "dev_allow_all" ON turnos FOR ALL USING (true);
-  END IF;
-  IF NOT EXISTS (SELECT 1 FROM pg_policies WHERE policyname = 'dev_allow_all' AND tablename = 'profesional_ausencias') THEN
-    CREATE POLICY "dev_allow_all" ON profesional_ausencias FOR ALL USING (true);
-  END IF;
-END
-$$;
+-- Entorno de producción: NO se crean policies permisivas.
+-- - Se elimina cualquier 'dev_allow_all' heredada de setups de desarrollo.
+-- - Se revocan todos los privilegios a los roles anon y authenticated.
+-- La única vía de acceso queda siendo el backend (service_role bypasa RLS).
+-- Si en el futuro se quieren policies (ej. acceso directo desde el PWA),
+-- deben ser restrictivas (USING con reglas por rol/tabla), nunca allow-all.
+DROP POLICY IF EXISTS "dev_allow_all" ON usuarios;
+DROP POLICY IF EXISTS "dev_allow_all" ON negocios;
+DROP POLICY IF EXISTS "dev_allow_all" ON sucursales;
+DROP POLICY IF EXISTS "dev_allow_all" ON servicios;
+DROP POLICY IF EXISTS "dev_allow_all" ON profesionales;
+DROP POLICY IF EXISTS "dev_allow_all" ON horarios_laborales;
+DROP POLICY IF EXISTS "dev_allow_all" ON turnos;
+DROP POLICY IF EXISTS "dev_allow_all" ON profesional_ausencias;
+DROP POLICY IF EXISTS "dev_allow_all" ON pagos_garantia;
+DROP POLICY IF EXISTS "dev_allow_all" ON intenciones_de_pago;
+
+REVOKE ALL ON usuarios, negocios, sucursales, servicios, profesionales,
+  horarios_laborales, turnos, profesional_ausencias, pagos_garantia,
+  intenciones_de_pago FROM anon, authenticated;
 
 -- ==============================
 -- 4. USUARIOS INICIALES (auth.users + tabla espejo 'usuarios')
