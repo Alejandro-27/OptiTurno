@@ -66,17 +66,17 @@ function SoloSuperadmin({ children }: { children: ReactNode }) {
 
 // Admin_negocio DEBE tener negocio configurado (si no, redirige a onboarding)
 function SoloAdminConNegocio() {
-  const { sesion, tieneNegocio, cargando } = useStore((s) => ({
-    sesion: s.sesion,
-    tieneNegocio: s.tieneNegocio,
-    cargando: s.cargando,
-  }));
+  const sesion = useStore((s) => s.sesion);
+  const tieneNegocio = useStore((s) => s.tieneNegocio);
+  const cargando = useStore((s) => s.cargando);
   const esAdminNegocio = sesion?.usuario.rol === "admin_negocio";
+  const esSuperadmin = sesion?.usuario.rol === "superadmin";
 
   // Mientras carga, no renderizar nada (el Suspense maneja el loading global)
-  if (cargando || tieneNegocio === null) return null;
+  if (cargando || (tieneNegocio === null && esAdminNegocio)) return null;
 
-  if (esAdminNegocio && !tieneNegocio) {
+  // Superadmin siempre pasa; admin_negocio solo si tiene negocio
+  if (esAdminNegocio && !tieneNegocio && !esSuperadmin) {
     return <Navigate to="/admin/onboarding" replace />;
   }
   return <Outlet />;

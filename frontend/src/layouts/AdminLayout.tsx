@@ -8,6 +8,7 @@ import {
 } from "react-router-dom";
 import {
   BookOpen,
+  Building2,
   Calendar,
   Clock,
   Info,
@@ -15,7 +16,6 @@ import {
   LogOut,
   Menu,
   User,
-  UserCog,
   UserCheck,
   Users,
   X,
@@ -63,9 +63,9 @@ const ITEMS: ItemNav[] = [
     visible: (empleado) => !empleado,
   },
   {
-    to: "/admin/usuarios",
-    etiqueta: "Usuarios",
-    icono: UserCog,
+    to: "/admin/negocios",
+    etiqueta: "Negocios",
+    icono: Building2,
     visible: (_empleado, superadmin) => superadmin,
   },
   {

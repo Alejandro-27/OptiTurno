@@ -154,6 +154,9 @@ export async function iniciarApp(): Promise<void> {
     } catch {
       tieneNegocio = false;
     }
+  } else if (sesion && sesion.usuario.rol === "superadmin") {
+    // Superadmin no necesita negocio propio; siempre tiene acceso
+    tieneNegocio = true;
   }
 
   // 3. Catálogos base: siempre (servicios y profesionales de la sucursal)
