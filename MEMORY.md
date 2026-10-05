@@ -110,3 +110,24 @@ Decisiones del usuario: **solo turnos `confirmado`**, **cadencia horaria** (`0 *
 - Migración `00010_notificaciones.sql`: tabla `notificaciones` (`estado` pendiente/enviado/fallido, `intentos`, `error`, `enviado_en`), RLS cerrado para `anon`/`authenticated` (solo `service_role`).
 - **Bug encontrado y corregido**: `00008_hardening_rls_produccion.sql` fallaba en un `db:reset` limpio (`DROP POLICY` sobre `pagos_garantia`, tabla eliminada en `00003`). Ahora usa bloques `DO` que verifican `information_schema`. Esto también rompía aplicar 00008 en prod.
 - Verificado end-to-end contra Supabase local: filtra `pendiente_pago`, normaliza teléfono a `573102222222`, escribe/actualiza `notificaciones` y respeta el tope de intentos. Falta verificar el envío exitoso real (requiere escanear el QR).
+
+## Multi-tenant onboarding y aislamiento (commit d8c8a86)
+
+Decisiones aprobadas: `admin_negocio` gestiona múltiples sucursales de su negocio; clientes globales; flujo 2 pasos (superadmin crea usuario → wizard onboarding); seed asocia usuarios de prueba; RLS endurecido en issue separada.
+
+- Migración `00011_admin_negocio_vinculo.sql`: columna `admin_usuario_id` en `negocios` (FK a `usuarios` ON DELETE SET NULL) + seed vincula negocio de prueba a `11111111-...` (Andrés Barbero Master).
+- Backend onboarding:
+  - `POST /api/onboarding/negocio` (zod: nombre, slug, sucursal) → crea negocio + sucursal + setea `admin_usuario_id = request.usuario.id`. Falla 409 si ya tiene negocio.
+  - `GET /api/onboarding/mi-negocio` → 404 si no tiene (requiere onboarding).
+- Scoping usuarios:
+  - `GET /api/usuarios?negocio_id=` requerido (evita fuga global). Devuelve admin_negocio + profesionales del negocio.
+  - `GET /api/negocios/:id/usuarios` (admin_negocio del negocio o superadmin).
+- Frontend:
+  - `OnboardingWizard` (3 pasos: negocio, sucursal, confirmar; slug auto-generado; validación client-side; redirige a `/admin` tras éxito).
+  - Guard `SoloAdminConNegocio`: si `admin_negocio` y `!tieneNegocio` → redirige a `/admin/onboarding`.
+  - `AdminNegocios` (superadmin): lista negocios, expande equipo vía `GET /api/negocios/:id/usuarios`.
+  - Ruta `/admin/negocios` reemplaza `/admin/usuarios`; `RUTA_DE_TAB` actualizado.
+  - `tieneNegocio` en store, cargado en `iniciarApp` vía `repositorios.sucursales.obtenerMiNegocio()`.
+  - Repo `sucursales`: `obtenerMiNegocio()` (mock + api).
+- `AdminTeam` ya scopado a sucursal del admin (sin cambios).
+- Verificado: TypeScript, lint, prettier, builds OK (solo 3 warnings pre-existentes en toast.tsx).
