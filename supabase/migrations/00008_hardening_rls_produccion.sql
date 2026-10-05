@@ -5,20 +5,41 @@
 -- setup_produccion.sql) y revoca todo privilegio a anon/authenticated.
 -- El backend accede con service_role, que bypasa RLS: esta es la config
 -- segura para cualquier entorno (local, preview y producción).
+--
+-- Nota: `pagos_garantia` e `intenciones_de_pago` se eliminan en 00003, así que
+-- aquí solo se tocan si todavía existen (un reset limpio las crearía igual).
 
--- 1. Eliminar policies permisivas (idempotente)
-DROP POLICY IF EXISTS "dev_allow_all" ON usuarios;
-DROP POLICY IF EXISTS "dev_allow_all" ON negocios;
-DROP POLICY IF EXISTS "dev_allow_all" ON sucursales;
-DROP POLICY IF EXISTS "dev_allow_all" ON servicios;
-DROP POLICY IF EXISTS "dev_allow_all" ON profesionales;
-DROP POLICY IF EXISTS "dev_allow_all" ON horarios_laborales;
-DROP POLICY IF EXISTS "dev_allow_all" ON turnos;
-DROP POLICY IF EXISTS "dev_allow_all" ON profesional_ausencias;
-DROP POLICY IF EXISTS "dev_allow_all" ON pagos_garantia;
-DROP POLICY IF EXISTS "dev_allow_all" ON intenciones_de_pago;
+-- 1. Eliminar policies permisivas (idempotente y tolerante a tablas ausentes)
+DO $$
+DECLARE
+  tabla TEXT;
+  tablas TEXT[] := ARRAY[
+    'usuarios', 'negocios', 'sucursales', 'servicios', 'profesionales',
+    'horarios_laborales', 'turnos', 'profesional_ausencias',
+    'pagos_garantia', 'intenciones_de_pago'
+  ];
+BEGIN
+  FOREACH tabla IN ARRAY tablas LOOP
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+               WHERE table_schema = 'public' AND table_name = tabla) THEN
+      EXECUTE format('DROP POLICY IF EXISTS "dev_allow_all" ON public.%I', tabla);
+    END IF;
+  END LOOP;
+END $$;
 
 -- 2. Revocar privilegios a los roles de menor privilegio (anon/authenticated)
 REVOKE ALL ON usuarios, negocios, sucursales, servicios, profesionales,
-  horarios_laborales, turnos, profesional_ausencias, pagos_garantia,
-  intenciones_de_pago FROM anon, authenticated;
+  horarios_laborales, turnos, profesional_ausencias FROM anon, authenticated;
+
+DO $$
+DECLARE
+  tabla TEXT;
+  tablas TEXT[] := ARRAY['pagos_garantia', 'intenciones_de_pago'];
+BEGIN
+  FOREACH tabla IN ARRAY tablas LOOP
+    IF EXISTS (SELECT 1 FROM information_schema.tables
+               WHERE table_schema = 'public' AND table_name = tabla) THEN
+      EXECUTE format('REVOKE ALL ON public.%I FROM anon, authenticated', tabla);
+    END IF;
+  END LOOP;
+END $$;
