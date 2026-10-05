@@ -10,6 +10,8 @@ import usuariosRoutes from "./routes/usuarios.routes";
 import { actividadRoutes } from "./routes/actividad.routes";
 import { disponibilidadRoutes } from "./routes/disponibilidad.routes";
 import { ausenciasRoutes } from "./routes/ausencias.routes";
+import { recordatoriosRoutes } from "./routes/recordatorios.routes";
+import { recordatoriosPlugin } from "./plugins/recordatorios";
 import { errorHandler } from "./plugins/errorHandler";
 
 dotenv.config();
@@ -70,6 +72,12 @@ const start = async () => {
       prefix: "/api/disponibilidad-semanal",
     }); // Disponibilidad semanal (panel admin)
     await fastify.register(ausenciasRoutes, { prefix: "/api/ausencias" }); // Ausencias de profesionales (panel empleado)
+
+    // Recordatorios automáticos de WhatsApp (Evolution API): rutas + cron.
+    await fastify.register(recordatoriosRoutes, {
+      prefix: "/api/recordatorios",
+    });
+    await fastify.register(recordatoriosPlugin);
 
     // Health Check global
     fastify.get("/api/ping", async () => {

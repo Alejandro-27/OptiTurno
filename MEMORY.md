@@ -99,3 +99,14 @@ Ejecutada en fases con commits en español; cada fase verificada con `tsc --noEm
 ## Paquetes/proveedores aprobados
 
 - Sin dependencias nuevas salvo justificación: backend solo usa `fastify`, `@fastify/cors`, `dotenv`, `@supabase/supabase-js`, `ioredis`, `zod`. WhatsApp vía `fetch` nativo (Node 24) — no agregar SDK.
+- Excepción aprobada: `@node-cron/fastify` + `node-cron` para los recordatorios (el usuario eligió explícitamente este paquete frente a `@fastify/schedule`).
+
+## Recordatorios WhatsApp / Evolution API
+
+Decisiones del usuario: **solo turnos `confirmado`**, **cadencia horaria** (`0 * * * *`, `America/Bogota`, `noOverlap`), **ventana 24 h** (turnos de mañana), y **endpoint manual** para disparar el envío bajo demanda.
+
+- Evolution API v2 corre **fuera del repo**, en `~/.evolution-api` (compose con `evoapicloud/evolution-api:v2.3.7` + Postgres interno obligatorio en v2). API key en `~/.evolution-api/.env` (chmod 600), nunca versionada. Aliases en `~/.bashrc`: `evolutionon`, `evolutionoff`, `evolutionstatus`, `evolutionqr` (abre `/manager`). Instancia: `optiturno` (Baileys). El QR todavía no se ha escaneado → envío real pendiente de verificación.
+- Backend: `config/whatsapp.ts` (zod, deshabilitado si falta `WHATSAPP_API_KEY`), `services/whatsapp.service.ts` (`POST /message/sendText/:instancia` con `fetch` + timeout), `services/recordatorios.service.ts` (idempotencia por `UNIQUE(turno_id, ventana_horas)`, máximo 3 intentos, degrada sin lanzar), `plugins/recordatorios.ts` (cron), `POST /api/recordatorios/procesar` (header `x-cron-secret`) y `GET /api/recordatorios/estado` (solo `superadmin`/`admin_negocio`).
+- Migración `00010_notificaciones.sql`: tabla `notificaciones` (`estado` pendiente/enviado/fallido, `intentos`, `error`, `enviado_en`), RLS cerrado para `anon`/`authenticated` (solo `service_role`).
+- **Bug encontrado y corregido**: `00008_hardening_rls_produccion.sql` fallaba en un `db:reset` limpio (`DROP POLICY` sobre `pagos_garantia`, tabla eliminada en `00003`). Ahora usa bloques `DO` que verifican `information_schema`. Esto también rompía aplicar 00008 en prod.
+- Verificado end-to-end contra Supabase local: filtra `pendiente_pago`, normaliza teléfono a `573102222222`, escribe/actualiza `notificaciones` y respeta el tope de intentos. Falta verificar el envío exitoso real (requiere escanear el QR).
