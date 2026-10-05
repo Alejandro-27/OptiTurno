@@ -1,11 +1,18 @@
-import type { SucursalDTO } from "../../api/dto";
-import { obtenerSucursales, obtenerMiSucursal } from "../../api/negocios.api";
+import type { SucursalDTO, MiNegocioDTO } from "../../api/dto";
+import {
+  obtenerSucursales,
+  obtenerMiSucursal,
+  obtenerMiNegocio,
+} from "../../api/negocios.api";
 import { getSessionToken } from "../session";
+import { ApiError } from "../../api/dto";
 
 export interface SucursalesRepositorio {
   listarSucursales(): Promise<SucursalDTO[]>;
   // Resuelve la sucursal del usuario (mi-sucursal si hay token; la primera si no)
   obtenerSucursalActiva(): Promise<SucursalDTO | null>;
+  // Verifica si el admin_negocio autenticado tiene negocio configurado
+  obtenerMiNegocio(): Promise<MiNegocioDTO | null>;
 }
 
 const SUCURSAL_PRINCIPAL: SucursalDTO = {
@@ -17,12 +24,24 @@ const SUCURSAL_PRINCIPAL: SucursalDTO = {
   negocios: { nombre: "Barbería El Elegante" },
 };
 
+const NEGOCIO_PRINCIPAL: MiNegocioDTO = {
+  id: "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+  nombre: "Barbería El Elegante",
+  slug: "barberia-el-elegante",
+  admin_usuario_id: "11111111-1111-1111-1111-111111111111",
+  sucursales: [SUCURSAL_PRINCIPAL],
+};
+
 export const sucursalesRepositorioMock: SucursalesRepositorio = {
   async listarSucursales() {
     return [{ ...SUCURSAL_PRINCIPAL }];
   },
   async obtenerSucursalActiva() {
     return { ...SUCURSAL_PRINCIPAL };
+  },
+  async obtenerMiNegocio() {
+    // En mock, el admin_negocio de prueba SÍ tiene negocio
+    return { ...NEGOCIO_PRINCIPAL };
   },
 };
 
@@ -41,5 +60,14 @@ export const sucursalesRepositorioApi: SucursalesRepositorio = {
     }
     const sucursales = await obtenerSucursales();
     return sucursales[0] || null;
+  },
+  async obtenerMiNegocio() {
+    try {
+      return await obtenerMiNegocio();
+    } catch (error) {
+      // 404 = no tiene negocio (requiere onboarding)
+      if (error instanceof ApiError && error.estado === 404) return null;
+      throw error;
+    }
   },
 };

@@ -41,6 +41,8 @@ export interface AppState {
   misTurnosCargando: boolean;
   ausencias: AusenciaDTO[];
   usuarios: UsuarioAdminDTO[];
+  // Indica si el admin_negocio autenticado ya tiene negocio configurado
+  tieneNegocio: boolean | null;
 }
 
 const estadoInicial: AppState = {
@@ -58,6 +60,7 @@ const estadoInicial: AppState = {
   misTurnosCargando: false,
   ausencias: [],
   usuarios: [],
+  tieneNegocio: null,
 };
 
 let estado: AppState = estadoInicial;
@@ -133,13 +136,24 @@ export async function iniciarApp(): Promise<void> {
   const sesion = await repositorios.auth.recuperarSesion();
   const esAdmin = Boolean(sesion && sesion.usuario.rol !== "cliente");
 
-  // 2. Resolver la sucursal: la del usuario si hay token, si no la primera del sistema.
+  // 2. Resolver la sucursal y si el admin_negocio tiene negocio: la del usuario si hay token, si no la primera del sistema.
   let sucursalId: string | null = null;
+  let tieneNegocio: boolean | null = null;
   try {
     const sucursal = await repositorios.sucursales.obtenerSucursalActiva();
     sucursalId = sucursal?.id || null;
   } catch {
     sucursalId = null;
+  }
+
+  // Si es admin_negocio, verificar si tiene negocio configurado
+  if (sesion && sesion.usuario.rol === "admin_negocio") {
+    try {
+      const miNegocio = await repositorios.sucursales.obtenerMiNegocio();
+      tieneNegocio = !!miNegocio;
+    } catch {
+      tieneNegocio = false;
+    }
   }
 
   // 3. Catálogos base: siempre (servicios y profesionales de la sucursal)
@@ -194,6 +208,7 @@ export async function iniciarApp(): Promise<void> {
     inicializado: true,
     cargando: false,
     sucursalId,
+    tieneNegocio,
     servicios: rServicios.datos,
     profesionales: rProfesionales.datos,
     turnos: rTurnos.datos,

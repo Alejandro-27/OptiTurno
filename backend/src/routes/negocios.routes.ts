@@ -12,6 +12,7 @@ import {
   listarSucursalesHandler,
   obtenerSucursalHandler,
   obtenerMiSucursalHandler,
+  listarUsuariosNegocioHandler,
 } from "../controllers/negocios.controller.js";
 import {
   verificarAutenticacion,
@@ -97,5 +98,17 @@ export const negociosRoutes = async (fastify: FastifyInstance) => {
       ],
     },
     eliminarServicioHandler,
+  );
+
+  // Usuarios de un negocio (admin_negocio del negocio o superadmin)
+  fastify.get(
+    "/negocios/:id/usuarios",
+    {
+      preHandler: [
+        verificarAutenticacion,
+        permitirRoles(["admin_negocio", "superadmin"]),
+      ],
+    },
+    listarUsuariosNegocioHandler,
   );
 };

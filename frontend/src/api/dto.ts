@@ -246,3 +246,41 @@ export interface SeederResponseDTO {
   sucursalId: string;
   serviciosInsertados: number;
 }
+
+// Onboarding
+export interface OnboardingNegocioInput {
+  nombre: string;
+  slug: string;
+  sucursal: {
+    nombre: string;
+    direccion: string;
+    telefono: string;
+  };
+}
+
+export interface OnboardingNegocioResultado {
+  negocio: {
+    id: string;
+    nombre: string;
+    slug: string;
+  };
+  sucursal: {
+    id: string;
+    nombre: string;
+    direccion: string;
+    telefono: string;
+  };
+}
+
+export interface MiNegocioDTO {
+  id: string;
+  nombre: string;
+  slug: string;
+  admin_usuario_id: string;
+  sucursales: Array<{
+    id: string;
+    nombre: string;
+    direccion: string;
+    telefono: string;
+  }>;
+}

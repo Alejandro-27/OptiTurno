@@ -39,9 +39,12 @@ export const usuariosController = {
     return reply.status(200).send(actualizado);
   },
 
-  // Lista todos los usuarios del sistema (solo superadmin)
+  // Lista usuarios de un negocio (solo superadmin con filtro negocio_id)
   async listarUsuarios(request: FastifyRequest, reply: FastifyReply) {
-    const usuarios = await usuariosService.listarUsuarios();
+    const { negocio_id } = request.query as { negocio_id?: string };
+    const usuarios = await usuariosService.listarUsuarios({
+      negocioId: negocio_id,
+    });
     return reply.status(200).send(usuarios);
   },
 

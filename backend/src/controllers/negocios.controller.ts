@@ -22,6 +22,7 @@ import {
   actualizarServicioService,
   eliminarServicioService,
 } from "../services/negocios.service.js";
+import { usuariosService } from "../services/usuarios.service.js";
 import { idParamsSchema, sucursalParamsSchema } from "../schemas/common.js";
 
 // Crear usuarios
@@ -223,4 +224,30 @@ export const ejecutarSeederHandler = async (
     "ot:sucursal:usr:*",
   );
   return reply.status(201).send(resultado);
+};
+
+// Lista usuarios de un negocio (admin_negocio del negocio o superadmin)
+export const listarUsuariosNegocioHandler = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  const { id } = validarParams(idParamsSchema, request.params);
+  // Validación manual: superadmin pasa, admin_negocio solo su negocio
+  if (request.usuario!.rol !== "superadmin") {
+    const { data: negocio, error: errNegocio } = await supabase
+      .from("negocios")
+      .select("admin_usuario_id")
+      .eq("id", id)
+      .maybeSingle();
+    if (errNegocio) throw errNegocio;
+    if (!negocio || negocio.admin_usuario_id !== request.usuario!.id) {
+      throw new AppError(
+        403,
+        "No tienes acceso a los usuarios de ese negocio.",
+      );
+    }
+  }
+
+  const usuarios = await usuariosService.listarUsuarios({ negocioId: id });
+  return reply.status(200).send(usuarios);
 };

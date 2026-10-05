@@ -174,11 +174,59 @@ export const usuariosService = {
     return actualizado;
   },
 
-  // Lista todos los usuarios del sistema (panel superadmin)
-  async listarUsuarios() {
+  // Lista usuarios con filtro opcional por negocio (para superadmin)
+  // Si no se pasa negocioId, requiere ser superadmin y lanza error (evita fuga global).
+  async listarUsuarios(filtro?: { negocioId?: string }) {
+    if (!filtro?.negocioId) {
+      throw {
+        status: 400,
+        message: "Parámetro requerido: negocio_id.",
+      };
+    }
+
+    // Obtener admin_negocio del negocio
+    const { data: negocio, error: errNegocio } = await supabase
+      .from("negocios")
+      .select("admin_usuario_id")
+      .eq("id", filtro.negocioId)
+      .maybeSingle();
+
+    if (errNegocio) throw errNegocio;
+    if (!negocio) {
+      throw { status: 404, message: "Negocio no encontrado." };
+    }
+
+    // Obtener sucursales del negocio
+    const { data: sucursales, error: errSuc } = await supabase
+      .from("sucursales")
+      .select("id")
+      .eq("negocio_id", filtro.negocioId);
+
+    if (errSuc) throw errSuc;
+    const sucursalIds = (sucursales || []).map((s) => s.id);
+
+    // Obtener profesionales de esas sucursales
+    const { data: profesionales, error: errProf } = await supabase
+      .from("profesionales")
+      .select("usuario_id")
+      .in("sucursal_id", sucursalIds);
+
+    if (errProf) throw errProf;
+    const profesionalUserIds = (profesionales || []).map((p) => p.usuario_id);
+
+    // Usuarios a incluir: admin_negocio + profesionales
+    const userIds = [
+      ...new Set(
+        [negocio.admin_usuario_id, ...profesionalUserIds].filter(Boolean),
+      ),
+    ];
+
+    if (userIds.length === 0) return [];
+
     const { data, error } = await supabase
       .from("usuarios")
       .select("id, nombre, email, telefono, rol")
+      .in("id", userIds)
       .order("nombre", { ascending: true });
 
     if (error)

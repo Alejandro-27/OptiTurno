@@ -1,6 +1,7 @@
 import { lazy, Suspense, useEffect, type ReactNode } from "react";
 import {
   Navigate,
+  Outlet,
   Route,
   Routes,
   useLocation,
@@ -31,14 +32,15 @@ const AdminCatalog = lazy(() => import("./components/AdminCatalog"));
 const AdminAvailability = lazy(() => import("./components/AdminAvailability"));
 const AdminProfile = lazy(() => import("./components/AdminProfile"));
 const AdminTeam = lazy(() => import("./components/AdminTeam"));
-const AdminUsers = lazy(() => import("./components/AdminUsers"));
+const AdminNegocios = lazy(() => import("./components/AdminNegocios"));
+const OnboardingWizard = lazy(() => import("./components/OnboardingWizard"));
 
 const RUTA_DE_TAB: Record<string, string> = {
   dashboard: "/admin",
   calendar: "/admin/calendario",
   catalog: "/admin/catalogo",
   team: "/admin/equipo",
-  usuarios: "/admin/usuarios",
+  negocios: "/admin/negocios",
   availability: "/admin/disponibilidad",
   profile: "/admin/perfil",
 };
@@ -60,6 +62,24 @@ function SoloNoEmpleado({ children }: { children: ReactNode }) {
 function SoloSuperadmin({ children }: { children: ReactNode }) {
   const esSuperadmin = useStore((s) => s.sesion?.usuario.rol === "superadmin");
   return esSuperadmin ? children : <Navigate to="/admin" replace />;
+}
+
+// Admin_negocio DEBE tener negocio configurado (si no, redirige a onboarding)
+function SoloAdminConNegocio() {
+  const { sesion, tieneNegocio, cargando } = useStore((s) => ({
+    sesion: s.sesion,
+    tieneNegocio: s.tieneNegocio,
+    cargando: s.cargando,
+  }));
+  const esAdminNegocio = sesion?.usuario.rol === "admin_negocio";
+
+  // Mientras carga, no renderizar nada (el Suspense maneja el loading global)
+  if (cargando || tieneNegocio === null) return null;
+
+  if (esAdminNegocio && !tieneNegocio) {
+    return <Navigate to="/admin/onboarding" replace />;
+  }
+  return <Outlet />;
 }
 
 export default function App() {
@@ -159,42 +179,47 @@ export default function App() {
 
           {/* Panel Admin */}
           <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<DashboardAdmin />} />
-            <Route path="calendario" element={<AdminCalendar />} />
-            <Route
-              path="catalogo"
-              element={
-                <SoloNoEmpleado>
-                  <AdminCatalog />
-                </SoloNoEmpleado>
-              }
-            />
-            <Route
-              path="equipo"
-              element={
-                <SoloNoEmpleado>
-                  <AdminTeam />
-                </SoloNoEmpleado>
-              }
-            />
-            <Route
-              path="usuarios"
-              element={
-                <SoloSuperadmin>
-                  <AdminUsers />
-                </SoloSuperadmin>
-              }
-            />
-            <Route path="disponibilidad" element={<AdminAvailability />} />
-            <Route
-              path="perfil"
-              element={
-                <SoloNoEmpleado>
-                  <AdminProfile />
-                </SoloNoEmpleado>
-              }
-            />
-            <Route path="*" element={<Navigate to="/admin" replace />} />
+            {/* Onboarding: accesible SIN tener negocio (para admin_negocio nuevo) */}
+            <Route path="onboarding" element={<OnboardingWizard />} />
+            {/* Resto de rutas admin: requieren negocio configurado (para admin_negocio) */}
+            <Route element={<SoloAdminConNegocio />}>
+              <Route index element={<DashboardAdmin />} />
+              <Route path="calendario" element={<AdminCalendar />} />
+              <Route
+                path="catalogo"
+                element={
+                  <SoloNoEmpleado>
+                    <AdminCatalog />
+                  </SoloNoEmpleado>
+                }
+              />
+              <Route
+                path="equipo"
+                element={
+                  <SoloNoEmpleado>
+                    <AdminTeam />
+                  </SoloNoEmpleado>
+                }
+              />
+              <Route
+                path="negocios"
+                element={
+                  <SoloSuperadmin>
+                    <AdminNegocios />
+                  </SoloSuperadmin>
+                }
+              />
+              <Route path="disponibilidad" element={<AdminAvailability />} />
+              <Route
+                path="perfil"
+                element={
+                  <SoloNoEmpleado>
+                    <AdminProfile />
+                  </SoloNoEmpleado>
+                }
+              />
+              <Route path="*" element={<Navigate to="/admin" replace />} />
+            </Route>
           </Route>
 
           {/* 404 */}

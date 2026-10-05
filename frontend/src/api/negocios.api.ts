@@ -4,7 +4,11 @@ import type {
   ProfesionalDTO,
   SucursalDTO,
   SeederResponseDTO,
+  OnboardingNegocioInput,
+  OnboardingNegocioResultado,
+  MiNegocioDTO,
 } from "./dto";
+import { ApiError } from "./dto";
 
 // Trae los servicios disponibles de una sucursal específica
 export const obtenerServicios = async (
@@ -67,5 +71,44 @@ export const eliminarServicio = async (id: string): Promise<void> => {
 // Disparador de emergencia para poblar la base de datos en plena exposición
 export const ejecutarSeederDev = async (): Promise<SeederResponseDTO> => {
   const { data } = await apiClient.post<SeederResponseDTO>("/seed");
+  return data;
+};
+
+// --- Onboarding ---
+
+// Crea el negocio + sucursal inicial y vincula al admin autenticado
+export const crearNegocioOnboarding = async (
+  input: OnboardingNegocioInput,
+): Promise<OnboardingNegocioResultado> => {
+  const { data } = await apiClient.post<OnboardingNegocioResultado>(
+    "/onboarding/negocio",
+    input,
+  );
+  return data;
+};
+
+// Consulta si el admin autenticado ya tiene negocio configurado
+export const obtenerMiNegocio = async (): Promise<MiNegocioDTO | null> => {
+  try {
+    const { data } = await apiClient.get<MiNegocioDTO>(
+      "/onboarding/mi-negocio",
+    );
+    return data;
+  } catch (error) {
+    // 404 = no tiene negocio (requiere onboarding)
+    if (error instanceof ApiError && error.estado === 404) return null;
+    throw error;
+  }
+};
+
+// Lista usuarios de un negocio (superadmin o admin_negocio del negocio)
+export const listarUsuariosNegocio = async (
+  negocioId: string,
+): Promise<
+  Array<{ id: string; nombre: string; email: string; rol: string }>
+> => {
+  const { data } = await apiClient.get<
+    Array<{ id: string; nombre: string; email: string; rol: string }>
+  >(`/negocios/${negocioId}/usuarios`);
   return data;
 };

@@ -11,6 +11,7 @@ import { actividadRoutes } from "./routes/actividad.routes";
 import { disponibilidadRoutes } from "./routes/disponibilidad.routes";
 import { ausenciasRoutes } from "./routes/ausencias.routes";
 import { recordatoriosRoutes } from "./routes/recordatorios.routes";
+import { onboardingRoutes } from "./routes/onboarding.routes";
 import { recordatoriosPlugin } from "./plugins/recordatorios";
 import { errorHandler } from "./plugins/errorHandler";
 
@@ -77,6 +78,9 @@ const start = async () => {
     await fastify.register(recordatoriosRoutes, {
       prefix: "/api/recordatorios",
     });
+
+    // Onboarding: crear negocio y consultar estado
+    await fastify.register(onboardingRoutes, { prefix: "/api/onboarding" });
     await fastify.register(recordatoriosPlugin);
 
     // Health Check global

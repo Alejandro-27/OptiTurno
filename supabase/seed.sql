@@ -20,6 +20,12 @@ INSERT INTO sucursales (id, negocio_id, nombre, direccion, telefono) VALUES
   ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa', 'Sede Central Anapoima', 'Calle 4 #5-12', '3101234567')
 ON CONFLICT DO NOTHING;
 
+-- 3b. Vincular negocio a su admin (usuario 11111111...)
+UPDATE negocios
+SET admin_usuario_id = '11111111-1111-1111-1111-111111111111'
+WHERE slug = 'barberia-el-elegante'
+  AND (admin_usuario_id IS NULL OR admin_usuario_id <> '11111111-1111-1111-1111-111111111111');
+
 -- 4. Servicios de prueba
 INSERT INTO servicios (sucursal_id, nombre, descripcion, precio, duracion_minutos) VALUES
   ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb', 'Corte de Cabello Premium', 'Incluye lavado y perfilado de cejas', 25000, 30),
