@@ -357,6 +357,154 @@ export const eliminarServicioService = async (servicioId: string) => {
   await invalidar(CLAVES.serviciosSucursal);
 };
 
+// Actualiza un negocio (solo superadmin)
+export const actualizarNegocioService = async (
+  negocioId: string,
+  campos: {
+    nombre?: string;
+    slug?: string;
+  },
+) => {
+  if (Object.keys(campos).length === 0) {
+    throw { status: 400, message: "No hay campos para actualizar." };
+  }
+
+  const { data, error } = await supabase
+    .from("negocios")
+    .update(campos)
+    .eq("id", negocioId)
+    .select(
+      "id, nombre, slug, admin_usuario_id, activo, created_at, updated_at",
+    )
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) {
+    throw { status: 404, message: "El negocio no existe." };
+  }
+  await invalidar(CLAVES.sucursales);
+  return data;
+};
+
+// Elimina un negocio (solo superadmin) — soft delete
+export const eliminarNegocioService = async (negocioId: string) => {
+  const { data: negocio, error: errNegocio } = await supabase
+    .from("negocios")
+    .select("id")
+    .eq("id", negocioId)
+    .maybeSingle();
+
+  if (errNegocio) throw errNegocio;
+  if (!negocio) {
+    throw { status: 404, message: "El negocio no existe." };
+  }
+
+  // Soft delete: marcar como inactivo
+  const { error } = await supabase
+    .from("negocios")
+    .update({ activo: false, updated_at: new Date().toISOString() })
+    .eq("id", negocioId);
+
+  if (error) throw error;
+
+  // También desactivar sus sucursales en cascada
+  await supabase
+    .from("sucursales")
+    .update({ activo: false, updated_at: new Date().toISOString() })
+    .eq("negocio_id", negocioId);
+
+  await invalidar(
+    CLAVES.sucursales,
+    CLAVES.serviciosSucursal,
+    CLAVES.profesionalesSucursal,
+  );
+};
+
+// Actualiza una sucursal (solo superadmin)
+export const actualizarSucursalService = async (
+  sucursalId: string,
+  campos: {
+    nombre?: string;
+    direccion?: string;
+    telefono?: string;
+    activo?: boolean;
+  },
+) => {
+  if (Object.keys(campos).length === 0) {
+    throw { status: 400, message: "No hay campos para actualizar." };
+  }
+
+  const { data, error } = await supabase
+    .from("sucursales")
+    .update({ ...campos, updated_at: new Date().toISOString() })
+    .eq("id", sucursalId)
+    .select(
+      "id, negocio_id, nombre, direccion, telefono, activo, created_at, updated_at",
+    )
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) {
+    throw { status: 404, message: "La sucursal no existe." };
+  }
+  await invalidar(
+    CLAVES.sucursales,
+    CLAVES.serviciosSucursal,
+    CLAVES.profesionalesSucursal,
+  );
+  return data;
+};
+
+// Elimina una sucursal (solo superadmin) — soft delete
+export const eliminarSucursalService = async (sucursalId: string) => {
+  const { data: sucursal, error: errSuc } = await supabase
+    .from("sucursales")
+    .select("id, negocio_id")
+    .eq("id", sucursalId)
+    .maybeSingle();
+
+  if (errSuc) throw errSuc;
+  if (!sucursal) {
+    throw { status: 404, message: "La sucursal no existe." };
+  }
+
+  // Verificar si tiene servicios, profesionales o turnos asociados (para logs/información)
+  const [
+    { count: _countServicios },
+    { count: _countProfesionales },
+    { count: _countTurnos },
+  ] = await Promise.all([
+    supabase
+      .from("servicios")
+      .select("id", { count: "exact", head: true })
+      .eq("sucursal_id", sucursalId),
+    supabase
+      .from("profesionales")
+      .select("id", { count: "exact", head: true })
+      .eq("sucursal_id", sucursalId),
+    supabase
+      .from("turnos")
+      .select("id", { count: "exact", head: true })
+      .eq("profesionales.sucursal_id", sucursalId)
+      .eq("estado", "confirmado"),
+  ]);
+
+  // Soft delete: marcar como inactivo
+  const { error } = await supabase
+    .from("sucursales")
+    .update({ activo: false, updated_at: new Date().toISOString() })
+    .eq("id", sucursalId);
+
+  if (error) throw error;
+
+  await invalidar(
+    CLAVES.sucursales,
+    CLAVES.serviciosSucursal,
+    CLAVES.profesionalesSucursal,
+  );
+  return { id: sucursalId, eliminado: true };
+};
+
 // Últimos eventos de la sucursal, para el stream de actividad del panel admin
 // Caché: 45 seg. Se invalida con CLAVES.actividadGeneral en cada mutación de turnos.
 export const listarActividadService = async (sucursalId: string) =>

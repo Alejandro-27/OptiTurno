@@ -6,7 +6,9 @@ import { CLAVES, invalidar } from "../config/cache.js";
 import {
   crearUsuarioSchema,
   crearNegocioSchema,
+  actualizarNegocioSchema,
   crearSucursalSchema,
+  actualizarSucursalSchema,
   crearServicioSchema,
   actualizarServicioSchema,
 } from "../schemas/negocios.schemas";
@@ -21,6 +23,10 @@ import {
   verificarRecursoDeSucursalService,
   actualizarServicioService,
   eliminarServicioService,
+  actualizarNegocioService,
+  eliminarNegocioService,
+  actualizarSucursalService,
+  eliminarSucursalService,
 } from "../services/negocios.service.js";
 import { usuariosService } from "../services/usuarios.service.js";
 import { idParamsSchema, sucursalParamsSchema } from "../schemas/common.js";
@@ -250,4 +256,46 @@ export const listarUsuariosNegocioHandler = async (
 
   const usuarios = await usuariosService.listarUsuarios({ negocioId: id });
   return reply.status(200).send(usuarios);
+};
+
+// Actualiza un negocio (solo superadmin)
+export const actualizarNegocioHandler = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  const { id } = validarParams(idParamsSchema, request.params);
+  const campos = validarCuerpo(actualizarNegocioSchema, request.body);
+  const actualizado = await actualizarNegocioService(id, campos);
+  return reply.status(200).send(actualizado);
+};
+
+// Elimina un negocio (solo superadmin) — soft delete
+export const eliminarNegocioHandler = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  const { id } = validarParams(idParamsSchema, request.params);
+  const resultado = await eliminarNegocioService(id);
+  return reply.status(200).send(resultado);
+};
+
+// Actualiza una sucursal (solo superadmin)
+export const actualizarSucursalHandler = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  const { id } = validarParams(idParamsSchema, request.params);
+  const campos = validarCuerpo(actualizarSucursalSchema, request.body);
+  const actualizado = await actualizarSucursalService(id, campos);
+  return reply.status(200).send(actualizado);
+};
+
+// Elimina una sucursal (solo superadmin) — soft delete
+export const eliminarSucursalHandler = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  const { id } = validarParams(idParamsSchema, request.params);
+  const resultado = await eliminarSucursalService(id);
+  return reply.status(200).send(resultado);
 };

@@ -13,12 +13,39 @@ export const crearNegocioSchema = z.object({
   slug: z.string().trim().min(2),
 });
 
+export const actualizarNegocioSchema = z
+  .object({
+    nombre: z.string().trim().min(2).optional(),
+    slug: z.string().trim().min(2).optional(),
+  })
+  .refine((d) => d.nombre !== undefined || d.slug !== undefined, {
+    message: "No hay campos para actualizar.",
+  });
+
 export const crearSucursalSchema = z.object({
   negocio_id: uuidSchema,
   nombre: z.string().trim().min(2),
   direccion: z.string().trim().min(1),
   telefono: z.string().trim().min(1),
 });
+
+export const actualizarSucursalSchema = z
+  .object({
+    nombre: z.string().trim().min(2).optional(),
+    direccion: z.string().trim().min(1).optional(),
+    telefono: z.string().trim().min(1).optional(),
+    activo: z.boolean().optional(),
+  })
+  .refine(
+    (d) =>
+      d.nombre !== undefined ||
+      d.direccion !== undefined ||
+      d.telefono !== undefined ||
+      d.activo !== undefined,
+    {
+      message: "No hay campos para actualizar.",
+    },
+  );
 
 export const crearServicioSchema = z.object({
   sucursal_id: uuidSchema,

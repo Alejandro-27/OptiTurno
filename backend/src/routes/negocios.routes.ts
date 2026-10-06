@@ -5,8 +5,12 @@ import {
   ejecutarSeederHandler,
   crearUsuarioHandler,
   crearNegocioHandler,
+  actualizarNegocioHandler,
+  eliminarNegocioHandler,
   crearServicioHandler,
   crearSucursalHandler,
+  actualizarSucursalHandler,
+  eliminarSucursalHandler,
   actualizarServicioHandler,
   eliminarServicioHandler,
   listarSucursalesHandler,
@@ -56,12 +60,40 @@ export const negociosRoutes = async (fastify: FastifyInstance) => {
     },
     crearNegocioHandler,
   );
+  fastify.put(
+    "/negocios/:id",
+    {
+      preHandler: [verificarAutenticacion, permitirRoles(["superadmin"])],
+    },
+    actualizarNegocioHandler,
+  );
+  fastify.delete(
+    "/negocios/:id",
+    {
+      preHandler: [verificarAutenticacion, permitirRoles(["superadmin"])],
+    },
+    eliminarNegocioHandler,
+  );
   fastify.post(
     "/sucursales",
     {
       preHandler: [verificarAutenticacion, permitirRoles(["superadmin"])],
     },
     crearSucursalHandler,
+  );
+  fastify.put(
+    "/sucursales/:id",
+    {
+      preHandler: [verificarAutenticacion, permitirRoles(["superadmin"])],
+    },
+    actualizarSucursalHandler,
+  );
+  fastify.delete(
+    "/sucursales/:id",
+    {
+      preHandler: [verificarAutenticacion, permitirRoles(["superadmin"])],
+    },
+    eliminarSucursalHandler,
   );
   fastify.post(
     "/servicios",
