@@ -121,21 +121,61 @@ export const guardarHorarioSemanalService = async (
 };
 
 export const profesionalesService = {
+  // Lista profesionales con filtro por sucursal (para admin_negocio) o sin filtro (superadmin)
+  async listar(filtro?: { sucursalId?: string }) {
+    let query = supabase.from("profesionales").select(
+      `
+          id,
+          especialidad,
+          sucursal_id,
+          usuarios:usuario_id (id, nombre, email),
+          profesional_sucursales!profesional_id (sucursal_id, es_principal, activo)
+        `,
+    );
+
+    if (filtro?.sucursalId) {
+      const { data: profesionalesIds } = await supabase
+        .from("profesional_sucursales")
+        .select("profesional_id")
+        .eq("sucursal_id", filtro.sucursalId)
+        .eq("activo", true);
+
+      const ids = (profesionalesIds ?? []).map((p) => p.profesional_id);
+      if (ids.length === 0) return [];
+      query = query.in("id", ids);
+    }
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data || [];
+  },
+
   async crear(datos: {
-    sucursal_id: string;
+    sucursal_id?: string;
+    sucursal_ids?: string[];
     nombre: string;
     email?: string;
+    password?: string;
     especialidad?: string;
     telefono?: string;
   }) {
-    const { sucursal_id, nombre, email, especialidad, telefono } = datos;
+    const {
+      sucursal_id,
+      sucursal_ids,
+      nombre,
+      email,
+      password,
+      especialidad,
+      telefono,
+    } = datos;
 
-    if (!sucursal_id || !nombre) {
+    const esSuperadmin = sucursal_ids && sucursal_ids.length > 0;
+    const sucursalPrincipal = esSuperadmin ? sucursal_ids[0] : sucursal_id;
+
+    if (!sucursalPrincipal || !nombre) {
       throw { status: 400, message: "Faltan campos obligatorios." };
     }
 
-    // 1. Crear la cuenta en Supabase Auth (de un solo golpe y confirmada).
-    //    Requiere email obligatorio, igual que el registro público de clientes.
     if (!email) {
       throw {
         status: 400,
@@ -143,10 +183,14 @@ export const profesionalesService = {
       };
     }
 
+    const pwd =
+      password || `OptiTurno#${Math.random().toString(36).slice(2, 8)}`;
+
+    // 1. Crear la cuenta en Supabase Auth
     const { data: authData, error: authError } =
       await supabase.auth.admin.createUser({
         email,
-        password: `OptiTurno#${Math.random().toString(36).slice(2, 8)}`,
+        password: pwd,
         email_confirm: true,
         user_metadata: { nombre, telefono: telefono || null },
       });
@@ -163,57 +207,80 @@ export const profesionalesService = {
     const usuarioId = authData.user.id;
 
     // 2. Perfil espejo en la tabla pública 'usuarios'
-    const { data: perfil, error: perfilError } = await supabase
-      .from("usuarios")
-      .insert([
-        {
-          id: usuarioId,
-          nombre,
-          email,
-          telefono: telefono || null,
-          rol: "empleado",
-        },
-      ])
-      .select()
-      .single();
+    const { error: perfilError } = await supabase.from("usuarios").upsert(
+      {
+        id: usuarioId,
+        nombre,
+        email,
+        telefono: telefono || null,
+        rol: "empleado",
+        sucursal_id: (sucursal_ids && sucursal_ids[0]) || sucursalPrincipal, // sede principal
+      },
+      { onConflict: "id" },
+    );
 
-    if (perfilError) {
-      throw {
-        status: 400,
-        message: "No se pudo completar el perfil del profesional.",
-      };
-    }
+    if (perfilError)
+      throw { status: 400, message: "No se pudo completar el perfil." };
 
-    // 3. Vínculo con la sucursal en 'profesionales'
-    const { data: profesional, error: profError } = await supabase
+    // 2. Vínculo con la(s) sucursal(es) en 'profesionales' y 'profesional_sucursales'
+    const sucursalesParaVincular =
+      sucursal_ids && sucursal_ids.length > 0
+        ? sucursal_ids
+        : [sucursalPrincipal];
+
+    // Primero crear/actualizar el profesional (tabla profesionales)
+    const { data: prof, error: profErr } = await supabase
       .from("profesionales")
-      .insert([
+      .upsert(
         {
           usuario_id: usuarioId,
-          sucursal_id,
           especialidad: especialidad || "General",
         },
-      ])
+        { onConflict: "usuario_id" },
+      )
       .select()
       .single();
 
-    if (profError) {
+    if (profErr)
       throw {
         status: 400,
-        message: "No se pudo vincular el profesional a la sucursal.",
+        message: "No se pudo crear/actualizar el profesional.",
       };
+
+    const profesionalId = prof.id;
+
+    // 2. Vincular a sucursal(es) en profesional_sucursales
+    for (let i = 0; i < sucursalesParaVincular.length; i++) {
+      const sucId = sucursalesParaVincular[i];
+      const { error: psError } = await supabase
+        .from("profesional_sucursales")
+        .upsert(
+          {
+            profesional_id: profesionalId,
+            sucursal_id: sucId,
+            es_principal: i === 0,
+            activo: true,
+          },
+          { onConflict: "profesional_id,sucursal_id" },
+        );
+      if (psError)
+        throw {
+          status: 400,
+          message: `No se pudo vincular a la sucursal ${sucId}.`,
+        };
     }
 
-    // 4. Horarios laborales por defecto (lunes a viernes)
+    // 3. Horarios laborales por defecto (lunes a viernes) - solo en la sede principal
     const { error: horarioError } = await supabase
       .from("horarios_laborales")
-      .insert(
+      .upsert(
         HORARIOS_DEFECTO.map((h) => ({
-          profesional_id: profesional.id,
+          profesional_id: profesionalId,
+          sucursal_id: sucursalPrincipal,
           ...h,
         })),
+        { onConflict: "profesional_id,sucursal_id,dia_semana" },
       );
-
     if (horarioError) {
       throw {
         status: 400,
@@ -221,28 +288,29 @@ export const profesionalesService = {
       };
     }
 
-    // Un profesional nuevo aparece en el catálogo público y en la disponibilidad.
     await invalidar(
       CLAVES.profesionalesSucursal,
       CLAVES.dispSemanalGeneral,
       CLAVES.dispGeneral,
+      CLAVES.horariosGeneral,
     );
 
     return {
-      id: profesional.id,
-      especialidad: profesional.especialidad,
-      sucursal_id,
-      usuarios: {
-        id: perfil.id,
-        nombre: perfil.nombre,
-        email: perfil.email,
-      },
+      id: profesionalId,
+      especialidad: "General",
+      sucursal_id: sucursalPrincipal,
+      usuarios: { nombre, email },
     };
   },
 
   async editar(
     id: string,
-    datos: { nombre?: string; especialidad?: string; telefono?: string },
+    datos: {
+      nombre?: string;
+      especialidad?: string;
+      telefono?: string;
+      sucursal_ids?: string[];
+    },
   ) {
     const { data: profesional, error: profError } = await supabase
       .from("profesionales")
@@ -260,12 +328,11 @@ export const profesionalesService = {
         .from("profesionales")
         .update({ especialidad: datos.especialidad })
         .eq("id", id);
-      if (error) {
+      if (error)
         throw { status: 400, message: "No se pudo actualizar el profesional." };
-      }
     }
 
-    // 2. Actualizar nombre/teléfono en el perfil espejo 'usuarios' (si vienen)
+    // 2. Actualizar nombre/teléfono en el perfil espejo 'usuarios'
     const perfil: { nombre?: string; telefono?: string | null } = {};
     if (datos.nombre !== undefined) perfil.nombre = datos.nombre;
     if (datos.telefono !== undefined) perfil.telefono = datos.telefono || null;
@@ -274,12 +341,41 @@ export const profesionalesService = {
         .from("usuarios")
         .update(perfil)
         .eq("id", profesional.usuario_id);
-      if (error) {
+      if (error)
         throw { status: 400, message: "No se pudo actualizar el perfil." };
+    }
+
+    // 3. Si superadmin envía sucursal_ids, actualizar profesional_sucursales
+    if (datos.sucursal_ids !== undefined && datos.sucursal_ids.length > 0) {
+      // Desactivar todas las sedes actuales
+      await supabase
+        .from("profesional_sucursales")
+        .update({ activo: false })
+        .eq("profesional_id", id);
+
+      // Activar/crear las nuevas
+      for (let i = 0; i < datos.sucursal_ids.length; i++) {
+        const sucId = datos.sucursal_ids[i];
+        const { error: psError } = await supabase
+          .from("profesional_sucursales")
+          .upsert(
+            {
+              profesional_id: id,
+              sucursal_id: sucId,
+              es_principal: i === 0,
+              activo: true,
+            },
+            { onConflict: "profesional_id,sucursal_id" },
+          );
+        if (psError)
+          throw {
+            status: 400,
+            message: `No se pudo vincular a la sucursal ${sucId}.`,
+          };
       }
     }
 
-    // 3. Devolver el profesional actualizado (mismo shape que el listado)
+    // Devolver el profesional actualizado
     const { data: actualizado, error: finalError } = await supabase
       .from("profesionales")
       .select(
@@ -300,6 +396,39 @@ export const profesionalesService = {
     return actualizado;
   },
 
+  async cambiarEstado(id: string, activo: boolean) {
+    const { data: profesional, error: profError } = await supabase
+      .from("profesionales")
+      .select("id")
+      .eq("id", id)
+      .single();
+
+    if (profError || !profesional) {
+      throw { status: 404, message: "Profesional no encontrado." };
+    }
+
+    // Actualizar profesional_sucursales (soft-delete/activate)
+    const { error } = await supabase
+      .from("profesional_sucursales")
+      .update({ activo })
+      .eq("profesional_id", id);
+
+    if (error)
+      throw {
+        status: 400,
+        message: "No se pudo cambiar el estado del profesional.",
+      };
+
+    await invalidar(
+      CLAVES.profesionalesSucursal,
+      CLAVES.dispSemanalGeneral,
+      CLAVES.dispGeneral,
+      CLAVES.horariosGeneral,
+    );
+
+    return { id, activo };
+  },
+
   async eliminar(id: string) {
     const { data: profesional, error: profError } = await supabase
       .from("profesionales")
@@ -311,24 +440,30 @@ export const profesionalesService = {
       throw { status: 404, message: "Profesional no encontrado." };
     }
 
-    // 1. Eliminar el vínculo (cascada: turnos y horarios_laborales del profesional)
+    // Eliminar el vínculo (cascada: turnos y horarios_laborales del profesional)
     const { error: deleteError } = await supabase
       .from("profesionales")
       .delete()
       .eq("id", id);
 
     if (deleteError) {
-      throw {
-        status: 400,
-        message: "No se pudo eliminar el profesional.",
-      };
+      throw { status: 400, message: "No se pudo eliminar el profesional." };
     }
 
-    // 2. Limpiar el perfil espejo 'usuarios' (mejor esfuerzo)
+    // Limpiar el perfil espejo 'usuarios' (mejor esfuerzo)
     await supabase
       .from("usuarios")
       .delete()
-      .eq("id", profesional.usuario_id)
+      .eq(
+        "id",
+        (
+          await supabase
+            .from("profesionales")
+            .select("usuario_id")
+            .eq("id", id)
+            .single()
+        ).data?.usuario_id,
+      )
       .eq("rol", "empleado");
 
     await invalidar(

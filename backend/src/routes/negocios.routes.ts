@@ -52,20 +52,14 @@ export const negociosRoutes = async (fastify: FastifyInstance) => {
   fastify.post(
     "/negocios",
     {
-      preHandler: [
-        verificarAutenticacion,
-        permitirRoles(["superadmin", "admin_negocio"]),
-      ],
+      preHandler: [verificarAutenticacion, permitirRoles(["superadmin"])],
     },
     crearNegocioHandler,
   );
   fastify.post(
     "/sucursales",
     {
-      preHandler: [
-        verificarAutenticacion,
-        permitirRoles(["superadmin", "admin_negocio"]),
-      ],
+      preHandler: [verificarAutenticacion, permitirRoles(["superadmin"])],
     },
     crearSucursalHandler,
   );

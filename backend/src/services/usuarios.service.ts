@@ -54,7 +54,26 @@ export const usuariosService = {
         },
       });
 
-    if (authError) throw authError;
+    if (authError) {
+      // Traducir errores conocidos de Supabase Auth a español
+      const msg = authError.message || "";
+      if (
+        msg.includes("already registered") ||
+        msg.includes("already exists")
+      ) {
+        throw { status: 409, message: "El correo ya está registrado." };
+      }
+      if (msg.includes("weak password") || msg.includes("Password should be")) {
+        throw {
+          status: 400,
+          message: "La contraseña no cumple los requisitos de seguridad.",
+        };
+      }
+      throw {
+        status: 400,
+        message: `Error de autenticación: ${authError.message}`,
+      };
+    }
     if (!authData.user)
       throw new Error("No se pudo generar el registro de autenticación.");
 

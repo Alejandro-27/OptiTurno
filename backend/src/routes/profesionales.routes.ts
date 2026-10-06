@@ -6,6 +6,19 @@ import {
 } from "../middlewares/auth.middleware";
 
 export default async function profesionalesRoutes(fastify: FastifyInstance) {
+  // Lista profesionales (filtrado por sucursal para admin_negocio)
+  fastify.get(
+    "/",
+    {
+      preHandler: [
+        verificarAutenticacion,
+        permitirRoles(["admin_negocio", "superadmin"]),
+      ],
+    },
+    profesionalesController.listar,
+  );
+
+  // Crear profesional
   fastify.post(
     "/",
     {
@@ -17,6 +30,7 @@ export default async function profesionalesRoutes(fastify: FastifyInstance) {
     profesionalesController.crear,
   );
 
+  // Editar profesional (superadmin puede mover entre sedes, admin_negocio solo campos no-sucursal)
   fastify.put(
     "/:id",
     {
@@ -28,6 +42,19 @@ export default async function profesionalesRoutes(fastify: FastifyInstance) {
     profesionalesController.editar,
   );
 
+  // Activar/desactivar profesional (soft-delete via profesional_sucursales.activo)
+  fastify.patch(
+    "/:id/estado",
+    {
+      preHandler: [
+        verificarAutenticacion,
+        permitirRoles(["admin_negocio", "superadmin"]),
+      ],
+    },
+    profesionalesController.cambiarEstado,
+  );
+
+  // Eliminar profesional (hard-delete, solo si no tiene turnos)
   fastify.delete(
     "/:id",
     {

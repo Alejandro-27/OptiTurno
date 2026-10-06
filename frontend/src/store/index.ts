@@ -35,7 +35,11 @@ export interface AppState {
   logs: ActivityLog[];
   equipo: DayAvailability[];
   profesionales: Profesional[];
-  sucursalId: string | null;
+  // Para superadmin: array de todas las sucursales de sus negocios
+  // Para admin_negocio: array con 1 elemento (su sucursal asignada)
+  sucursalesIds: string[];
+  // Sucursal actualmente seleccionada en el panel (selector en header para superadmin)
+  sucursalActivaId: string | null;
   sesion: SesionDTO | null;
   misTurnos: MisTurnoDTO[];
   misTurnosCargando: boolean;
@@ -54,7 +58,8 @@ const estadoInicial: AppState = {
   logs: [],
   equipo: [],
   profesionales: [],
-  sucursalId: null,
+  sucursalesIds: [],
+  sucursalActivaId: null,
   sesion: null,
   misTurnos: [],
   misTurnosCargando: false,
@@ -136,36 +141,73 @@ export async function iniciarApp(): Promise<void> {
   const sesion = await repositorios.auth.recuperarSesion();
   const esAdmin = Boolean(sesion && sesion.usuario.rol !== "cliente");
 
-  // 2. Resolver la sucursal y si el admin_negocio tiene negocio: la del usuario si hay token, si no la primera del sistema.
-  let sucursalId: string | null = null;
+  // 2. Resolver sucursales según el rol:
+  // - superadmin: todas las sucursales de sus negocios (para selector en header)
+  // - admin_negocio: solo su sucursal asignada (desde usuario.sucursal_id)
+  // - empleado: primera sucursal disponible (fallback)
+  let sucursalesIds: string[] = [];
+  let sucursalActivaId: string | null = null;
   let tieneNegocio: boolean | null = null;
-  try {
-    const sucursal = await repositorios.sucursales.obtenerSucursalActiva();
-    sucursalId = sucursal?.id || null;
-  } catch {
-    sucursalId = null;
-  }
 
-  // Si es admin_negocio, verificar si tiene negocio configurado
-  if (sesion && sesion.usuario.rol === "admin_negocio") {
-    try {
-      const miNegocio = await repositorios.sucursales.obtenerMiNegocio();
-      tieneNegocio = !!miNegocio;
-    } catch {
-      tieneNegocio = false;
+  if (sesion) {
+    if (sesion.usuario.rol === "superadmin") {
+      // Superadmin: cargar todas las sucursales de sus negocios
+      try {
+        const sucursales = await repositorios.sucursales.listarSucursales();
+        sucursalesIds = sucursales.map((s) => s.id);
+        sucursalActivaId = sucursalesIds[0] || null;
+      } catch {
+        sucursalesIds = [];
+        sucursalActivaId = null;
+      }
+      tieneNegocio = true;
+    } else if (sesion.usuario.rol === "admin_negocio") {
+      // Admin de sede: solo su sucursal asignada
+      const miSucursalId = sesion.usuario.sucursal_id;
+      if (miSucursalId) {
+        sucursalesIds = [miSucursalId];
+        sucursalActivaId = miSucursalId;
+      }
+      // Verificar si tiene negocio configurado (ya debería tener sucursal si pasó onboarding)
+      try {
+        const miNegocio = await repositorios.sucursales.obtenerMiNegocio();
+        tieneNegocio = !!miNegocio;
+      } catch {
+        tieneNegocio = false;
+      }
+    } else if (sesion.usuario.rol === "empleado") {
+      // Empleado: sucursal principal de su perfil
+      const miSucursalId = sesion.usuario.sucursal_id;
+      if (miSucursalId) {
+        sucursalesIds = [miSucursalId];
+        sucursalActivaId = miSucursalId;
+      }
+      tieneNegocio = true;
     }
-  } else if (sesion && sesion.usuario.rol === "superadmin") {
-    // Superadmin no necesita negocio propio; siempre tiene acceso
-    tieneNegocio = true;
   }
 
-  // 3. Catálogos base: siempre (servicios y profesionales de la sucursal)
+  // Fallback: si no hay sucursal activa, usar la primera del sistema
+  if (!sucursalActivaId) {
+    try {
+      const sucursal = await repositorios.sucursales.obtenerSucursalActiva();
+      sucursalActivaId = sucursal?.id || null;
+      if (sucursalActivaId && !sucursalesIds.includes(sucursalActivaId)) {
+        sucursalesIds = [sucursalActivaId];
+      }
+    } catch {
+      sucursalActivaId = null;
+    }
+  }
+
+  // 3. Catálogos base: siempre (servicios y profesionales de la sucursal activa)
   const [rServicios, rProfesionales] = await Promise.all([
     cargarEstricto(() =>
-      repositorios.servicios.listarServicios(sucursalId || undefined),
+      repositorios.servicios.listarServicios(sucursalActivaId || undefined),
     ),
     cargarEstricto(() =>
-      repositorios.profesionales.listarProfesionales(sucursalId || undefined),
+      repositorios.profesionales.listarProfesionales(
+        sucursalActivaId || undefined,
+      ),
     ),
   ]);
 
@@ -210,7 +252,8 @@ export async function iniciarApp(): Promise<void> {
     ...e,
     inicializado: true,
     cargando: false,
-    sucursalId,
+    sucursalesIds,
+    sucursalActivaId,
     tieneNegocio,
     servicios: rServicios.datos,
     profesionales: rProfesionales.datos,
@@ -226,34 +269,51 @@ export async function iniciarApp(): Promise<void> {
 }
 
 // Recarga los datos del panel tras login/registro de un comercio.
-// Re-resuelve la sucursal (puede cambiar) y refresca todo lo del admin.
+// Re-resuelve las sucursales (puede cambiar) y refresca todo lo del admin.
 export async function refrescarDatosAdmin(): Promise<void> {
   const sesion = getEstado().sesion;
   if (!sesion) return;
 
-  let sucursalId: string | null = null;
-  try {
-    const sucursal = await repositorios.sucursales.obtenerSucursalActiva();
-    sucursalId = sucursal?.id || null;
-  } catch {
-    sucursalId = getEstado().sucursalId;
+  if (sesion.usuario.rol === "superadmin") {
+    try {
+      const sucursales = await repositorios.sucursales.listarSucursales();
+      const ids = sucursales.map((s) => s.id);
+      setEstado((e) => ({
+        ...e,
+        sucursalesIds: ids,
+        sucursalActivaId: ids[0] || null,
+      }));
+    } catch {
+      // mantener estado actual
+    }
+  } else if (sesion.usuario.rol === "admin_negocio") {
+    const miSucursalId = sesion.usuario.sucursal_id;
+    if (miSucursalId) {
+      setEstado((e) => ({
+        ...e,
+        sucursalesIds: [miSucursalId],
+        sucursalActivaId: miSucursalId,
+      }));
+    }
   }
 
-  let servicios = getEstado().servicios;
-  let profesionales = getEstado().profesionales;
+  // Obtener sucursal activa actual del estado
+  const estadoActual = getEstado();
+  const sucursalActivaIdActual = estadoActual.sucursalActivaId;
 
-  if (sucursalId !== getEstado().sucursalId) {
-    const [rServ, rProf] = await Promise.all([
-      cargarEstricto(() =>
-        repositorios.servicios.listarServicios(sucursalId || undefined),
+  // 3. Catálogos base: siempre (servicios y profesionales de la sucursal activa)
+  const [rServicios, rProfesionales] = await Promise.all([
+    cargarEstricto(() =>
+      repositorios.servicios.listarServicios(
+        sucursalActivaIdActual || undefined,
       ),
-      cargarEstricto(() =>
-        repositorios.profesionales.listarProfesionales(sucursalId || undefined),
+    ),
+    cargarEstricto(() =>
+      repositorios.profesionales.listarProfesionales(
+        sucursalActivaIdActual || undefined,
       ),
-    ]);
-    servicios = rServ.datos;
-    profesionales = rProf.datos;
-  }
+    ),
+  ]);
 
   const esAdmin = sesion.usuario.rol !== "cliente";
   let turnos = getEstado().turnos;
@@ -262,7 +322,7 @@ export async function refrescarDatosAdmin(): Promise<void> {
   let ausencias = getEstado().ausencias;
 
   if (esAdmin) {
-    const propio = resolverProfesionalPropio(profesionales, sesion);
+    const propio = resolverProfesionalPropio(rProfesionales.datos, sesion);
     const [rTurnos, rAct, rDisp, rAus] = await Promise.all([
       cargarEstricto(() => repositorios.turnos.listarTurnos()),
       cargarEstricto(() => repositorios.actividad.listarActividad()),
@@ -277,13 +337,15 @@ export async function refrescarDatosAdmin(): Promise<void> {
     logs = rAct.datos;
     equipo = rDisp.datos;
     ausencias = rAus.datos;
+    ausencias = rAus.datos;
   }
 
   setEstado((e) => ({
     ...e,
-    sucursalId,
-    servicios,
-    profesionales,
+    sucursalesIds: e.sucursalesIds,
+    sucursalActivaId: sucursalActivaIdActual,
+    servicios: rServicios.datos,
+    profesionales: rProfesionales.datos,
     turnos,
     logs,
     equipo,
@@ -411,9 +473,9 @@ export async function guardarServicio(
   const creado = await repositorios.servicios.crearServicio(
     {
       ...svc,
-      sucursalId: svc.sucursalId || getEstado().sucursalId || undefined,
+      sucursalId: svc.sucursalId || getEstado().sucursalActivaId || undefined,
     },
-    getEstado().sucursalId || undefined,
+    getEstado().sucursalActivaId || undefined,
   );
   setEstado((e) => ({
     ...e,
@@ -533,15 +595,15 @@ export async function listarProfesionales(
 export async function crearProfesional(
   datos: DatosCrearProfesional,
 ): Promise<Profesional> {
-  const sucursalId = getEstado().sucursalId;
-  if (!sucursalId) {
+  const sucursalActivaId = getEstado().sucursalActivaId;
+  if (!sucursalActivaId) {
     throw new Error(
       "Aún no hay una sucursal activa. Crea o selecciona una sucursal primero.",
     );
   }
   const creado = await repositorios.profesionales.crearProfesional(
     datos,
-    sucursalId,
+    sucursalActivaId,
   );
   setEstado((e) => ({
     ...e,

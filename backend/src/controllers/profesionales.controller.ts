@@ -14,18 +14,31 @@ import {
   crearProfesionalSchema,
   editarProfesionalSchema,
   horarioSemanalSchema,
+  cambiarEstadoProfesionalSchema,
 } from "../schemas/profesionales.schemas";
 import { idParamsSchema } from "../schemas/common";
 
 export const profesionalesController = {
+  // GET /profesionales — lista con filtro por sucursal
+  async listar(request: FastifyRequest, reply: FastifyReply) {
+    const { sucursal_id } = request.query as { sucursal_id?: string };
+    const filtro = sucursal_id ? { sucursalId: sucursal_id } : undefined;
+    const lista = await profesionalesService.listar(filtro);
+    return reply.send(lista);
+  },
+
   async crear(request: FastifyRequest, reply: FastifyReply) {
     const datos = validarCuerpo(crearProfesionalSchema, request.body);
-    // Multi-tenant: el admin solo crea profesionales en SU sucursal.
-    await verificarPertenenciaSucursalService(
-      request.usuario!.id,
-      request.usuario!.rol,
-      datos.sucursal_id,
-    );
+    // Multi-tenant: validar pertenencia a la sede
+    const sucursalParaValidar =
+      datos.sucursal_id || (datos.sucursal_ids && datos.sucursal_ids[0]);
+    if (sucursalParaValidar) {
+      await verificarPertenenciaSucursalService(
+        request.usuario!.id,
+        request.usuario!.rol,
+        sucursalParaValidar,
+      );
+    }
     const nuevoProfesional = await profesionalesService.crear(datos);
     return reply.status(201).send(nuevoProfesional);
   },
@@ -41,6 +54,23 @@ export const profesionalesController = {
     const datos = validarCuerpo(editarProfesionalSchema, request.body);
     const actualizado = await profesionalesService.editar(id, datos);
     return reply.send(actualizado);
+  },
+
+  // PATCH /profesionales/:id/estado — activar/desactivar profesional (soft-delete)
+  async cambiarEstado(request: FastifyRequest, reply: FastifyReply) {
+    const { id } = validarParams(idParamsSchema, request.params);
+    await verificarRecursoDeSucursalService(
+      "profesionales",
+      id,
+      request.usuario!.id,
+      request.usuario!.rol,
+    );
+    const { activo } = validarCuerpo(
+      cambiarEstadoProfesionalSchema,
+      request.body,
+    );
+    const resultado = await profesionalesService.cambiarEstado(id, activo);
+    return reply.send(resultado);
   },
 
   async eliminar(request: FastifyRequest, reply: FastifyReply) {

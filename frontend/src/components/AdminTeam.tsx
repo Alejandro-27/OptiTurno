@@ -25,7 +25,7 @@ import AdminTableSkeleton from "./skeletons/AdminTableSkeleton";
 
 export default function AdminTeam() {
   const profesionales = useStore((s) => s.profesionales);
-  const sucursalId = useStore((s) => s.sucursalId);
+  const sucursalActivaId = useStore((s) => s.sucursalActivaId);
   const inicializado = useStore((s) => s.inicializado);
   const { mostrarToast } = useToast();
   const formRef = useRef<HTMLFormElement>(null);
@@ -144,7 +144,7 @@ export default function AdminTeam() {
           </div>
         )}
 
-        {!operationError && sucursalId && profesionales.length === 0 && (
+        {!operationError && sucursalActivaId && profesionales.length === 0 && (
           <div className="flex items-center gap-2 text-[11px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 rounded-lg px-3 py-2">
             <AlertTriangle size={14} />
             Aún no hay profesionales. Agrega el primero para habilitar reservas.
@@ -161,7 +161,7 @@ export default function AdminTeam() {
                 Equipo de profesionales
               </h3>
               <p className="text-[10px] text-slate-500 dark:text-slate-400">
-                {sucursalId
+                {sucursalActivaId
                   ? `${profesionales.length} profesional(es) activos en tu sucursal`
                   : "Sin sucursal activa asignada"}
               </p>
@@ -169,7 +169,7 @@ export default function AdminTeam() {
           </div>
           <button
             onClick={openAddDrawer}
-            disabled={!sucursalId}
+            disabled={!sucursalActivaId}
             className="flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg px-4 py-2 font-semibold text-xs transition-all shadow-md shadow-indigo-600/15 active:scale-95"
           >
             <UserPlus size={14} />

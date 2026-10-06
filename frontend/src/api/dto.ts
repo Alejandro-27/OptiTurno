@@ -201,6 +201,7 @@ export interface UsuarioSesionDTO {
   nombre: string;
   rol: Rol;
   telefono?: string | null;
+  sucursal_id?: string | null;
 }
 
 // Usuario para el panel de gestión (superadmin)

@@ -92,35 +92,51 @@ export const obtenerSucursalPorIdService = async (sucursalId: string) =>
     return data;
   });
 
-// Resuelve la sucursal de un usuario: si es profesional/trabaja en una sucursal
-// se usa esa; en caso contrario se cae a la primera sucursal del sistema.
-// Caché: 5 min, por usuario (se usa como dependency de muchos endpoints admin).
+// Resuelve la sucursal de un usuario según su rol (para compatibilidad legacy).
+// - superadmin: null (acceso global)
+// - admin_negocio: usa su sucursal_id directa (desde usuarios.sucursal_id)
+// - empleado: usa profesional_sucursales (puede ser multi-sede, devuelve la principal)
 export const resolverSucursalDeUsuarioService = async (usuarioId: string) =>
   leerConCache(CLAVES.sucursalDeUsuario(usuarioId), 300, async () => {
-    const { data: profesional } = await supabase
-      .from("profesionales")
-      .select("sucursal_id")
-      .eq("usuario_id", usuarioId)
-      .maybeSingle();
+    const { data: usuario } = await supabase
+      .from("usuarios")
+      .select("rol, sucursal_id")
+      .eq("id", usuarioId)
+      .single();
 
-    if (profesional?.sucursal_id) {
-      return obtenerSucursalPorIdService(profesional.sucursal_id);
+    if (!usuario) return null;
+
+    if (usuario.rol === "superadmin") return null;
+    if (usuario.rol === "admin_negocio") {
+      if (!usuario.sucursal_id) return null;
+      return obtenerSucursalPorIdService(usuario.sucursal_id);
     }
 
-    const { data: primera } = await supabase
-      .from("sucursales")
+    // Empleado: buscar en profesional_sucursales
+    const { data: profesional } = await supabase
+      .from("profesionales")
       .select("id")
-      .order("nombre", { ascending: true })
-      .limit(1)
+      .eq("usuario_id", usuarioId)
+      .single();
+
+    if (!profesional) return null;
+
+    const { data: ps } = await supabase
+      .from("profesional_sucursales")
+      .select("sucursal_id")
+      .eq("profesional_id", profesional.id)
+      .eq("es_principal", true)
+      .eq("activo", true)
       .maybeSingle();
 
-    if (!primera) return null;
-    return obtenerSucursalPorIdService(primera.id);
+    if (!ps?.sucursal_id) return null;
+    return obtenerSucursalPorIdService(ps.sucursal_id);
   });
 
 // Verifica que el actor tiene acceso a la sucursal indicada.
 // - superadmin: acceso total (plataforma).
-// - admin_negocio/empleado: deben operar sobre SU sucursal.
+// - admin_negocio: debe operar sobre SU sucursal asignada (usuarios.sucursal_id).
+// - empleado: debe operar sobre una de sus sedes asignadas (profesional_sucursales.activo=true).
 // Lanza 403 si no coincide (defensa BOLA/multi-tenant).
 export const verificarPertenenciaSucursalService = async (
   usuarioId: string,
@@ -128,23 +144,59 @@ export const verificarPertenenciaSucursalService = async (
   sucursalId: string,
 ) => {
   if (rol === "superadmin") return;
-  const sucursal = await resolverSucursalDeUsuarioService(usuarioId);
-  if (!sucursal) {
-    throw {
-      status: 403,
-      message: "Tu cuenta no está vinculada a una sucursal.",
-    };
+
+  if (rol === "admin_negocio") {
+    const { data: usuario } = await supabase
+      .from("usuarios")
+      .select("sucursal_id")
+      .eq("id", usuarioId)
+      .single();
+
+    if (!usuario?.sucursal_id || usuario.sucursal_id !== sucursalId) {
+      throw {
+        status: 403,
+        message: "No tienes acceso a los datos de esa sucursal.",
+      };
+    }
+    return;
   }
-  if (sucursal.id !== sucursalId) {
-    throw {
-      status: 403,
-      message: "No tienes acceso a los datos de esa sucursal.",
-    };
+
+  if (rol === "empleado") {
+    const { data: profesional } = await supabase
+      .from("profesionales")
+      .select("id")
+      .eq("usuario_id", usuarioId)
+      .single();
+
+    if (!profesional) {
+      throw {
+        status: 403,
+        message: "Tu cuenta no está vinculada a una sucursal.",
+      };
+    }
+
+    const { data: ps } = await supabase
+      .from("profesional_sucursales")
+      .select("sucursal_id")
+      .eq("profesional_id", profesional.id)
+      .eq("activo", true);
+
+    const sucursalesPermitidas = (ps ?? []).map((r) => r.sucursal_id);
+    if (!sucursalesPermitidas.includes(sucursalId)) {
+      throw {
+        status: 403,
+        message: "No tienes acceso a los datos de esa sucursal.",
+      };
+    }
+    return;
   }
+
+  throw { status: 403, message: "Rol no autorizado para esta operación." };
 };
 
 // Lee la sucursal_id de un recurso (servicio/profesional) y valida el acceso
 // del actor contra ella. Devuelve el id en caso de éxito.
+// Para profesionales, verifica que el actor tenga acceso a AL MENOS UNA de las sedes del profesional.
 export const verificarRecursoDeSucursalService = async (
   tabla: "servicios" | "profesionales",
   recursoId: string,
@@ -161,12 +213,90 @@ export const verificarRecursoDeSucursalService = async (
   if (!recurso) {
     throw { status: 404, message: "El recurso solicitado no existe." };
   }
-  await verificarPertenenciaSucursalService(
-    usuarioId,
-    rol,
-    recurso.sucursal_id,
-  );
-  return recurso.id;
+
+  if (rol === "superadmin") return recurso.id;
+
+  if (rol === "admin_negocio") {
+    const { data: usuario } = await supabase
+      .from("usuarios")
+      .select("sucursal_id")
+      .eq("id", usuarioId)
+      .single();
+
+    if (!usuario?.sucursal_id || usuario.sucursal_id !== recurso.sucursal_id) {
+      throw { status: 403, message: "No tienes acceso a este recurso." };
+    }
+    return recurso.id;
+  }
+
+  if (rol === "empleado") {
+    // Para profesionales, verificar que el empleado tenga acceso a AL MENOS UNA de las sedes del profesional
+    if (tabla === "profesionales") {
+      const { data: ps } = await supabase
+        .from("profesional_sucursales")
+        .select("sucursal_id")
+        .eq("profesional_id", recursoId)
+        .eq("activo", true);
+
+      const { data: miProfesional } = await supabase
+        .from("profesionales")
+        .select("id")
+        .eq("usuario_id", usuarioId)
+        .single();
+
+      if (!miProfesional) {
+        throw {
+          status: 403,
+          message: "Tu cuenta no está vinculada a un profesional.",
+        };
+      }
+
+      const { data: misSedes } = await supabase
+        .from("profesional_sucursales")
+        .select("sucursal_id")
+        .eq("profesional_id", miProfesional.id)
+        .eq("activo", true);
+
+      const misSucursales = (misSedes ?? []).map((r) => r.sucursal_id);
+      const sedesRecurso = (ps ?? []).map((r) => r.sucursal_id);
+
+      const hayInterseccion = sedesRecurso.some((s) =>
+        misSucursales.includes(s),
+      );
+      if (!hayInterseccion) {
+        throw { status: 403, message: "No tienes acceso a este profesional." };
+      }
+      return recurso.id;
+    }
+
+    // Para servicios, verificar que el empleado tenga acceso a la sede del servicio
+    const { data: miProfesional } = await supabase
+      .from("profesionales")
+      .select("id")
+      .eq("usuario_id", usuarioId)
+      .single();
+
+    if (!miProfesional) {
+      throw {
+        status: 403,
+        message: "Tu cuenta no está vinculada a un profesional.",
+      };
+    }
+
+    const { data: misSedes } = await supabase
+      .from("profesional_sucursales")
+      .select("sucursal_id")
+      .eq("profesional_id", miProfesional.id)
+      .eq("activo", true);
+
+    const misSucursales = (misSedes ?? []).map((r) => r.sucursal_id);
+    if (!misSucursales.includes(recurso.sucursal_id)) {
+      throw { status: 403, message: "No tienes acceso a este recurso." };
+    }
+    return recurso.id;
+  }
+
+  throw { status: 403, message: "Rol no autorizado para esta operación." };
 };
 
 // Actualiza los datos editables de un servicio de la sucursal
