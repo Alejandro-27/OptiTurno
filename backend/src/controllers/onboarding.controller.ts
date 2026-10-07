@@ -13,6 +13,7 @@ export const onboardingController = {
     const resultado = await crearNegocioOnboardingService(
       request.usuario!.id,
       input,
+      request.usuario!.rol,
     );
     return reply.status(201).send(resultado);
   },

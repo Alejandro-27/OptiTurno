@@ -156,6 +156,7 @@ export const profesionalesService = {
     nombre: string;
     email?: string;
     password?: string;
+    rol?: "empleado" | "admin_negocio";
     especialidad?: string;
     telefono?: string;
   }) {
@@ -165,6 +166,7 @@ export const profesionalesService = {
       nombre,
       email,
       password,
+      rol = "empleado",
       especialidad,
       telefono,
     } = datos;
@@ -213,14 +215,21 @@ export const profesionalesService = {
         nombre,
         email,
         telefono: telefono || null,
-        rol: "empleado",
+        rol,
         sucursal_id: (sucursal_ids && sucursal_ids[0]) || sucursalPrincipal, // sede principal
       },
       { onConflict: "id" },
     );
 
-    if (perfilError)
+    if (perfilError) {
+      if (perfilError.code === "23505" && rol === "admin_negocio") {
+        throw {
+          status: 409,
+          message: "Esa sede ya tiene un administrador asignado.",
+        };
+      }
       throw { status: 400, message: "No se pudo completar el perfil." };
+    }
 
     // 2. Vínculo con la(s) sucursal(es) en 'profesionales' y 'profesional_sucursales'
     const sucursalesParaVincular =
@@ -231,13 +240,10 @@ export const profesionalesService = {
     // Primero crear/actualizar el profesional (tabla profesionales)
     const { data: prof, error: profErr } = await supabase
       .from("profesionales")
-      .upsert(
-        {
-          usuario_id: usuarioId,
-          especialidad: especialidad || "General",
-        },
-        { onConflict: "usuario_id" },
-      )
+      .insert({
+        usuario_id: usuarioId,
+        especialidad: especialidad || "General",
+      })
       .select()
       .single();
 

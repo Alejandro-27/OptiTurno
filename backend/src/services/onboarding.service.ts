@@ -28,24 +28,28 @@ export interface OnboardingResultado {
 /**
  * Crea el negocio y su sucursal principal, y vincula al usuario autenticado
  * como dueño (admin_negocio).
- * Falla si el usuario ya tiene un negocio asociado.
+ * Un admin_negocio solo puede tener un negocio; un superadmin puede crear
+ * cuantos necesite.
  */
 export const crearNegocioOnboardingService = async (
   usuarioId: string,
   input: OnboardingInput,
+  rol?: string,
 ): Promise<OnboardingResultado> => {
-  // Verificar que el usuario no tenga ya un negocio
-  const { data: existente } = await supabase
-    .from("negocios")
-    .select("id")
-    .eq("admin_usuario_id", usuarioId)
-    .maybeSingle();
+  if (rol !== "superadmin") {
+    const { data: existente } = await supabase
+      .from("negocios")
+      .select("id")
+      .eq("admin_usuario_id", usuarioId)
+      .maybeSingle();
 
-  if (existente) {
-    throw {
-      status: 409,
-      message: "Ya tienes un negocio creado. Contacta a soporte para cambios.",
-    };
+    if (existente) {
+      throw {
+        status: 409,
+        message:
+          "Ya tienes un negocio creado. Contacta a soporte para cambios.",
+      };
+    }
   }
 
   // Crear negocio

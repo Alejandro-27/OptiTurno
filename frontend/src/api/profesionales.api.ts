@@ -8,6 +8,10 @@ export interface CrearProfesionalInput {
   email: string;
   especialidad?: string;
   telefono?: string;
+  // Contraseña de la cuenta creada (obligatoria en el formulario)
+  password: string;
+  // Rol de la cuenta: profesional del equipo o administrador de la sede
+  rol?: "empleado" | "admin_negocio";
 }
 
 // Alta de un profesional: crea cuenta en Auth + perfil + vínculo a la sucursal

@@ -17,6 +17,10 @@ export interface DatosCrearProfesional {
   email: string;
   especialidad?: string;
   telefono?: string;
+  // Contraseña de la cuenta (mínimo 6 caracteres)
+  password: string;
+  // Rol de la cuenta creada (por defecto: empleado)
+  rol?: "empleado" | "admin_negocio";
 }
 
 export interface DatosEditarProfesional {
@@ -146,6 +150,8 @@ export const profesionalesRepositorioApi: ProfesionalesRepositorio = {
       email: datos.email,
       especialidad: datos.especialidad,
       telefono: datos.telefono,
+      password: datos.password,
+      rol: datos.rol,
     };
     const dto = await crearProfesionalApi(input);
     return profesionalDtoToUI(dto);

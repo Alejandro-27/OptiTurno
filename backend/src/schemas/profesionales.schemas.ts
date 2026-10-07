@@ -11,8 +11,12 @@ export const crearProfesionalSchema = z
     email: z.string().trim().toLowerCase().pipe(z.email()).optional(),
     especialidad: z.string().trim().optional(),
     telefono: z.string().trim().optional(),
-    // Contraseña inicial para crear usuario en Auth
-    password: z.string().min(6).optional(),
+    // Contraseña inicial para crear la cuenta en Auth (obligatoria)
+    password: z
+      .string()
+      .min(6, "La contraseña debe tener al menos 6 caracteres."),
+    // Rol de la cuenta creada: profesional del equipo o administrador de la sede
+    rol: z.enum(["empleado", "admin_negocio"]).default("empleado"),
   })
   .refine(
     (d) =>

@@ -12,6 +12,7 @@ import { useNavigate } from "react-router-dom";
 import { useToast } from "../contexts/toast";
 import { crearNegocioOnboarding } from "../api/negocios.api";
 import { esErrorInline, mensajeDeError, ApiError } from "../api/dto";
+import { useStore } from "../store";
 
 const PASOS = [
   { id: "negocio", titulo: "Tu Negocio", icono: Building2 },
@@ -24,6 +25,7 @@ type PasoId = (typeof PASOS)[number]["id"];
 export default function OnboardingWizard() {
   const navigate = useNavigate();
   const { mostrarToast } = useToast();
+  const rol = useStore((s) => s.sesion?.usuario.rol);
 
   const [pasoActual, setPasoActual] = useState<PasoId>("negocio");
   const [guardando, setGuardando] = useState(false);
@@ -120,10 +122,13 @@ export default function OnboardingWizard() {
       setCompletado(true);
       mostrarToast("¡Negocio creado correctamente! Redirigiendo...", "exito");
       // Pequeña pausa para que se vea el estado de éxito
-      setTimeout(() => navigate("/admin"), 1200);
+      const destino = rol === "superadmin" ? "/admin/negocios" : "/admin";
+      setTimeout(() => navigate(destino), 1200);
     } catch (err) {
       if (err instanceof ApiError && err.estado === 409) {
-        setErrorForm("Ese slug ya está en uso. Elige otro.");
+        setErrorForm(
+          mensajeDeError(err, "Ese slug ya está en uso. Elige otro."),
+        );
       } else if (esErrorInline(err)) {
         setErrorForm(mensajeDeError(err, "No se pudo crear el negocio."));
       } else {

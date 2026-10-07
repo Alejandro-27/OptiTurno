@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
-import { Building2, Search, MapPin } from "lucide-react";
+import { Building2, Plus, Search, MapPin } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { obtenerSucursales, listarUsuariosNegocio } from "../api/negocios.api";
 import type { SucursalDTO } from "../api/dto";
 import { useToast } from "../contexts/toast";
@@ -13,6 +14,7 @@ type NegocioConSucursales = SucursalDTO & {
 
 export default function AdminNegocios() {
   const { mostrarToast } = useToast();
+  const navigate = useNavigate();
 
   const [negocios, setNegocios] = useState<NegocioConSucursales[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -119,6 +121,13 @@ export default function AdminNegocios() {
             </p>
           </div>
         </div>
+        <button
+          onClick={() => navigate("/admin/onboarding")}
+          className="flex items-center justify-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg px-4 py-2 font-semibold text-xs transition-all shadow-md shadow-indigo-600/15 active:scale-95"
+        >
+          <Plus size={14} />
+          Crear negocio
+        </button>
       </div>
 
       {cargando ? (
