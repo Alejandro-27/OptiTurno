@@ -203,6 +203,7 @@ export const CLAVES = {
   sucursales: "ot:sucursales:all",
   sucursalPorId: (sucursalId: string) => `ot:sucursal:id:${sucursalId}`,
   sucursalDeUsuario: (usuarioId: string) => `ot:sucursal:usr:${usuarioId}`,
+  negociosAdmin: "ot:negocios:admin",
   disponibilidad: (profesionalId: string, fecha: string) =>
     `ot:disp:${profesionalId}:${fecha}`,
   dispGeneral: "ot:disp:*",

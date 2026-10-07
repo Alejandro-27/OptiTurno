@@ -285,3 +285,47 @@ export interface MiNegocioDTO {
     telefono: string;
   }>;
 }
+
+// Sucursal dentro de un negocio del panel superadmin
+export interface SucursalAdminDTO {
+  id: string;
+  negocio_id: string;
+  nombre: string;
+  direccion: string | null;
+  telefono: string | null;
+  activo: boolean;
+}
+
+// Negocio con sus sucursales (GET /negocios, solo superadmin)
+export interface NegocioAdminDTO {
+  id: string;
+  nombre: string;
+  slug: string;
+  activo: boolean;
+  admin_usuario_id: string | null;
+  sucursales: SucursalAdminDTO[];
+}
+
+export interface CrearNegocioInputDTO {
+  nombre: string;
+  slug: string;
+}
+
+export interface ActualizarNegocioInputDTO {
+  nombre?: string;
+  slug?: string;
+}
+
+export interface CrearSucursalInputDTO {
+  negocio_id: string;
+  nombre: string;
+  direccion: string;
+  telefono: string;
+}
+
+export interface ActualizarSucursalInputDTO {
+  nombre?: string;
+  direccion?: string;
+  telefono?: string;
+  activo?: boolean;
+}

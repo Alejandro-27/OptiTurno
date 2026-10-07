@@ -29,6 +29,10 @@ import {
   usuariosRepositorioMock,
   usuariosRepositorioApi,
 } from "./repos/usuarios";
+import {
+  negociosRepositorioMock,
+  negociosRepositorioApi,
+} from "./repos/negocios";
 
 export const repositorios = usarMocks()
   ? {
@@ -41,6 +45,7 @@ export const repositorios = usarMocks()
       sucursales: sucursalesRepositorioMock,
       ausencias: ausenciasRepositorioMock,
       usuarios: usuariosRepositorioMock,
+      negocios: negociosRepositorioMock,
     }
   : {
       servicios: serviciosRepositorioApi,
@@ -52,6 +57,7 @@ export const repositorios = usarMocks()
       sucursales: sucursalesRepositorioApi,
       ausencias: ausenciasRepositorioApi,
       usuarios: usuariosRepositorioApi,
+      negocios: negociosRepositorioApi,
     };
 
 export {

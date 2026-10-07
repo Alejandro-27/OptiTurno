@@ -27,6 +27,7 @@ import {
   eliminarNegocioService,
   actualizarSucursalService,
   eliminarSucursalService,
+  listarNegociosAdminService,
 } from "../services/negocios.service.js";
 import { usuariosService } from "../services/usuarios.service.js";
 import { idParamsSchema, sucursalParamsSchema } from "../schemas/common.js";
@@ -63,7 +64,7 @@ export const crearNegocioHandler = async (
     .single();
 
   if (error) throw new AppError(400, "No se pudo crear el negocio.");
-  await invalidar(CLAVES.sucursales);
+  await invalidar(CLAVES.sucursales, CLAVES.negociosAdmin);
   return reply.status(201).send(data);
 };
 
@@ -88,6 +89,7 @@ export const crearSucursalHandler = async (
     CLAVES.sucursales,
     CLAVES.sucursalPorId(data.id),
     "ot:sucursal:usr:*",
+    CLAVES.negociosAdmin,
   );
   return reply.status(201).send(data);
 };
@@ -233,6 +235,15 @@ export const ejecutarSeederHandler = async (
 };
 
 // Lista usuarios de un negocio (admin_negocio del negocio o superadmin)
+// Lista todos los negocios con sus sucursales (solo superadmin)
+export const listarNegociosHandler = async (
+  request: FastifyRequest,
+  reply: FastifyReply,
+) => {
+  const negocios = await listarNegociosAdminService();
+  return reply.status(200).send(negocios);
+};
+
 export const listarUsuariosNegocioHandler = async (
   request: FastifyRequest,
   reply: FastifyReply,

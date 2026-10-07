@@ -364,6 +364,20 @@ export const eliminarServicioService = async (servicioId: string) => {
   await invalidar(CLAVES.serviciosSucursal);
 };
 
+// Lista todos los negocios con sus sucursales (panel del superadmin)
+export const listarNegociosAdminService = async () =>
+  leerConCache(CLAVES.negociosAdmin, 300, async () => {
+    const { data, error } = await supabase
+      .from("negocios")
+      .select(
+        "id, nombre, slug, activo, admin_usuario_id, sucursales(id, negocio_id, nombre, direccion, telefono, activo)",
+      )
+      .order("nombre", { ascending: true });
+
+    if (error) throw error;
+    return data || [];
+  });
+
 // Actualiza un negocio (solo superadmin)
 export const actualizarNegocioService = async (
   negocioId: string,
@@ -389,7 +403,7 @@ export const actualizarNegocioService = async (
   if (!data) {
     throw { status: 404, message: "El negocio no existe." };
   }
-  await invalidar(CLAVES.sucursales);
+  await invalidar(CLAVES.sucursales, CLAVES.negociosAdmin);
   return data;
 };
 
@@ -424,6 +438,7 @@ export const eliminarNegocioService = async (negocioId: string) => {
     CLAVES.sucursales,
     CLAVES.serviciosSucursal,
     CLAVES.profesionalesSucursal,
+    CLAVES.negociosAdmin,
   );
 };
 
@@ -458,6 +473,7 @@ export const actualizarSucursalService = async (
     CLAVES.sucursales,
     CLAVES.serviciosSucursal,
     CLAVES.profesionalesSucursal,
+    CLAVES.negociosAdmin,
   );
   return data;
 };

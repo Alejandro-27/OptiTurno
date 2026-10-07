@@ -7,6 +7,12 @@ import type {
   OnboardingNegocioInput,
   OnboardingNegocioResultado,
   MiNegocioDTO,
+  NegocioAdminDTO,
+  SucursalAdminDTO,
+  CrearNegocioInputDTO,
+  ActualizarNegocioInputDTO,
+  CrearSucursalInputDTO,
+  ActualizarSucursalInputDTO,
 } from "./dto";
 import { ApiError } from "./dto";
 
@@ -111,4 +117,62 @@ export const listarUsuariosNegocio = async (
     Array<{ id: string; nombre: string; email: string; rol: string }>
   >(`/negocios/${negocioId}/usuarios`);
   return data;
+};
+
+// --- CRUD superadmin ---
+
+// Lista todos los negocios con sus sucursales (solo superadmin)
+export const listarNegocios = async (): Promise<NegocioAdminDTO[]> => {
+  const { data } = await apiClient.get<NegocioAdminDTO[]>("/negocios");
+  return data;
+};
+
+// Crea un negocio nuevo (solo superadmin)
+export const crearNegocio = async (
+  input: CrearNegocioInputDTO,
+): Promise<NegocioAdminDTO> => {
+  const { data } = await apiClient.post<NegocioAdminDTO>("/negocios", input);
+  return data;
+};
+
+// Actualiza nombre/slug de un negocio (solo superadmin)
+export const actualizarNegocio = async (
+  id: string,
+  input: ActualizarNegocioInputDTO,
+): Promise<NegocioAdminDTO> => {
+  const { data } = await apiClient.put<NegocioAdminDTO>(
+    `/negocios/${id}`,
+    input,
+  );
+  return data;
+};
+
+// Elimina (soft delete) un negocio y sus sucursales (solo superadmin)
+export const eliminarNegocio = async (id: string): Promise<void> => {
+  await apiClient.delete(`/negocios/${id}`);
+};
+
+// Crea una sucursal en un negocio (solo superadmin)
+export const crearSucursal = async (
+  input: CrearSucursalInputDTO,
+): Promise<SucursalAdminDTO> => {
+  const { data } = await apiClient.post<SucursalAdminDTO>("/sucursales", input);
+  return data;
+};
+
+// Actualiza una sucursal (solo superadmin)
+export const actualizarSucursal = async (
+  id: string,
+  input: ActualizarSucursalInputDTO,
+): Promise<SucursalAdminDTO> => {
+  const { data } = await apiClient.put<SucursalAdminDTO>(
+    `/sucursales/${id}`,
+    input,
+  );
+  return data;
+};
+
+// Elimina (soft delete) una sucursal (solo superadmin)
+export const eliminarSucursal = async (id: string): Promise<void> => {
+  await apiClient.delete(`/sucursales/${id}`);
 };
