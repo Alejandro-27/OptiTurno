@@ -196,11 +196,15 @@ export const usuariosService = {
   // Lista usuarios con filtro opcional por negocio (para superadmin)
   // Si no se pasa negocioId, requiere ser superadmin y lanza error (evita fuga global).
   async listarUsuarios(filtro?: { negocioId?: string }) {
+    // Sin negocio_id: vista global del superadmin (AdminUsers)
     if (!filtro?.negocioId) {
-      throw {
-        status: 400,
-        message: "Parámetro requerido: negocio_id.",
-      };
+      const { data, error } = await supabase
+        .from("usuarios")
+        .select("id, nombre, email, telefono, rol")
+        .order("nombre", { ascending: true });
+      if (error)
+        throw { status: 400, message: "No se pudo listar los usuarios." };
+      return data || [];
     }
 
     // Obtener admin_negocio del negocio

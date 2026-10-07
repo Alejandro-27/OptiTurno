@@ -93,7 +93,7 @@ export const obtenerSucursalPorIdService = async (sucursalId: string) =>
   });
 
 // Resuelve la sucursal de un usuario según su rol (para compatibilidad legacy).
-// - superadmin: null (acceso global)
+// - superadmin: primera sucursal de la plataforma (paneles globales)
 // - admin_negocio: usa su sucursal_id directa (desde usuarios.sucursal_id)
 // - empleado: usa profesional_sucursales (puede ser multi-sede, devuelve la principal)
 export const resolverSucursalDeUsuarioService = async (usuarioId: string) =>
@@ -106,10 +106,17 @@ export const resolverSucursalDeUsuarioService = async (usuarioId: string) =>
 
     if (!usuario) return null;
 
-    if (usuario.rol === "superadmin") return null;
+    if (usuario.rol === "superadmin") {
+      const sucursales = await listarSucursalesService();
+      return sucursales[0] || null;
+    }
     if (usuario.rol === "admin_negocio") {
-      if (!usuario.sucursal_id) return null;
-      return obtenerSucursalPorIdService(usuario.sucursal_id);
+      if (usuario.sucursal_id) {
+        return obtenerSucursalPorIdService(usuario.sucursal_id);
+      }
+      // Admin sin sede asignada: cae a la primera disponible (igual que el SPA)
+      const sucursales = await listarSucursalesService();
+      return sucursales[0] || null;
     }
 
     // Empleado: buscar en profesional_sucursales
