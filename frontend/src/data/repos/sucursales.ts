@@ -50,6 +50,30 @@ export const sucursalesRepositorioApi: SucursalesRepositorio = {
     return obtenerSucursales();
   },
   async obtenerSucursalActiva() {
+    // 1. Si viene en la URL (?sucursal= o ?negocio=), resolver esa sede puntual
+    if (typeof window !== "undefined" && window.location.search) {
+      const params = new URLSearchParams(window.location.search);
+      const sucursalParam = params.get("sucursal");
+      const negocioParam = params.get("negocio");
+
+      if (sucursalParam || negocioParam) {
+        try {
+          const sucursales = await obtenerSucursales();
+          const encontrada = sucursales.find(
+            (s) =>
+              s.id === sucursalParam ||
+              s.negocio_id === negocioParam ||
+              (s.negocios &&
+                (s.negocios as { nombre?: string; slug?: string }).slug ===
+                  negocioParam),
+          );
+          if (encontrada) return encontrada;
+        } catch {
+          // continuar con el flujo normal
+        }
+      }
+    }
+
     const autenticado = Boolean(getSessionToken());
     if (autenticado) {
       try {

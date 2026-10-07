@@ -152,7 +152,33 @@ const procesarVentana = async (
     return resumen;
   }
 
-  const turnos = (data ?? []) as unknown as TurnoCandidato[];
+  let turnos = (data ?? []) as unknown as TurnoCandidato[];
+
+  // Para ventanas intra-día (ej. 2 horas), filtrar solo las citas en ese rango horario
+  if (ventana < 24) {
+    const formateador = new Intl.DateTimeFormat("en-US", {
+      timeZone: configWhatsApp.zonaHoraria,
+      hour: "numeric",
+      minute: "numeric",
+      hour12: false,
+    });
+    const partes = formateador.formatToParts(new Date());
+    const hActual = Number(partes.find((p) => p.type === "hour")?.value ?? 0);
+    const mActual = Number(partes.find((p) => p.type === "minute")?.value ?? 0);
+    const minutosAhora = hActual * 60 + mActual;
+    const minutosObjetivo = minutosAhora + ventana * 60;
+
+    turnos = turnos.filter((t) => {
+      const [th = 0, tm = 0] = t.hora_inicio.split(":").map(Number);
+      const minutosTurno = th * 60 + tm;
+      // Tolerancia: citas que caigan en la ventana (+/- 30 min)
+      return (
+        minutosTurno >= minutosObjetivo - 30 &&
+        minutosTurno <= minutosObjetivo + 30
+      );
+    });
+  }
+
   resumen.candidatos = turnos.length;
   if (turnos.length === 0) return resumen;
 

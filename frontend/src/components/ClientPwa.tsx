@@ -62,6 +62,7 @@ export default function ClientPwa() {
   const servicios = useStore((s) => s.servicios);
   const sesion = useStore((s) => s.sesion);
   const inicializado = useStore((s) => s.inicializado);
+  const nombreNegocio = useStore((s) => s.nombreNegocio);
   const navigate = useNavigate();
   const [step, setStep] = useState<1 | 2 | 3>(1); // 1: catálogo, 2: profesional, 3: fecha/hora
 
@@ -230,7 +231,7 @@ export default function ClientPwa() {
             ) : (
               <div className="flex items-center gap-2">
                 <span className="font-display text-sm font-semibold text-slate-900 dark:text-slate-50">
-                  Studio OptiTurno
+                  {nombreNegocio || "Studio OptiTurno"}
                 </span>
               </div>
             )}

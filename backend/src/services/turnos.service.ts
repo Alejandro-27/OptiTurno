@@ -47,10 +47,41 @@ export const crearTurnoService = async (datos: CrearTurnoInput) => {
     throw { status: 404, message: "El servicio solicitado no existe." };
   }
 
-  const [horas, minutos, segundos] = hora_inicio.split(":").map(Number);
-  const fechaBase = new Date(2026, 0, 1, horas, minutos, segundos || 0);
-  fechaBase.setMinutes(fechaBase.getMinutes() + servicio.duracion_minutos);
-  const hora_fin = fechaBase.toTimeString().split(" ")[0];
+  const [horas, minutos] = hora_inicio.split(":").map(Number);
+  const totalMinutosInicio = horas * 60 + minutos;
+  const totalMinutosFin = totalMinutosInicio + servicio.duracion_minutos;
+  const finH = Math.floor(totalMinutosFin / 60) % 24;
+  const finM = totalMinutosFin % 60;
+  const hora_fin = `${String(finH).padStart(2, "0")}:${String(finM).padStart(2, "0")}:00`;
+
+  const numeroDiaSemana = new Date(fecha.replace(/-/g, "/")).getDay();
+
+  const { data: horariosLaborales, error: errorHorarios } = await supabase
+    .from("horarios_laborales")
+    .select("hora_inicio, hora_fin")
+    .eq("profesional_id", profesional_id)
+    .eq("dia_semana", numeroDiaSemana);
+
+  if (errorHorarios) throw errorHorarios;
+
+  if (!horariosLaborales || horariosLaborales.length === 0) {
+    throw {
+      status: 409,
+      message: "El profesional no atiende en el día seleccionado.",
+    };
+  }
+
+  const cabeEnJornada = horariosLaborales.some((hl) => {
+    return hora_inicio >= hl.hora_inicio && hora_fin <= hl.hora_fin;
+  });
+
+  if (!cabeEnJornada) {
+    throw {
+      status: 409,
+      message:
+        "El horario solicitado está fuera de la jornada laboral del profesional.",
+    };
+  }
 
   const { data: ausencias, error: errorAusencias } = await supabase
     .from("profesional_ausencias")
@@ -435,11 +466,35 @@ export const reagendarTurnoService = async (
   return nuevoTurno;
 };
 
-export const listarTurnosAdminService = async (sucursalId: string) =>
-  // Caché 30 seg por sucursal: la vista de calendario tolora un leve retraso y
-  // esta es la consulta más pesada (4 joins). Se invalida en cada mutación.
-  leerConCache(CLAVES.turnosAdmin(sucursalId), 30, async () => {
-    const { data: turnos, error } = await supabase
+export const listarTurnosAdminService = async (
+  sucursalId: string,
+  profesionalId?: string,
+) => {
+  const claveCache = profesionalId
+    ? `${CLAVES.turnosAdmin(sucursalId)}:prof:${profesionalId}`
+    : CLAVES.turnosAdmin(sucursalId);
+
+  return leerConCache(claveCache, 30, async () => {
+    // 1. Resolver todos los profesionales de la sucursal (N:M + directos)
+    const { data: ps } = await supabase
+      .from("profesional_sucursales")
+      .select("profesional_id")
+      .eq("sucursal_id", sucursalId)
+      .eq("activo", true);
+
+    const idsFromPs = (ps || []).map((p) => p.profesional_id);
+
+    const { data: directos } = await supabase
+      .from("profesionales")
+      .select("id")
+      .eq("sucursal_id", sucursalId);
+
+    const idsDirectos = (directos || []).map((p) => p.id);
+    const todosIds = Array.from(new Set([...idsFromPs, ...idsDirectos]));
+
+    if (todosIds.length === 0) return [];
+
+    let query = supabase
       .from("turnos")
       .select(
         `
@@ -450,12 +505,20 @@ export const listarTurnosAdminService = async (sucursalId: string) =>
         profesionales:profesional_id (id, especialidad, sucursal_id, usuarios:usuario_id (nombre))
         `,
       )
-      .eq("profesionales.sucursal_id", sucursalId)
       .order("hora_inicio", { ascending: true });
 
+    if (profesionalId) {
+      if (!todosIds.includes(profesionalId)) return [];
+      query = query.eq("profesional_id", profesionalId);
+    } else {
+      query = query.in("profesional_id", todosIds);
+    }
+
+    const { data: turnos, error } = await query;
     if (error) throw error;
     return turnos || [];
   });
+};
 
 export const cancelarTurnoAdminService = async (
   usuarioId: string,
@@ -472,7 +535,9 @@ export const cancelarTurnoAdminService = async (
 
   const { data: turno, error: errorBusqueda } = await supabase
     .from("turnos")
-    .select("id, estado, profesionales:profesional_id (id, sucursal_id)")
+    .select(
+      "id, estado, profesional_id, profesionales:profesional_id (id, sucursal_id)",
+    )
     .eq("id", turnoId)
     .single();
 
@@ -480,11 +545,23 @@ export const cancelarTurnoAdminService = async (
     throw { status: 404, message: "El turno solicitado no existe." };
   }
 
+  const { data: ps } = await supabase
+    .from("profesional_sucursales")
+    .select("sucursal_id")
+    .eq("profesional_id", turno.profesional_id)
+    .eq("sucursal_id", sucursal.id)
+    .eq("activo", true)
+    .maybeSingle();
+
   const profesional = Array.isArray(turno.profesionales)
     ? turno.profesionales[0]
     : turno.profesionales;
 
-  if (!profesional || profesional.sucursal_id !== sucursal.id) {
+  const pertenece = Boolean(
+    ps || (profesional && profesional.sucursal_id === sucursal.id),
+  );
+
+  if (!pertenece) {
     throw {
       status: 403,
       message: "No puedes cancelar turnos de otra sucursal.",
@@ -537,7 +614,9 @@ export const cambiarEstadoTurnoAdminService = async (
 
   const { data: turno, error: errorBusqueda } = await supabase
     .from("turnos")
-    .select("id, estado, profesionales:profesional_id (id, sucursal_id)")
+    .select(
+      "id, estado, profesional_id, profesionales:profesional_id (id, sucursal_id)",
+    )
     .eq("id", turnoId)
     .single();
 
@@ -545,11 +624,23 @@ export const cambiarEstadoTurnoAdminService = async (
     throw { status: 404, message: "El turno solicitado no existe." };
   }
 
+  const { data: ps } = await supabase
+    .from("profesional_sucursales")
+    .select("sucursal_id")
+    .eq("profesional_id", turno.profesional_id)
+    .eq("sucursal_id", sucursal.id)
+    .eq("activo", true)
+    .maybeSingle();
+
   const profesional = Array.isArray(turno.profesionales)
     ? turno.profesionales[0]
     : turno.profesionales;
 
-  if (!profesional || profesional.sucursal_id !== sucursal.id) {
+  const pertenece = Boolean(
+    ps || (profesional && profesional.sucursal_id === sucursal.id),
+  );
+
+  if (!pertenece) {
     throw {
       status: 403,
       message: "No puedes modificar turnos de otra sucursal.",
@@ -616,7 +707,19 @@ export const bloquearHorarioService = async (
     .eq("id", datos.profesional_id)
     .single();
 
-  if (!profesional || profesional.sucursal_id !== sucursal.id) {
+  const { data: ps } = await supabase
+    .from("profesional_sucursales")
+    .select("sucursal_id")
+    .eq("profesional_id", datos.profesional_id)
+    .eq("sucursal_id", sucursal.id)
+    .eq("activo", true)
+    .maybeSingle();
+
+  const pertenece = Boolean(
+    ps || (profesional && profesional.sucursal_id === sucursal.id),
+  );
+
+  if (!pertenece) {
     throw {
       status: 403,
       message: "El profesional no pertenece a tu sucursal.",
@@ -660,21 +763,20 @@ export const bloquearHorarioService = async (
       turnosAfectados += ids.length;
     }
 
-    if (!datos.hora_inicio || !datos.hora_fin) {
-      const { error: errInsert } = await supabase
-        .from("profesional_ausencias")
-        .upsert(
-          {
-            profesional_id: datos.profesional_id,
-            fecha,
-            hora_inicio: null,
-            hora_fin: null,
-          },
-          { onConflict: "profesional_id,fecha,hora_inicio" },
-        );
+    // Insertar ausencia (día completo o rango de horas parcial)
+    const ausencia = {
+      profesional_id: datos.profesional_id,
+      fecha,
+      hora_inicio: datos.hora_inicio || null,
+      hora_fin: datos.hora_fin || null,
+      motivo: datos.motivo || "Bloqueo de agenda",
+    };
 
-      if (errInsert) throw errInsert;
-    }
+    const { error: errInsert } = await supabase
+      .from("profesional_ausencias")
+      .insert([ausencia]);
+
+    if (errInsert && errInsert.code !== "23505") throw errInsert;
   }
 
   await invalidarDatosTurnos();

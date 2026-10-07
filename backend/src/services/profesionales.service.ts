@@ -88,25 +88,53 @@ export const guardarHorarioSemanalService = async (
     throw { status: 404, message: "Profesional no encontrado." };
   }
 
+  // Resolver la sucursal del profesional (sede principal en profesional_sucursales o sucursal_id directa)
+  const { data: ps } = await supabase
+    .from("profesional_sucursales")
+    .select("sucursal_id")
+    .eq("profesional_id", profesionalId)
+    .eq("es_principal", true)
+    .eq("activo", true)
+    .maybeSingle();
+
+  let sucursalId = ps?.sucursal_id;
+  if (!sucursalId) {
+    const { data: prof } = await supabase
+      .from("profesionales")
+      .select("sucursal_id")
+      .eq("id", profesionalId)
+      .maybeSingle();
+    sucursalId = prof?.sucursal_id;
+  }
+
   for (const dia of DIAS_SEMANA) {
     const registro = schedule.find((s) => s.day === dia.label);
     const habilitado = registro?.enabled === true;
 
-    await supabase
+    let deleteQuery = supabase
       .from("horarios_laborales")
       .delete()
       .eq("profesional_id", profesionalId)
       .eq("dia_semana", dia.numero);
 
+    if (sucursalId) {
+      deleteQuery = deleteQuery.eq("sucursal_id", sucursalId);
+    }
+    await deleteQuery;
+
     if (habilitado && registro) {
-      const { error } = await supabase.from("horarios_laborales").insert([
-        {
-          profesional_id: profesionalId,
-          dia_semana: dia.numero,
-          hora_inicio: `${registro.openTime}:00`,
-          hora_fin: `${registro.closeTime}:00`,
-        },
-      ]);
+      const fila: Record<string, unknown> = {
+        profesional_id: profesionalId,
+        dia_semana: dia.numero,
+        hora_inicio: `${registro.openTime}:00`,
+        hora_fin: `${registro.closeTime}:00`,
+      };
+      if (sucursalId) {
+        fila.sucursal_id = sucursalId;
+      }
+      const { error } = await supabase
+        .from("horarios_laborales")
+        .insert([fila]);
       if (error) throw error;
     }
   }
@@ -242,6 +270,7 @@ export const profesionalesService = {
       .from("profesionales")
       .insert({
         usuario_id: usuarioId,
+        sucursal_id: sucursalPrincipal,
         especialidad: especialidad || "General",
       })
       .select()

@@ -12,7 +12,14 @@ import {
 } from "lucide-react";
 import { useStore } from "../store";
 
-const HOY_ISO = new Date().toISOString().slice(0, 10);
+const obtenerFechaLocalISO = (d = new Date()): string => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const dia = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${dia}`;
+};
+
+const HOY_ISO = obtenerFechaLocalISO();
 const MES_ACTUAL = HOY_ISO.slice(0, 7);
 
 const ACTIVOS = new Set(["confirmado", "pendiente_pago"]);
@@ -35,9 +42,11 @@ export default function AdminDashboard({
     const citasHoy = turnos.filter(
       (t) => t.fecha === HOY_ISO && ACTIVOS.has(t.estado || ""),
     );
-    const canceladas = turnos.filter((t) => t.estado === "cancelado").length;
+    const canceladasONoAsistio = turnos.filter(
+      (t) => t.estado === "cancelado" || t.estado === "no_asistio",
+    ).length;
     const inasistencia = turnos.length
-      ? Math.round((canceladas / turnos.length) * 100)
+      ? Math.round((canceladasONoAsistio / turnos.length) * 100)
       : 0;
     return {
       ingresosMes,

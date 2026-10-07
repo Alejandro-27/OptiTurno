@@ -41,7 +41,7 @@ export const turnosRouter = async (fastify: FastifyInstance) => {
     {
       preHandler: [
         verificarAutenticacion,
-        permitirRoles(["superadmin", "admin_negocio"]),
+        permitirRoles(["superadmin", "admin_negocio", "empleado"]),
       ],
     },
     listarTurnosAdminHandler,

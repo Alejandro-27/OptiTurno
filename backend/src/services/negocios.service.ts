@@ -45,18 +45,33 @@ export const obtenerProfesionalesPorSucursalService = async (
   sucursalId: string,
 ) =>
   leerConCache(CLAVES.profesionales(sucursalId), 600, async () => {
-    const { data, error } = await supabase
-      .from("profesionales")
-      .select(
-        `
+    // 1. Obtener IDs de profesionales vinculados vía profesional_sucursales
+    const { data: ps } = await supabase
+      .from("profesional_sucursales")
+      .select("profesional_id")
+      .eq("sucursal_id", sucursalId)
+      .eq("activo", true);
+
+    const idsFromPs = (ps || []).map((p) => p.profesional_id);
+
+    let query = supabase.from("profesionales").select(
+      `
           id,
           especialidad,
           sucursal_id,
           usuarios:usuario_id (id, nombre)
         `,
-      )
-      .eq("sucursal_id", sucursalId);
+    );
 
+    if (idsFromPs.length > 0) {
+      query = query.or(
+        `sucursal_id.eq.${sucursalId},id.in.(${idsFromPs.join(",")})`,
+      );
+    } else {
+      query = query.eq("sucursal_id", sucursalId);
+    }
+
+    const { data, error } = await query;
     if (error) throw error;
     return data;
   });
@@ -654,13 +669,23 @@ export const guardarDisponibilidadSemanalService = async (
     restEnd: string;
   }>,
 ) => {
-  const { data: profesionales, error: errorProf } = await supabase
+  const { data: ps } = await supabase
+    .from("profesional_sucursales")
+    .select("profesional_id")
+    .eq("sucursal_id", sucursalId)
+    .eq("activo", true);
+
+  const idsFromPs = (ps || []).map((p) => p.profesional_id);
+
+  const { data: directos } = await supabase
     .from("profesionales")
     .select("id")
     .eq("sucursal_id", sucursalId);
 
-  if (errorProf) throw errorProf;
-  if (!profesionales || profesionales.length === 0) {
+  const idsDirectos = (directos || []).map((p) => p.id);
+  const todosIds = Array.from(new Set([...idsFromPs, ...idsDirectos]));
+
+  if (todosIds.length === 0) {
     throw {
       status: 400,
       message: "Aún no hay profesionales registrados en esta sucursal.",
@@ -671,29 +696,24 @@ export const guardarDisponibilidadSemanalService = async (
     const registro = schedule.find((s) => s.day === dia.label);
     const habilitado = registro?.enabled === true;
 
-    for (const profesional of profesionales) {
-      if (habilitado && registro) {
-        await supabase
-          .from("horarios_laborales")
-          .delete()
-          .eq("profesional_id", profesional.id)
-          .eq("dia_semana", dia.numero);
+    for (const profesionalId of todosIds) {
+      await supabase
+        .from("horarios_laborales")
+        .delete()
+        .eq("profesional_id", profesionalId)
+        .eq("sucursal_id", sucursalId)
+        .eq("dia_semana", dia.numero);
 
+      if (habilitado && registro) {
         const { error } = await supabase.from("horarios_laborales").insert([
           {
-            profesional_id: profesional.id,
+            profesional_id: profesionalId,
+            sucursal_id: sucursalId,
             dia_semana: dia.numero,
             hora_inicio: `${registro.openTime}:00`,
             hora_fin: `${registro.closeTime}:00`,
           },
         ]);
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("horarios_laborales")
-          .delete()
-          .eq("profesional_id", profesional.id)
-          .eq("dia_semana", dia.numero);
         if (error) throw error;
       }
     }

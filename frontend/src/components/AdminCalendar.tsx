@@ -19,6 +19,7 @@ import ModalEditarCita from "./ModalEditarCita";
 type ViewMode = "diario" | "semanal" | "mensual";
 
 const HOURS = [
+  "07:00",
   "08:00",
   "09:00",
   "10:00",
@@ -29,6 +30,10 @@ const HOURS = [
   "15:00",
   "16:00",
   "17:00",
+  "18:00",
+  "19:00",
+  "20:00",
+  "21:00",
 ];
 
 const INICIO_JORNADA = minutosDe(HOURS[0]);
@@ -78,7 +83,7 @@ export default function AdminCalendar() {
   const [tempMonth, setTempMonth] = useState<number>(currentDate.getMonth());
   const [tempYear, setTempYear] = useState<number>(currentDate.getFullYear());
 
-  const columns = profesionales.slice(0, 5).map((p, i) => ({
+  const columns = profesionales.map((p, i) => ({
     id: p.id,
     name: `Sillón ${i + 1}`,
     staff: p.nombre,

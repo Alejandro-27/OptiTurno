@@ -12,6 +12,7 @@ import {
   bloquearHorarioService,
 } from "../services/turnos.service.js";
 import { resolverSucursalDeUsuarioService } from "../services/negocios.service.js";
+import { resolverProfesionalDeUsuarioService } from "../services/ausencias.service.js";
 import { validarCuerpo, validarParams } from "../schemas/validar";
 import { idParamsSchema } from "../schemas/common";
 import {
@@ -65,7 +66,14 @@ export const listarTurnosAdminHandler = async (
       .status(404)
       .send({ error: "Aún no hay sucursales registradas." });
   }
-  const turnos = await listarTurnosAdminService(sucursal.id);
+
+  let profesionalId: string | undefined;
+  if (request.usuario!.rol === "empleado") {
+    const prof = await resolverProfesionalDeUsuarioService(request.usuario!.id);
+    profesionalId = prof?.id;
+  }
+
+  const turnos = await listarTurnosAdminService(sucursal.id, profesionalId);
   return reply.status(200).send(turnos);
 };
 

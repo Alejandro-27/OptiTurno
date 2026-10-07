@@ -47,6 +47,8 @@ export interface AppState {
   usuarios: UsuarioAdminDTO[];
   // Indica si el admin_negocio autenticado ya tiene negocio configurado
   tieneNegocio: boolean | null;
+  // Nombre del comercio o sucursal activa
+  nombreNegocio: string | null;
 }
 
 const estadoInicial: AppState = {
@@ -66,6 +68,7 @@ const estadoInicial: AppState = {
   ausencias: [],
   usuarios: [],
   tieneNegocio: null,
+  nombreNegocio: null,
 };
 
 let estado: AppState = estadoInicial;
@@ -187,16 +190,21 @@ export async function iniciarApp(): Promise<void> {
   }
 
   // Fallback: si no hay sucursal activa, usar la primera del sistema
-  if (!sucursalActivaId) {
-    try {
-      const sucursal = await repositorios.sucursales.obtenerSucursalActiva();
-      sucursalActivaId = sucursal?.id || null;
-      if (sucursalActivaId && !sucursalesIds.includes(sucursalActivaId)) {
-        sucursalesIds = [sucursalActivaId];
+  let nombreNegocio: string | null = null;
+  try {
+    const sucursal = await repositorios.sucursales.obtenerSucursalActiva();
+    if (sucursal) {
+      if (!sucursalActivaId) {
+        sucursalActivaId = sucursal.id;
       }
-    } catch {
-      sucursalActivaId = null;
+      if (!sucursalesIds.includes(sucursal.id)) {
+        sucursalesIds = [sucursal.id, ...sucursalesIds];
+      }
+      nombreNegocio =
+        (sucursal.negocios as { nombre?: string })?.nombre || sucursal.nombre;
     }
+  } catch {
+    // Si falla, continuar con null
   }
 
   // 3. Catálogos base: siempre (servicios y profesionales de la sucursal activa)
@@ -255,6 +263,7 @@ export async function iniciarApp(): Promise<void> {
     sucursalesIds,
     sucursalActivaId,
     tieneNegocio,
+    nombreNegocio,
     servicios: rServicios.datos,
     profesionales: rProfesionales.datos,
     turnos: rTurnos.datos,

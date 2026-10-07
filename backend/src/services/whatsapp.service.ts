@@ -25,12 +25,13 @@ export interface ResultadoEnvioWhatsApp {
  */
 export const normalizarTelefono = (telefono: string | null): string | null => {
   if (!telefono) return null;
+  const teniaMas = telefono.trim().startsWith("+");
   let digitos = telefono.replace(/\D/g, "");
   if (!digitos) return null;
   // Prefijo internacional presente: 10-15 dígitos que no empiezan en 0.
   if (digitos.startsWith("00")) digitos = digitos.slice(2);
   if (digitos.startsWith("0")) digitos = digitos.slice(1);
-  if (digitos.length <= 10) digitos = `57${digitos}`;
+  if (digitos.length <= 10 && !teniaMas) digitos = `57${digitos}`;
   return digitos.length >= 11 && digitos.length <= 15 ? digitos : null;
 };
 
