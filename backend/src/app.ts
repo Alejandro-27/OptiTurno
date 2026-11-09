@@ -4,6 +4,7 @@ import helmet from "@fastify/helmet";
 import rateLimit from "@fastify/rate-limit";
 import dotenv from "dotenv";
 import { turnosRouter } from "./routes/turnos.routes.js";
+import { iniciarKeepAlive } from "./services/keepAlive";
 import { negociosRoutes } from "./routes/negocios.routes.js";
 import profesionalesRoutes from "./routes/profesionales.routes";
 import usuariosRoutes from "./routes/usuarios.routes";
@@ -89,6 +90,10 @@ const start = async () => {
     });
 
     const port = Number(process.env.PORT) || 5000;
+
+    // Keep alive solo en producción (Supabase + Render).
+    iniciarKeepAlive();
+
     await fastify.listen({ port, host: "0.0.0.0" });
 
     console.log(`🚀 Servidor modular corriendo en http://localhost:${port}`);
