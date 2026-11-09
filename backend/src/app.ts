@@ -33,16 +33,27 @@ fastify.setNotFoundHandler((_request, reply) => {
 
 const start = async () => {
   try {
-    // CORS: solo orígenes explícitos (nunca origin:true).
-    // En producción, definir CORS_ORIGINS="https://tu-app.vercel.app,https://otro" en el env.
-    const corsOrigins = process.env.CORS_ORIGINS
-      ? process.env.CORS_ORIGINS.split(",").map((s) => s.trim())
-      : ["http://localhost:4000", "http://127.0.0.1:4000"];
+    // CORS: solo orígenes explícitos (nunca origin:true). Los de producción van
+    // fijos para que un CORS_ORIGINS desactualizado en Render no rompa el front;
+    // la env var suma orígenes extra (p. ej. previews de Vercel).
+    const origenesProduccion = [
+      "https://opititurno.dpdns.org",
+      "https://opti-turno.vercel.app",
+    ];
+    const origenesDev = ["http://localhost:4000", "http://127.0.0.1:4000"];
+    const origenesEnv = (process.env.CORS_ORIGINS ?? "")
+      .split(",")
+      .map((s) => s.trim())
+      .filter(Boolean);
 
-    // Middlewares / Plugins globales
     await fastify.register(cors, {
-      origin: corsOrigins,
-      methods: ["GET", "HEAD", "PUT", "POST", "PATCH", "DELETE"],
+      origin: [
+        ...new Set([...origenesProduccion, ...origenesEnv, ...origenesDev]),
+      ],
+      credentials: true,
+      // @fastify/cors responde el preflight OPTIONS con 204 por su cuenta.
+      methods: ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+      optionsSuccessStatus: 204,
     });
 
     // Headers de seguridad (HSTS, X-Content-Type-Options, etc.)
