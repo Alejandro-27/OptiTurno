@@ -131,9 +131,7 @@ const horariosMock = new Map<string, DayAvailability[]>();
 export const profesionalesRepositorioApi: ProfesionalesRepositorio = {
   async listarProfesionales(sucursalId) {
     if (!sucursalId) {
-      throw new Error(
-        "Se requiere el id de la sucursal para listar profesionales.",
-      );
+      return [];
     }
     const dtos = await obtenerProfesionales(sucursalId);
     return dtos.map(profesionalDtoToUI);

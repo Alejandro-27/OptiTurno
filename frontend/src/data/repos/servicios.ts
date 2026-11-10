@@ -54,9 +54,7 @@ export const serviciosRepositorioMock: ServiciosRepositorio = {
 export const serviciosRepositorioApi: ServiciosRepositorio = {
   async listarServicios(sucursalId) {
     if (!sucursalId) {
-      throw new Error(
-        "Se requiere el id de la sucursal para listar servicios.",
-      );
+      return [];
     }
     const dtos = await obtenerServicios(sucursalId);
     return dtos.map(servicioDtoToUI);
